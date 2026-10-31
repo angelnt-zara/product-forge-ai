@@ -1,0 +1,59 @@
+# OS files and IDE/editor settings
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
+# Visual Studio Code
+.vscode/
+# Xcode
+*.xcuserstate
+*.xcworkspace
+xcuserdata/ 
+DerivedData/
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+# Generated code artifacts
+code/generated/
+
+# OpenCode (contains auth tokens)
+opencode.json
+
+# OpenCode work directory (task tracking, plans, evidence)
+.omo/
+
+# Raycast
+raycast-env.d*
+dx/raycast/**/*lock*
+
+# aicontext (generated symlinks from marketplace packages)
+.aicontext/.cache/
+.aicontext/.lock
+
+# --- aicontext generated files (start) ---
+# GitHub Copilot
+.github/instructions
+.github/skills
+.github/prompts
+.github/copilot-memory
+.github/agents
+.mcp.json
+.vscode/mcp.json
+
+# Claude Code
+.claude
+.claude/rules
+.claude/skills
+.claude/commands
+.claude/agents
+
+# OpenCode
+.opencode/opencode.json
+
+# SDD
+.sdd/
+
+# Workspace repos (cloned by aicontext install)
+/repos/
+# --- aicontext generated files (end) ---
