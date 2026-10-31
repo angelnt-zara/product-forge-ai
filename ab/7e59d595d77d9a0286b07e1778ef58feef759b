@@ -1,0 +1,27 @@
+aicontext/agents/product-forge-pana-code.md
+  s_bccf7d4b964f02::t_c0e438bae874b9 8,45
+aicontext/agents/product-forge-pana-jobs.md
+  s_bccf7d4b964f02::t_f209046bd712b5 8,38
+aicontext/agents/product-forge-pana-logs.md
+  s_bccf7d4b964f02::t_8fa084b49d0964 7,33
+aicontext/agents/product-forge-pana-scanner.md
+  s_bccf7d4b964f02::t_74f79971e694c3 9,21
+aicontext/agents/product-forge-pana.md
+  s_bccf7d4b964f02::t_85e2d3a6dc3b26 16,45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "ab7e59d595d77d9a0286b07e1778ef58feef759b",
+  "prompts": {},
+  "sessions": {
+    "s_bccf7d4b964f02": {
+      "agent_id": {
+        "tool": "github-copilot-cli",
+        "id": "a92e5a62-1122-46e5-bdcc-dae6c8883c85",
+        "model": "unknown"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
