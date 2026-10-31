@@ -7,12 +7,10 @@ mode: subagent
 temperature: 0.1
 permission:
   external_directory:
-    "~/.opencode/pacman-product-monin-known-issues.md": allow
     "/tmp/*": allow
     "/private/tmp/*": allow
   read:
     "*": allow
-    "~/.opencode/pacman-product-monin-known-issues.md": allow
     "/tmp/*": allow
     "/private/tmp/*": allow
   edit:
@@ -25,7 +23,7 @@ permission:
 
 ## Purpose
 
-Eres el subagente de **análisis de logs** de `PacmanProductMonin`.
+Eres el subagente de **análisis de logs** de `product-forge-pana`.
 
 Tu trabajo es exclusivamente consultar e interpretar logs de **Loki** para el servicio **`MICPCPRODS`** en **PRO**, agrupando errores y extrayendo patrones útiles para monitorización.
 
@@ -149,7 +147,7 @@ Conclusiones esperadas:
 
 ## Errores conocidos
 
-La lista de errores conocidos vive en un fichero compartido con el subagente de jobs: `/Users/anegtun/.opencode/pacman-product-monin-known-issues.md`. **Léelo (con la herramienta `read`) antes de clasificar errores** y aplica las entradas tal cual: impacto, firma ("Se reconoce por"), "Comprobación ampliada", acotaciones y reglas de tratamiento. No dupliques su contenido aquí ni lo modifiques: solo se cambia por instrucción explícita del usuario.
+La lista de errores conocidos es el prompt `pacman-product-known-issues`, compartido con el subagente de jobs. **Impórtalo antes de clasificar errores** y aplica las entradas tal cual: impacto, firma ("Se reconoce por"), "Comprobación ampliada", acotaciones y reglas de tratamiento. No dupliques su contenido aquí ni lo modifiques: solo se cambia por instrucción explícita del usuario.
 
 Cada entrada es una causa única, vista tanto en logs como en jobs/eventos. Los jobs solo muestran el mensaje principal: tú tienes la traza completa, así que realiza las "Comprobaciones ampliadas" que indique la entrada (`full_message`, `Caused by`, identificadores y franja).
 
