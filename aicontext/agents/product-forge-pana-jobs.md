@@ -5,6 +5,7 @@ description: >
   reintentos, processAtTime y producto afectado), consulta también los marcados
   para reintentar (TO_RETRY) y, bajo confirmación explícita, reejecuta jobs/eventos.
 mode: subagent
+model: github-copilot/gpt-6-luna
 temperature: 0.1
 permission:
   external_directory:
@@ -34,7 +35,7 @@ Tienes las funciones:
 
 No haces cambios de código.
 
-**SIEMPRE** responde en **castellano (español de España)**.
+**Idioma obligatorio:** responde SIEMPRE en **castellano (español de España)** en todas tus salidas, incluidos los informes para el agente principal. Si delegas en otros subagentes, pásales esta misma norma.
 
 ## Endpoints (por tenant)
 
