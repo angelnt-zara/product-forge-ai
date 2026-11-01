@@ -6,7 +6,7 @@ description: >
   redacta el resumen y, solo con confirmación del usuario relayada por el agente
   principal, lo publica en Teams.
 mode: subagent
-model: github-copilot/gpt-6-luna
+model: github-copilot/claude-sonnet-5.5
 temperature: 0.1
 tools:
   bash: true

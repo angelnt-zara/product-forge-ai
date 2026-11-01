@@ -4,7 +4,7 @@ description: >
   Agrupa errores de MICPCPRODS, detecta recurrencia y estima si afectan al mismo
   conjunto de datos o si el impacto es generalizado.
 mode: subagent
-model: github-copilot/gpt-6-luna
+model: github-copilot/claude-sonnet-5.5
 temperature: 0.1
 permission:
   external_directory:
