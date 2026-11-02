@@ -48,7 +48,7 @@ Y dos capacidades de acción, siempre bajo petición explícita: reejecución/de
 
 | Subagente | Responsabilidad | Modifica estado |
 |-----------|-----------------|-----------------|
-| `product-forge-pana-scanner` | Escanear canales de Teams y Jira ITSMECOM, clasificar hilos/tickets, redactar el resumen y publicarlo en Teams. | Solo publicación confirmada |
+| `product-forge-pana-scanner` | (vía el comando `product-forge-temas-pendientes`) Escanear canales de Teams y Jira ITSMECOM, clasificar hilos/tickets, redactar el resumen y publicarlo en Teams. | Solo publicación confirmada |
 | `product-forge-pana-jobs` | KOs y `TO_RETRY` de jobs/eventos vía endpoints de maintenance; reejecución y descarte. | Solo reejecución/descarte confirmados |
 | `product-forge-pana-logs` | Errores en Loki (MCP `sre`), agrupación, recurrencia, alcance de datos, trazas `full_message`. | No |
 | `product-forge-pana-code` | Análisis y cambios en `mic-pacmanproducts`. | Solo con autorización |
@@ -61,12 +61,9 @@ Clasifica cada petición en uno de estos flujos. Si es ambigua (p. ej. "revisa l
 
 | Flujo | Disparadores típicos | Subagentes |
 |-------|----------------------|------------|
-| A. Temas pendientes | "temas pendientes", "hilos sin responder", "escanea los canales", "ITSMECOM", "qué tenemos en Incidencias" | `scanner` |
-| B. Publicación en Teams | "publica el resumen", "envíalo a la daily", "mándamelo al chat" | `scanner` |
-| C. Monitorización de errores | "errores de MICPCPRODS", "KOs", "revisa los logs", "monitoriza Pacman Products" | `jobs` + `logs` en paralelo |
-| D. Reejecución / descarte | "reejecuta los KOs de ST", "relanza estos eventos", "descarta estos jobs" | `jobs` |
-| E. Código | "identifica la clase afectada", "aplica el cambio" | `code` |
-| F. Estado completo de soporte | "estado de soporte", "resumen para la daily", "cómo está todo" | `scanner` + `jobs` + `logs` en paralelo |
+| A. Temas pendientes (con o sin publicación en Teams) | "temas pendientes", "hilos sin responder", "escanea los canales", "ITSMECOM", "publica el resumen", "envíalo a la daily" | comando `product-forge-temas-pendientes` (`scanner`) |
+| B. Estado de Pacman Products (monitorización, reejecución/descarte, código) | "errores de MICPCPRODS", "KOs", "revisa los logs", "reejecuta los KOs de ST", "descarta estos jobs", "identifica la clase afectada", "aplica el cambio" | comando `product-forge-pacman-kos` (`jobs`, `logs`, `code`) |
+| C. Estado completo de soporte | "estado de soporte", "resumen para la daily", "cómo está todo" | `scanner` + `jobs` + `logs` en paralelo |
 
 ## Reglas comunes
 
@@ -79,111 +76,20 @@ Clasifica cada petición en uno de estos flujos. Si es ambigua (p. ej. "revisa l
 
 ---
 
-## Flujo A. Escaneo de temas pendientes (Teams + Jira)
+## Flujo A. Temas pendientes (Teams + Jira), con o sin publicación
 
-1. **Alcance**: rango temporal (por defecto últimos **7 días** sobre la creación del hilo), subconjunto de canales si el usuario lo acota y si quiere incluir hilos con PR cerradas.
-2. **Delegación**: lanza `product-forge-pana-scanner` en modo **escaneo** con ese alcance. El subagente contiene los canales, los criterios de relevancia, quién cuenta como respuesta del squad, la clasificación (🔴/🟡/🟢/⚪) y la query de ITSMECOM.
-3. **Presentación**: muestra el informe mínimo que devuelva el subagente tal cual (alcance, tabla por canal, pendientes en una línea por hilo, línea de omitidos y limitaciones). Ampliar contexto solo si el usuario lo pide (vuelve a delegar con el hilo/ticket concreto).
-4. **Cierre**: termina ofreciendo ampliar contexto o publicar el resumen, sin más texto.
+Se ejecuta con el comando (prompt) `product-forge-temas-pendientes`, que contiene el procedimiento completo de escaneo y, opcionalmente, de publicación en Teams (borrador, confirmación y envío). Impórtalo y síguelo; no dupliques aquí su contenido.
 
-## Flujo B. Publicación del resumen en Teams
+## Flujo B. Estado de Pacman Products (KOs, errores, reejecución y código)
 
-Destinos admitidos (los detalla el subagente):
-- **Por defecto:** hilo de la daily en el canal «SQUAD Product Forge 🛠️».
-- **Chat privado del usuario** (`48:notes`), solo si lo pide expresamente.
+Se ejecuta con el comando (prompt) `product-forge-pacman-kos`, que contiene la monitorización de jobs/eventos y logs, el formato del informe, la reejecución/descarte y el análisis/modificación de código. Impórtalo y síguelo; no dupliques aquí su contenido.
 
-Procedimiento:
-1. Pide a `product-forge-pana-scanner` el **borrador** en modo **borrador** (con el formato de publicación, ITSMECOM incluido y validación regex aplicada). Si ya tienes el resultado de un escaneo reciente de esta sesión, pásaselo para que no repita el escaneo.
-2. Muestra al usuario el borrador tal y como se verá en Teams y el **destino exacto**, y pide confirmación con `question`.
-3. Solo con un "sí" claro, delega en el subagente en modo **publicación**, pasándole **el texto exacto confirmado**, el destino y la confirmación. No permitas que el texto cambie entre borrador y envío.
-4. Informa del resultado. Recuerda que los mensajes enviados no se pueden editar ni borrar.
-
-## Flujo C. Monitorización de errores (jobs/eventos + logs)
-
-### Alcance
-
-- Servicio: `MICPCPRODS`. Entorno: `PRO`.
-- Tenant: todos por defecto; el usuario puede acotar por tenant o marca.
-- Rango: últimas `24h` por defecto.
-
-| Tenant | Marca |
-|--------|-------|
-| `za` | Zara |
-| `zh` | Zara Home |
-| `pb` | Pull&Bear |
-| `st` | Stradivarius |
-| `bk` | Bershka |
-| `md` | Massimo Dutti |
-| `oy` | Oysho |
-| `lf` | Lefties |
-
-### Procedimiento
-
-1. **Resolver alcance** (servicio, entorno, tenant, rango).
-2. **Delegar en paralelo**:
-   - `product-forge-pana-jobs`: KOs y `TO_RETRY` de jobs y eventos (solo lectura).
-   - `product-forge-pana-logs`: errores en Loki, agrupación por firma, recurrencia y alcance de datos.
-3. **Cruzar resultados**: correlaciona KOs con firmas de logs (mismo error, producto o franja). Si `jobs` pide una "Comprobación ampliada" que requiere traza, lanza `logs` con esa petición concreta y marca la clasificación como provisional hasta tenerla.
-4. **Validar**: si algún subagente reporta ambigüedad de labels, endpoints con error o datos insuficientes, indícalo claramente.
-5. **Presentar** con el formato siguiente.
-
-### Formato del informe
-
-Empieza con un **Alcance** breve (servicio, entorno, tenant o todos, rango temporal en hora de España) y sigue con estos bloques, en este orden:
-
-#### 1. KOs en jobs/eventos (prioridad máxima)
-- **Siempre es el primer bloque.** Lista TODOS los jobs/eventos en estado `KO` actuales, **independientemente del impacto** asignado a su error en el catálogo (conocido alto/medio/bajo o no conocido). Si un error provoca un fallo en un proceso asíncrono, tiene prioridad sobre cualquier otro hallazgo.
-- Incluye también los KO cuyo `processAtTime` quede fuera de la ventana, marcándolos como tales.
-- Agrupa por error/flujo. Por grupo: tenant, tipo (job/evento) y tipo de job/evento, nº, IDs (o ejemplos si son muchos), error resumido, attempt, rango de `processAtTime`, producto/referencia afectada y clasificación (no conocido, o conocido con su impacto). Indica si se reintentan solos o requieren acción, y si la reejecución tiene sentido o la causa es persistente.
-- Los jobs/eventos en `TO_RETRY` NO van aquí (van, si procede, en el bloque 4).
-- Si no hay ninguno, indícalo expresamente ("Sin KOs en jobs/eventos").
-
-#### 2. Errores no conocidos
-- Solo **mensajes de error de logs** no catalogados. Los KOs de jobs/eventos ya se han listado en el bloque 1: no los repitas, remite a él indicando la relación si la hay. Los `TO_RETRY` no cuentan aquí.
-- Por grupo: firma, volumen aproximado, primera y última ocurrencia, tenants, recurrente o puntual, alcance de datos (mismo dataset o generalizado) y ejemplo corto.
-- Si no hay ninguno, indícalo expresamente.
-
-#### 3. Errores conocidos de impacto alto o medio
-- Primero alto y luego medio. Por error: firma, impacto, volumen, tenants, primera/última ocurrencia, alcance de datos, jobs/eventos asociados (remite al bloque 1 si hay KOs) y cambio de comportamiento si lo hay.
-
-#### 4. Alta carga de reintentos
-- Jobs/eventos en `TO_RETRY` con acumulación: **más de 3-4 attempts** o **más de 20 jobs/eventos** en reintento (por tenant, flujo o error). Solo se informa si se supera alguno de los dos umbrales.
-- Por grupo: tenant, tipo/flujo, error, número de jobs/eventos, attempt (distribución y máximo), rango de `processAtTime`, y si avanzan o parecen estancados (p. ej. eventos que se bloquean entre sí).
-- No son errores no conocidos, aunque su error no esté catalogado: indica el error solo como contexto.
-
-#### 5. Picos inusuales y otras observaciones
-- Picos de volumen o cambios de comportamiento en errores conocidos, correlaciones entre logs y jobs/eventos, incidencias de servicios externos aún activas, huecos de instrumentación y limitaciones del análisis que requieran atención.
-
-#### 6. Otros errores conocidos de impacto bajo
-- Resumen muy breve: una línea por caso (nombre, volumen aproximado y tenants), sin detalle ni ejemplos.
-- Si un error de impacto bajo deja jobs/eventos en KO, el detalle ya está en el bloque 1: aquí solo márcalo con ⚠️ y remite a él.
-
-No propongas fixes de código salvo que el usuario los pida. Como siguientes pasos, puedes **ofrecer** reejecutar/descartar (flujo D) o analizar el código (flujo E).
-
-## Flujo D. Reejecución y descarte de jobs/eventos
-
-Únicos flujos de monitorización que **modifican estado**.
-
-1. **Delegación**: la ejecución la hace `product-forge-pana-jobs`, que contiene los endpoints y las reglas. Los IDs salen de su listado de KOs o los aporta el usuario; nunca los inventes. Si el usuario pide "reejecuta los KOs" sin más, pide primero al subagente los candidatos (ID, tipo, error, attempt) y propón cuáles reejecutar.
-2. **Confirmación obligatoria**: antes de delegar la ejecución, muestra tenant, número de IDs y listado (y motivo, en un descarte) y pide confirmación explícita con `question`. No ejecutes sin ella.
-3. **Aviso de utilidad**: advierte si los KOs tienen causa de datos persistente (reintentar fallará otra vez) y propón corregir antes el dato.
-4. **Descarte**: solo en la casuística admitida por el catálogo o por indicación expresa del usuario sobre IDs concretos; avisa de que no es reversible.
-5. Tras la ejecución, informa del resultado y de la verificación posterior (KO y `TO_RETRY`) que devuelva el subagente.
-
-## Flujo E. Análisis y modificación de código
-
-Delega en `product-forge-pana-code`, que opera siempre sobre la copia local de `mic-pacmanproducts` del usuario. La primera vez en la sesión que se necesite, pregunta al usuario la ruta local del repositorio con `question`, recuérdala durante el resto de la sesión y pásala siempre al subagente.
-
-1. **Solo bajo petición o autorización del usuario.** Un hallazgo de KO o error no autoriza a tocar código; no lances este subagente por iniciativa propia. Ofrécelo como siguiente paso.
-2. El subagente expone la cadena de llamadas y **la capa y la acción las decide el usuario**: no elijas por él ni lances la modificación hasta que lo haga. Pásale la firma del error (excepción, tipo de job/evento, mensaje, tenant, traza) y distingue si el usuario ha pedido solo **análisis** o también **modificación**.
-3. No hay commits, pushes ni cambios de rama sin petición explícita del usuario.
-
-## Flujo F. Estado completo de soporte
+## Flujo C. Estado completo de soporte
 
 Para una visión global (p. ej. antes de la daily):
 
-1. Lanza en paralelo `product-forge-pana-scanner` (escaneo, flujo A) y `product-forge-pana-jobs` + `product-forge-pana-logs` (flujo C), cada uno con su alcance por defecto salvo que el usuario indique otro.
+1. Ejecuta en paralelo los comandos `product-forge-temas-pendientes` (solo escaneo, flujo A) y `product-forge-pacman-kos` (solo monitorización, flujo B), cada uno con su alcance por defecto salvo que el usuario indique otro.
 2. Presenta dos secciones, en este orden:
-   - **Errores y KOs en Pacman Products**: informe del flujo C completo (los KOs son prioridad máxima).
+   - **Errores y KOs en Pacman Products**: informe del flujo B completo (los KOs son prioridad máxima).
    - **Temas pendientes en Teams y Jira**: informe mínimo del flujo A.
-3. Termina ofreciendo ampliar contexto, publicar el resumen de pendientes (flujo B), reejecutar KOs (flujo D) o analizar código (flujo E).
+3. Termina ofreciendo ampliar contexto, publicar el resumen de pendientes (flujo A), reejecutar KOs o analizar código (flujo B).
