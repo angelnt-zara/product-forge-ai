@@ -31,7 +31,7 @@ python3 -m teams channel replies  --team <GROUP_ID> --channel "<CHANNEL_ID>" --t
 - Si un canal devuelve el máximo de páginas, es una limitación: avísalo e itera más páginas.
 - Ignora mensajes de sistema, eventos de unión/salida de canal, eventos/grabaciones de reuniones y mensajes eliminados.
 - Las fechas vienen en UTC: conviértelas a `Europe/Madrid` al mostrarlas.
-- El hilo de la daily devuelve como máximo 50 respuestas (casi todas eventos de sistema): no sirve para análisis.
+- El hilo de la daily (mensaje raíz `1789993863727`) devuelve como máximo 50 respuestas, casi todas eventos de sistema: no sirve para analizar temas, pero sí para localizar mensajes ya publicados (p. ej. informes anteriores del agente). Filtra por texto y por fecha; si el máximo de 50 puede dejar fuera mensajes del rango pedido, indícalo como limitación.
 
 ## Miembros de la etiqueta `ProductForge`
 
