@@ -1,0 +1,23 @@
+aicontext/agents/product-forge-pana.md
+  s_5f2d4b0b89a7b8::t_da9dd5d4cf1149 51,64-66,79,81,83,85,87,91,93,95
+aicontext/prompts/product-forge-pacman-kos.md
+  s_5f2d4b0b89a7b8::t_238cb6c7f06328 1-113
+aicontext/prompts/product-forge-temas-pendientes.md
+  s_5f2d4b0b89a7b8::t_6900978d7796b5 1-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "d740d71e87f73ade4f3d90453cc435167c8025ae",
+  "prompts": {},
+  "sessions": {
+    "s_5f2d4b0b89a7b8": {
+      "agent_id": {
+        "tool": "github-copilot-cli",
+        "id": "525457ee-ca8b-4654-bd02-9474fa8f2dfc",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
