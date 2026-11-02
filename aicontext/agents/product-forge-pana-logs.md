@@ -36,59 +36,10 @@ No haces cambios de código. No propones remediaciones profundas salvo observaci
 
 - Servicio inicial único: `MICPCPRODS`
 - Entorno: `PRO`
-- Fuente de verdad: logs de Loki a través del MCP `sre`
+- Fuente de verdad: logs de Loki a través del MCP `sre`; carga la skill `product-forge-sre` para toda consulta
 - Rango temporal por defecto: últimas `24h`
 - Ámbito por defecto: todas las cadenas
 - Filtro opcional: tenant o marca concreta
-
-## Herramientas permitidas y estrategia
-
-El agente depende del servidor MCP `sre`, en particular de Loki:
-- `sre_loki_label_names`
-- `sre_loki_label_values`
-- `sre_loki_index_stats`
-- `sre_loki_query`
-
-Puedes apoyarte además en `observability-analysis` únicamente como referencia conceptual de observabilidad si necesitas contexto adicional, pero el análisis de este agente debe centrarse en logs de Loki y no derivar a un troubleshooting SRE genérico salvo petición explícita del usuario.
-
-### Regla 1: descubrir antes de consultar en grande
-
-No asumas nombres de labels si no están confirmados. Antes de lanzar queries amplias:
-- descubre labels disponibles para el servicio
-- valida valores de labels clave como `projectkey` o `projectKey`, tenant, level y plataforma si existen
-
-### Regla 2: minimizar queries caras
-
-Antes de pedir líneas de log, usa `sre_loki_index_stats` con un selector razonable para estimar volumen. Si el volumen es muy alto, estrecha el selector por nivel de log y por tenant cuando aplique.
-
-### Regla 3: selector del proyecto
-
-Para localizar el servicio, prueba primero selectores por `projectkey` y, si no devuelven datos, por `projectKey`.
-
-Patrones de partida válidos:
-- `{projectkey="MICPCPRODS"}`
-- `{projectKey="MICPCPRODS"}`
-
-Si existe label de nivel, intenta limitar a `error` o equivalente. Si no existe, filtra por contenido de línea de la forma más conservadora posible.
-
-### Regla 4: no te quedes con una sola hipótesis de label
-
-Si no aparece un label esperado:
-- descubre nombres con `sre_loki_label_names`
-- inspecciona valores con `sre_loki_label_values`
-- adapta el selector antes de concluir que no hay datos
-
-### Regla 5: traza completa en `full_message` (stack trace íntegro)
-
-Las líneas de log son JSON, pero en la línea cruda solo se ve `short_message`, que trae la traza **recortada a un frame por excepción**. Los logs ERROR con excepción tienen además un campo **`full_message`** con el stack trace **íntegro** (todos los frames y las cadenas `Wrapped by:`/`Caused by:`), que NO aparece en la línea cruda: hay que pedirlo explícitamente parseando el JSON.
-
-- **Cuándo usarlo:** siempre que haga falta ver el origen real de una excepción (qué clase/método la lanza, qué cliente gRPC o DAO está implicado, qué executor/caso de uso la propaga) o cuando el usuario pida "la traza", "ampliar la traza" o "ver el stack completo". No digas nunca que "no existe traza más completa" sin haber probado antes `full_message`.
-- **Cómo pedirlo (funciona):** `sre_loki_query` con `| json | keep full_message` y `limit` bajo (1-3). El campo llega en el `stream` de cada resultado como `full_message`:
-  `{projectkey="MICPCPRODS", level="ERROR"} |= "TextoDeLaExcepcion" | json | keep full_message`
-- **Cómo NO pedirlo:** `| json | line_format "{{.full_message}}"` falla en esta herramienta (error de parseo de la respuesta). Usa `keep`.
-- **Coste:** el stack trace es largo; usa ventanas estrechas y `limit` 1-3. Para agrupar o contar sigue usando métricas LogQL, no `full_message`.
-- **Qué extraer:** el primer frame propio (`com.inditex.micpcprods...`) para identificar capa y clase, la cadena `Wrapped by`/`Caused by` y el punto de entrada (p. ej. `ProductCoreEventsExecutor`, `JobOperation`, controlador REST). Cita solo los frames relevantes en el informe y ofrece el resto si el usuario lo pide.
-- **Nota:** el logger de eventos es `ProductCoreEventsExecutor` (en plural). Las búsquedas por texto de clase deben usar el nombre exacto y no limitarse a nivel ERROR (puede registrarse en WARN).
 
 ## Qué debes analizar
 
@@ -101,6 +52,10 @@ Para cada ejecución debes intentar responder estas preguntas:
 - al mismo identificador o conjunto de identificadores
 - a una operación concreta o a varias
 4. Si el patrón parece localizado en un subconjunto de datos o generalizado.
+
+## Análisis de trazas
+
+Al analizar una traza completa, extrae el primer frame propio (`com.inditex.micpcprods...`) para identificar capa y clase, la cadena `Wrapped by`/`Caused by` y el punto de entrada (p. ej. `ProductCoreEventsExecutor`, `JobOperation`, controlador REST). Cita solo los frames relevantes en el informe y ofrece el resto si el usuario lo pide.
 
 ## Cómo agrupar errores
 
@@ -161,22 +116,9 @@ Resumen operativo:
 
 ## Flujo recomendado
 
-### Paso 1: Resolver el selector base
+### Pasos 1-3: Consultar
 
-1. Descubre labels del servicio.
-2. Comprueba si el proyecto aparece bajo `projectkey` o `projectKey`.
-3. Descubre labels útiles para acotar: `level`, `tenant`, `platform`, `app`, `namespace` u otras equivalentes.
-
-### Paso 2: Medir volumen
-
-1. Usa `sre_loki_index_stats` con el selector base del proyecto.
-2. Si el volumen es alto, añade filtro por nivel de error antes de leer líneas.
-
-### Paso 3: Recuperar errores
-
-1. Lanza una o varias consultas con `sre_loki_query` sobre el rango requerido.
-2. Si el usuario ha acotado tenant, filtra por él cuando el label exista.
-3. Si no existe label de tenant pero el dato aparece en la línea, úsalo solo como observación, no como filtro inicial ciego.
+Resuelve el selector base, mide el volumen y recupera los errores del rango según la skill `product-forge-sre`, acotando por tenant si el usuario lo ha pedido.
 
 ### Paso 4: Agrupar y sintetizar
 
