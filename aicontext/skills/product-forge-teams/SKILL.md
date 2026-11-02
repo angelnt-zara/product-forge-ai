@@ -1,0 +1,72 @@
+---
+name: product-forge-teams
+description: Cómo leer y publicar mensajes en Teams para el squad Product Forge (Pacman Products) con el CLI `teams`. Incluye destinos de publicación del squad, resolución de miembros de la etiqueta ProductForge, comandos de lectura/publicación y particularidades de formato (Markdown/HTML). Úsala en cualquier flujo que lea canales de Teams o publique en la daily o en el chat privado.
+---
+
+# Product Forge: interacción con Teams
+
+Referencia técnica reutilizable para leer y publicar en Teams. No contiene criterios de negocio (qué hilos son relevantes, clasificación, contenido del resumen): eso es de cada flujo que la use.
+
+Si falla la autenticación (`az login`, token expirado), indícalo y remite a la skill `teams-setup`. Las skills base `teams-channels` y `teams-setup` aportan el CLI; esta skill añade el contexto del squad.
+
+## Reglas obligatorias de todo mensaje publicado
+
+Aplican SIEMPRE, en cualquier flujo que use esta skill y sea cual sea el destino:
+
+- **Aviso de IA:** TODO mensaje que se publique en Teams (respuesta en canal, hilo nuevo, chat privado o cualquier otro destino) empieza por la línea `🤖 Mensaje generado con IA`, para advertir al lector de que lo ha generado un agente. Va siempre **al principio**, antes de cualquier título o contenido, separada del resto por una línea en blanco (en HTML, como `<p>🤖 Mensaje generado con IA</p>`). Forma parte del texto exacto que se muestra al usuario y que este confirma; no la omitas ni la modifiques.
+- **Título en hilos nuevos:** si el mensaje **abre un hilo nuevo** (no es una respuesta), debe incluir siempre un título que resuma la petición o el problema en un **máximo de 10-15 palabras**. Si el CLI admite asunto (`subject`), úsalo; si no, es la primera línea en negrita tras el aviso de IA. Las respuestas a hilos existentes no necesitan título adicional.
+
+## Lectura
+
+CLI desde la raíz del runtime. Requiere `az login`:
+
+```bash
+export PYTHONPATH="$PWD/.opencode/skills/_shared/scripts"
+python3 -m teams channel messages --team <GROUP_ID> --channel "<CHANNEL_ID>" --since <ISO> --top 50 --pages 3 --json
+python3 -m teams channel replies  --team <GROUP_ID> --channel "<CHANNEL_ID>" --thread <MESSAGE_ID> --json
+```
+
+- Usa siempre `--json` para poder inspeccionar `mentions`, `from`, `replyToId`, `webUrl` y fechas. En `mentions`, el nombre de una etiqueta aparece en `mentionText`.
+- Los canales son independientes: consúltalos **en paralelo** (varias llamadas en el mismo bloque, o subagentes `general` si el volumen es grande).
+- Si un canal devuelve el máximo de páginas, es una limitación: avísalo e itera más páginas.
+- Ignora mensajes de sistema, eventos de unión/salida de canal, eventos/grabaciones de reuniones y mensajes eliminados.
+- Las fechas vienen en UTC: conviértelas a `Europe/Madrid` al mostrarlas.
+- El hilo de la daily devuelve como máximo 50 respuestas (casi todas eventos de sistema): no sirve para análisis.
+
+## Miembros de la etiqueta `ProductForge`
+
+Resuélvelos al inicio de la ejecución y cachéalos durante la sesión:
+
+1. Preferente: Graph `GET /teams/{teamId}/tags` → localizar `displayName == "ProductForge"` → `GET /teams/{teamId}/tags/{tagId}/members` (token con `az account get-access-token --resource-type ms-graph`). Prueba con el team `1301738f-...` y, si no aparece, con los demás.
+2. Alternativa: leer `team.adoc` del squad (`gh api repos/inditex/doc-pacman/contents/docs/src/modules/equipo/pages/team.adoc -H "Accept: application/vnd.github.raw"`) o `tech-support`/`squad-rotation`.
+3. **Excepción fija:** considera siempre miembro de `ProductForge` a **Elias Ferreiro Borreiros**, aunque no figure en la etiqueta ni en `team.adoc`.
+4. Si no puedes resolver la lista con certeza, dilo y pide los nombres al usuario; no la inventes.
+
+## Publicación
+
+Modifica estado y **no se puede editar ni borrar lo enviado**. Solo se publica con el **texto exacto**, el **destino** y la **confirmación explícita** del usuario (cada versión nueva requiere una confirmación nueva). Envía exactamente el texto confirmado.
+
+### Destinos
+
+- **Hilo de la daily** (destino por defecto): canal «SQUAD Product Forge 🛠️», mensaje raíz `1789993863727`. Se envía como respuesta (Markdown):
+
+  ```bash
+  python3 -m teams channel reply --team 1301738f-827e-48ec-8770-3f0922c1c295 --channel "19:c2d93e0c05834c5f885f7ebbb2a82da8@thread.tacv2" --thread 1789993863727 --message "<md>" --yes
+  ```
+
+  Ya no se publica en el chat de grupo «Product Forge 🛠️».
+- **Chat privado del usuario** (solo si lo pide expresamente): el chat de notas personales `48:notes`.
+
+  ```bash
+  python3 -m teams chat send --chat "48:notes" --message "<html>" --yes
+  ```
+
+  **No uses el 1:1 que `chat list` muestra como «Chat with <nombre del usuario>»**: puede ser el de otra persona (ya se envió por error a Vicente Vidal Aznar). Antes de enviar a cualquier chat 1:1, verifica el destinatario real leyendo `chat messages`, e indica el chat exacto en la confirmación.
+
+### Formato del mensaje
+
+- **Markdown (respuesta en canal):** el conversor une con espacios las líneas consecutivas que no sean viñetas. Escribe cada viñeta (`- `) precedida de una línea en blanco.
+- **Corchetes prohibidos en el texto del enlace:** `[` y `]` dentro de `[texto](url)` rompen el Markdown y el enlace sale como URL cruda. Reemplaza `[PACMAN-NNN] título` por `PACMAN-NNN: título`, elimina cualquier otro `[` o `]` (y `(` `)` sin balancear) y no uses títulos truncados con `…`.
+- **Espaciado entre bloques:** el conversor Markdown→HTML no deja espacio visible entre bloques (ni líneas en blanco ni párrafos con `&nbsp;`). Para el chat privado, envía **HTML directo** (si el mensaje contiene HTML se envía tal cual): títulos y cabeceras en `<p><b>…</b></p>`, viñetas en `<ul><li>…</li></ul>`, enlaces con `<a href="…">` (con `&amp;` en la URL) y un `<br>` extra antes de cada cabecera de bloque, incluida la que sigue al título.
+- **Una única fuente del texto** para que el borrador mostrado al usuario y lo enviado coincidan. El borrador se muestra como se vería en Teams (enlaces sobre el texto, sin URLs); si se pide el literal, con las URLs completas.
+- Valida el formato del mensaje (p. ej. con regex por línea) antes de enviar y no envíes si alguna línea falla.
