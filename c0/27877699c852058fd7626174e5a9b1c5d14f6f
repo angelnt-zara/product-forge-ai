@@ -1,0 +1,21 @@
+aicontext/agents/product-forge-pana-logs.md
+  s_5f2d4b0b89a7b8::t_d452a119cc989a 39,56-59,119,121
+aicontext/skills/product-forge-sre/SKILL.md
+  s_5f2d4b0b89a7b8::t_2b57789173e536 1-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "c027877699c852058fd7626174e5a9b1c5d14f6f",
+  "prompts": {},
+  "sessions": {
+    "s_5f2d4b0b89a7b8": {
+      "agent_id": {
+        "tool": "github-copilot-cli",
+        "id": "525457ee-ca8b-4654-bd02-9474fa8f2dfc",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
