@@ -104,7 +104,15 @@ Aplica los mismos factores sobre el ticket: Incidente = bug; Solicitud de servic
 
 ## Salida
 
-Para cada elemento (hilo o ticket), una entrada con:
+**Formato estricto y compacto (obligatorio, para ahorrar tokens y evitar respuestas cortadas):**
+
+1. **Primero y siempre** la tabla principal de clasificación, completa, con **una sola línea por elemento**: `id | tipo | criticidad | atendido | informativo | omitir | motivo`. El `motivo` tiene como máximo ~12 palabras y cita el factor o tope aplicado. No empieces con introducciones ni notas.
+2. Los elementos omitidos por el mismo motivo (p. ej. PR mergeada) se agrupan en **una sola línea** con la lista de ids, no una fila por elemento.
+3. Después, `resumenEstado` (hilos 🏃‍♂️‍➡️ y ✅) y `descripcion` (ITSMECOM) en una lista breve, una línea por elemento (máx. ~25 palabras).
+4. Al final, solo las **dudas relevantes** y **solicitudes de aclaración** (máx. 1-2 líneas cada una). Sin repetir información de la tabla ni notas sobre elementos no dudosos.
+5. Si prevés que la respuesta es larga, prioriza la tabla (punto 1) y deja lo accesorio para el final.
+
+Campos por elemento (salvo lo anterior) (hilo o ticket), una entrada con:
 
 - `id` (rootId o clave), `tipo` (hilo externo / hilo interno / ITSMECOM-incidente / ITSMECOM-consulta), `criticidad`, `atendido`, `informativo` (true/false), `omitir` (true/false) y `motivoOmitir`, y `motivo` (una línea justificando criticidad y estado, citando el factor o tope aplicado).
 - Para hilos 🏃‍♂️‍➡️ y ✅: `resumenEstado` (la solución en los resueltos, aunque la dieran otros equipos o el autor cerrase el hilo; lo pendiente en los de seguimiento), sin corchetes.

@@ -64,7 +64,11 @@ En **todos** los hilos recogidos (del squad o externos), extrae las PR enlazadas
 
 ## Salida
 
-JSON (o lista estructurada equivalente) con, por cada hilo:
+**Formato compacto (obligatorio):** devuelve **JSON compacto** (sin prosa introductoria ni explicaciones), con textos literales recortados a lo imprescindible. Para evitar repetir datos, indica una sola vez por canal el patrón de `webUrl` y en cada hilo solo el `rootId`, salvo que el patrón varíe.
+
+**Hilos del squad sin respuestas cuyas PR enlazadas estén todas cerradas/mergeadas:** devuélvelos en una **entrada mínima** (`rootId`, `fechaCreacion`, `autor`, `titulo`, PR con `state` y `mergedAt`/`closedAt`, `sinRespuestas: true`), sin `cuerpoResumen` ni resto de campos. No decides si se omiten: el `classifier` conserva la decisión y el recuento. Los hilos con PR abierta o con respuestas llevan la entrada completa.
+
+Por cada hilo (entrada completa):
 
 - `canal`, `rootId`, `webUrl` completo, `fechaCreacion` (Europe/Madrid), `titulo` (subject o primera línea), `autor`, `autorEsMiembroSquad` (true/false según la lista).
 - `cuerpoResumen`: qué pide el post raíz, fiel al texto y **sin interpretar la criticidad**; indica si contiene una pregunta o petición explícita.

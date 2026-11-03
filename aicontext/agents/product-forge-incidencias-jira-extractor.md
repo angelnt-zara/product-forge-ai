@@ -38,7 +38,9 @@ project = ITSMECOM AND issuetype in (Incidente, "Solicitud de servicio") AND sta
 
 ## Salida
 
-JSON (o lista estructurada) con, por ticket:
+**Formato compacto (obligatorio):** JSON compacto, sin prosa introductoria. Indica la URL como patrón único `https://jira.inditex.com/jira/browse/<CLAVE>` y no la repitas por ticket. Comentarios: contenido literal recortado a lo esencial; en los comentarios antiguos que no sean los últimos ni destacados basta una línea (autor, fecha, idea).
+
+Por ticket:
 
 - `clave`, URL `https://jira.inditex.com/jira/browse/<CLAVE>`, `titulo` (summary), `tipo` (Incidente / Solicitud de servicio), `estado`, `asignado` (o «sin asignar»), `prioridad` de Jira, `creado` (Europe/Madrid), `entorno` si se indica en el ticket (PRO, PRE, STAGE...).
 - `descripcionResumen`: del problema, fiel al ticket, sin inventar afectación.
