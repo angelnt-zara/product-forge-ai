@@ -1,6 +1,6 @@
 ---
 name: product-forge-pacman-kos
-description: Flujo de estado de Pacman Products (MICPCPRODS): KOs y reintentos de jobs/eventos, errores en logs y, bajo petición, reejecución/descarte y cambios de código. SOLO se ejecuta si el usuario la invoca explícitamente (pide revisar KOs/errores o nombra esta skill); no cargarla por iniciativa propia ni como parte de otro flujo.
+description: Flujo de estado de Pacman Products (MICPCPRODS).
 ---
 
 # Product Forge: estado de Pacman Products (KOs y errores)

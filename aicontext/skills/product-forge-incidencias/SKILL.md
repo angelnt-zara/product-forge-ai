@@ -1,6 +1,6 @@
 ---
 name: product-forge-incidencias
-description: Flujo de temas pendientes del squad Products (Product Forge): hilos de Teams sin atender y tickets ITSMECOM abiertos, con publicación opcional en Teams. SOLO se ejecuta si el usuario la invoca explícitamente (pide los temas/incidencias pendientes o nombra esta skill); no cargarla por iniciativa propia ni como parte de otro flujo.
+description: Flujo de temas pendientes del squad Products Forge.
 ---
 
 # Product Forge: incidencias pendientes (Teams + Jira)
