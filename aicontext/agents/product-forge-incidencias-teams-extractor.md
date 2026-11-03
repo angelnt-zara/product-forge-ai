@@ -78,7 +78,7 @@ Añade un bloque de **cobertura y limitaciones** por canal: nº de mensajes leí
 
 ## Informes previos en la daily
 
-Si el principal te lo pide, localiza en el hilo de la daily y en el chat de grupo por defecto (identificadores y comandos en la skill `product-forge-teams`) los mensajes de los **últimos 7 días** cuyo título sea `Temas pendientes entre …`. Devuelve, para cada uno: id, fecha y la lista de hilos/tickets que contiene, indicando para cada uno su `webUrl`/clave y si figura como resuelto (✅). Si no puedes leerlos, indícalo como limitación.
+Si el principal te lo pide, localiza en el hilo de la daily (mensaje raíz `1789993863727`) y en el chat de grupo por defecto (`19:c464808cd0a54e2ba8ee742d995f2341@thread.v2`, `chat messages`) los mensajes de los **últimos 7 días** cuyo título sea `Temas pendientes entre …`. Devuelve, para cada uno: id, fecha y la lista de hilos/tickets que contiene, indicando para cada uno su `webUrl`/clave y si figura como resuelto (✅). Si no puedes leerlos, indícalo como limitación (el hilo de la daily devuelve como máximo 50 respuestas).
 
 ## Reglas
 
