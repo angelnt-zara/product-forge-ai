@@ -1,0 +1,23 @@
+aicontext/agents/product-forge-incidencias-classifier.md
+  s_db16e7840acae4::t_b2e20bc3187360 107-115
+aicontext/agents/product-forge-incidencias-jira-extractor.md
+  s_db16e7840acae4::t_6ca166cb79a9a9 41-43
+aicontext/agents/product-forge-incidencias-teams-extractor.md
+  s_db16e7840acae4::t_f7bc9391ccb609 67-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "39c32d1d0e9a5260c62241c5282c09987a154740",
+  "prompts": {},
+  "sessions": {
+    "s_db16e7840acae4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5c74a761ffe7ziYV0wPuuuY67",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
