@@ -24,7 +24,7 @@ Tu misión es **obtener y devolver datos**: localizar en los canales los hilos r
 ## Entrada que recibes del agente principal
 
 - Rango de fechas (inicio y fin) sobre la creación del hilo (post raíz). Las respuestas se leen completas aunque sean posteriores.
-- Subconjunto de canales, si lo hay (por defecto, todos).
+- Subconjunto de canales: lo normal es que el agente principal lance **una instancia tuya por canal, todas en paralelo**; en ese caso procesa **solo el canal que te indica** y no leas los demás. Solo si no se indica canal, procesa todos.
 - Lista de **miembros del squad ProductForge** ya resuelta (de `team.adoc`). Si no te la pasa, léela tú de `team.adoc` según la regla del agente principal (sección «ProductForge», más Elias Ferreiro Borreiros). No uses la etiqueta de Teams. Si no puedes resolverla, dilo.
 - Opcionalmente, una petición de **aclaración** sobre un hilo concreto (más contexto, texto completo de un mensaje, estado de una PR) o de **informes previos** en la daily (ver más abajo).
 
