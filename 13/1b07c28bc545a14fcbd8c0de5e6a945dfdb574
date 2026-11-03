@@ -1,0 +1,19 @@
+aicontext/agents/product-forge-pana-jobs.md
+  s_f5d96d8ad8fb54::t_bd54326f29fed7 25-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "131b07c28bc545a14fcbd8c0de5e6a945dfdb574",
+  "prompts": {},
+  "sessions": {
+    "s_f5d96d8ad8fb54": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5d87a1e4ffeecKZOFVXqIcbsu",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
