@@ -1,0 +1,37 @@
+aicontext/agents/product-forge-incidencias-jira-extractor.md
+  s_1f032d1662e34a::t_a887e3962d289d 25,36
+aicontext/agents/product-forge-incidencias-teams-extractor.md
+  s_1f032d1662e34a::t_af7f8967e4e212 33,63
+aicontext/agents/product-forge-kos-jobs.md
+  s_1f032d1662e34a::t_1950375d1c5288 65,159,169
+aicontext/agents/product-forge-kos-logs.md
+  s_1f032d1662e34a::t_2613e025ab171b 38,105,119,133
+aicontext/agents/product-forge-pana.md
+  s_1f032d1662e34a::t_941a8d6aba60b4 47,52,58-59
+aicontext/skills/product-forge-incidencias/SKILL.md
+  s_1f032d1662e34a::t_745ffdf4072ee0 1-5,8-10,32,48,66,68
+aicontext/skills/product-forge-jira/SKILL.md
+  s_1f032d1662e34a::t_9932ad7b2cf5e3 8,15,34,38,42
+aicontext/skills/product-forge-pacman-kos/SKILL.md
+  s_1f032d1662e34a::t_df8037cd6b25ba 1-5,8-10,30,61,121,124,136,143
+aicontext/skills/product-forge-pacman-kos/catalog.md
+  s_1f032d1662e34a::t_ab5b1ce4f05408 3
+aicontext/skills/product-forge-teams/SKILL.md
+  s_1f032d1662e34a::t_764656c04e0736 10,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "9d520c70112f7fa4df1c4d454ba67dba6cfb3ed1",
+  "prompts": {},
+  "sessions": {
+    "s_1f032d1662e34a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5c7f799effeRKf9kTAP6BJ9iM",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
