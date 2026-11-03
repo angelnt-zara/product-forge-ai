@@ -7,7 +7,7 @@ description: Cómo leer y publicar mensajes en Teams para el squad Product Forge
 
 Referencia técnica reutilizable para leer y publicar en Teams. No contiene criterios de negocio (qué hilos son relevantes, clasificación, contenido del resumen): eso es de cada flujo que la use.
 
-Si falla la autenticación (`az login`, token expirado), indícalo y remite a la skill `teams-setup`. Las skills base `teams-channels` y `teams-setup` aportan el CLI; esta skill añade el contexto del squad.
+Si falla la autenticación de Teams/Graph (`az login`, token expirado, permisos), indícalo y remite a la skill `teams-setup`; es válido para cualquier agente o subagente que use esta skill. Las skills base `teams-channels` y `teams-setup` aportan el CLI; esta skill añade el contexto del squad.
 
 ## Reglas obligatorias de todo mensaje publicado
 

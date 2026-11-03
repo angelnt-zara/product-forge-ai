@@ -85,4 +85,3 @@ Con los informes `Temas pendientes entre …` de los últimos 7 días que devuel
 - Horas siempre en `Europe/Madrid`, nunca en UTC.
 - No inventes hilos, tickets, autores ni fechas: todo sale de lo que devuelvan los subagentes. Muestra sus limitaciones.
 - Los subagentes son de solo lectura; la publicación la haces tú, solo con confirmación explícita.
-- Si falla la autenticación de Teams/Graph, remite a la skill `teams-setup`.

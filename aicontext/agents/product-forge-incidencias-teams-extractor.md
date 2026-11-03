@@ -31,7 +31,7 @@ Tu misión es **obtener y devolver datos**: localizar en los canales los hilos r
 
 ## Herramientas
 
-Carga la skill `product-forge-teams` (lectura y particularidades del CLI); añade `teams-setup` si falla la autenticación. Consulta los canales **en paralelo**. Sigue sus reglas: no uses `--since` (filtra por fecha en local), lee páginas suficientes para cubrir el rango y avisa si un canal no queda cubierto.
+Carga la skill `product-forge-teams` (lectura y particularidades del CLI). Consulta los canales **en paralelo**. Sigue sus reglas: no uses `--since` (filtra por fecha en local), lee páginas suficientes para cubrir el rango y avisa si un canal no queda cubierto.
 
 ## Canales a revisar
 
@@ -85,4 +85,3 @@ Si el principal te lo pide, localiza en el hilo de la daily (mensaje raíz `1789
 
 - No inventes hilos, autores ni fechas.
 - No analices jobs, logs ni código ni consultes Jira: eso es de otros subagentes.
-- Si falla la autenticación de Teams, indícalo y remite a `teams-setup`.

@@ -98,7 +98,7 @@ No propongas fixes de código salvo que el usuario los pida. Como siguientes pas
 - **Notificación (solo si el usuario acepta):** se envía como **hilo nuevo** en el canal «Incidencias 🐞» de Pacman en Teams (`groupId` `1301738f-827e-48ec-8770-3f0922c1c295`, `channelId` `19:d311bbd5ba844456a3f88ca0f8fcc1ec@thread.tacv2`, `tenantId` `c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75`; enlace: https://teams.microsoft.com/l/channel/19%3Ad311bbd5ba844456a3f88ca0f8fcc1ec%40thread.tacv2/Incidencias%20%F0%9F%90%9E?groupId=1301738f-827e-48ec-8770-3f0922c1c295&tenantId=c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75). Puede ser un único hilo con todos los squads o uno por squad, según prefiera el usuario.
   1. Redacta el borrador (qué squad, excepción, tenants, nº, IDs y hora en España) y muéstralo con el destino.
   2. Pide confirmación explícita con `question` (publicar, editar o cancelar). Cada versión nueva requiere una confirmación nueva.
-  3. Publica con el CLI de Teams (skills `product-forge-teams` / `teams-channels`). Si falla la autenticación, remite a la skill `teams-setup`.
+  3. Publica con el CLI de Teams (skills `product-forge-teams` / `teams-channels`).
   4. Nunca publiques sin confirmación; no la sustituye la petición inicial de «sacar el informe».
 
 ---
