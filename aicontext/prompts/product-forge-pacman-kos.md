@@ -91,10 +91,19 @@ No propongas fixes de código salvo que el usuario los pida. Como siguientes pas
 - **Obligatorio cuando haya alguno.** Avisa al usuario en una sección propia y **sugiérele notificarlo**. Se determina con el campo **Escalar** del catálogo `product-forge-pacman-kos-catalog` (sin el campo, la responsabilidad es del Squad Products y no entra aquí).
 - Agrupa por squad. Por grupo: excepción, tenants, nº, tipo de job/evento, IDs (o ejemplos si son muchos), attempt, rango de `processAtTime` y causa resumida.
 - Si no hay ninguno, no incluyas el bloque.
-- **Notificación (solo si el usuario acepta):** se envía como **hilo nuevo** en el canal «Incidencias 🐞» de Pacman en Teams (`groupId` `1301738f-827e-48ec-8770-3f0922c1c295`, `channelId` `19:d311bbd5ba844456a3f88ca0f8fcc1ec@thread.tacv2`, `tenantId` `c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75`; enlace: https://teams.microsoft.com/l/channel/19%3Ad311bbd5ba844456a3f88ca0f8fcc1ec%40thread.tacv2/Incidencias%20%F0%9F%90%9E?groupId=1301738f-827e-48ec-8770-3f0922c1c295&tenantId=c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75). Puede ser un único hilo con todos los squads o uno por squad, según prefiera el usuario.
-  1. Redacta el borrador (qué squad, excepción, tenants, nº, IDs y hora en España) y muéstralo con el destino.
+- **Canal de escalado:** el escalado se publica como **hilo nuevo** (con título, según las reglas de `product-forge-teams`). **Sugiere** el canal según el tipo de problema, explica brevemente por qué y deja que el usuario elija:
+
+  | Tipo de problema | Canal | `groupId` / `channelId` | Enlace |
+  |------------------|-------|-------------------------|--------|
+  | Problemas internos en Pacman (por defecto: KOs achacables a otros squads de Pacman) | «Incidencias 🐞» | `1301738f-827e-48ec-8770-3f0922c1c295` / `19:d311bbd5ba844456a3f88ca0f8fcc1ec@thread.tacv2` | https://teams.microsoft.com/l/channel/19%3Ad311bbd5ba844456a3f88ca0f8fcc1ec%40thread.tacv2/Incidencias%20%F0%9F%90%9E?groupId=1301738f-827e-48ec-8770-3f0922c1c295&tenantId=c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75 |
+  | Problemas con Product Core | «SQUAD Product Lifecycle» | `2dc145f7-b281-4896-bdec-c65d2e465b6d` / `19:52e629a2da9145a8a1660bf944310236@thread.skype` | https://teams.microsoft.com/l/channel/19%3A52e629a2da9145a8a1660bf944310236%40thread.skype/SQUAD%20Product%20Lifecycle?groupId=2dc145f7-b281-4896-bdec-c65d2e465b6d&tenantId=c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75 |
+  | Problemas críticos | «B - Gestión incidencias Tecnología» | `fc58da2f-67b0-49ab-a3df-d2b84d676f26` / `19:38382f0598414c04b7a4354ea823f795@thread.tacv2` | https://teams.microsoft.com/l/channel/19%3A38382f0598414c04b7a4354ea823f795%40thread.tacv2/B%20-%20Gesti%C3%B3n%20incidencias%20Tecnolog%C3%ADa?groupId=fc58da2f-67b0-49ab-a3df-d2b84d676f26&tenantId=c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75 |
+
+  `tenantId` de todos: `c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75`.
+- **Notificación (solo si el usuario acepta):** puede ser un único hilo con todos los squads o uno por squad, según prefiera el usuario. **Pide siempre confirmación** del canal y del texto exacto.
+  1. Redacta el borrador (qué squad, excepción, tenants, nº, IDs y hora en España) y muéstralo con el canal sugerido.
   2. Pide confirmación explícita con `question` (publicar, editar o cancelar). Cada versión nueva requiere una confirmación nueva.
-  3. Publica con el CLI de Teams (skills `product-forge-teams` / `teams-channels`).
+  3. Publica el hilo nuevo con el CLI de Teams (skill `teams-channels`).
   4. Nunca publiques sin confirmación; no la sustituye la petición inicial de «sacar el informe».
 
 ---
