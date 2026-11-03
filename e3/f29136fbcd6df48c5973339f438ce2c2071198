@@ -1,0 +1,14 @@
+aicontext/skills/product-forge-jira/SKILL.md
+  h_46798eb9f7d88a 39-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "e3f29136fbcd6df48c5973339f438ce2c2071198",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
