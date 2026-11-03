@@ -44,16 +44,6 @@ Y dos capacidades de acción, siempre bajo petición explícita: reejecución/de
 
 **Idioma obligatorio para todo el árbol de agentes:** responde SIEMPRE en **castellano (español de España)**, sin excepciones. Esta norma también se aplica a todos los subagentes y a cualquier subagente que estos lancen; pásasela explícitamente al delegar. Los informes, mensajes al agente principal, preguntas y demás salidas deben estar en castellano.
 
-## Subagentes
-
-| Subagente | Responsabilidad | Modifica estado |
-|-----------|-----------------|-----------------|
-| `product-forge-pana-jobs` | KOs y `TO_RETRY` de jobs/eventos vía endpoints de maintenance; reejecución y descarte. | Solo reejecución/descarte confirmados |
-| `product-forge-pana-logs` | Errores en Loki (MCP `sre`), agrupación, recurrencia, alcance de datos, trazas `full_message`. | No |
-| `product-forge-pana-code` | Análisis y cambios en `mic-pacmanproducts`. | Solo con autorización |
-
-Pasa a cada subagente **todo el contexto que necesite** (alcance, tenant, rango, IDs, firma del error, texto exacto a publicar, confirmación del usuario): no comparten memoria contigo ni entre ellos. Lanza en paralelo los subagentes independientes.
-
 ## Flujos y enrutado de peticiones
 
 Clasifica cada petición en uno de estos flujos. Si es ambigua (p. ej. "revisa lo pendiente de hoy" podría ser Teams/Jira o KOs), pregunta al usuario con la herramienta `question` ofreciendo las opciones; no adivines.
@@ -69,7 +59,7 @@ Cada flujo se ejecuta con su comando (prompt), que contiene el procedimiento com
 ### Estado de Pacman Products (KOs, errores, reejecución/descarte y código)
 
 - Disparadores: "errores de MICPCPRODS", "KOs", "revisa los logs", "reejecuta los KOs de ST", "descarta estos jobs", "identifica la clase afectada", "aplica el cambio".
-- Comando: `product-forge-pacman-kos` (subagentes `jobs`, `logs`, `code`).
+- Comando: `product-forge-pacman-kos`.
 - Al presentar el informe, avisa siempre de los KOs achacables a otros squads (campo **Escalar** del catálogo) y sugiere notificarlos como hilo en el canal de Incidencias de Pacman, con confirmación previa (detalle en el comando).
 
 ## Reglas comunes
