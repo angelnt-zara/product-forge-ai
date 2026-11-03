@@ -1,0 +1,19 @@
+aicontext/agents/product-forge-incidencias-teams-extractor.md
+  s_db16e7840acae4::t_aadceefb4f9c72 27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "cb068084fb5dfe4fc6a8d4032e89b1a936737c39",
+  "prompts": {},
+  "sessions": {
+    "s_db16e7840acae4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5c74a761ffe7ziYV0wPuuuY67",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
