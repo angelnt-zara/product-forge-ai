@@ -28,15 +28,11 @@ Comandos, identificadores y cautelas de publicación están en la skill `product
 
 1. **Alcance**: resuelve los parámetros anteriores y la **lista de miembros de ProductForge** (de `team.adoc`, según tus reglas comunes).
 2. **Obtención en paralelo** (subagentes de solo lectura): lanza a la vez `product-forge-incidencias-teams-extractor` (hilos de Teams relevantes y sus respuestas, datos objetivos) y `product-forge-incidencias-jira-extractor` (ITSMECOM abiertos con todos sus comentarios, datos objetivos). Si ya hay datos recientes de esta sesión con el mismo alcance, reutilízalos. Si vas a publicar, pide también a `teams-extractor` los **informes previos** de los últimos 7 días (ver paso 7).
-3. **Clasificación**: el `product-forge-incidencias-classifier` asigna criticidad, estado de atención, informativos y omisiones. Pásale los datos de ambos, la lista de miembros y si se incluyen PR cerradas. Si devuelve **solicitudes de aclaración**, trasládalas al subagente correspondiente (`teams-extractor` o `jira-extractor`, reutilizando su sesión) y devuelve la respuesta al clasificador. Itera hasta que no queden dudas relevantes.
-4. **Cotejo (obligatorio, tuyo):** antes de presentar o redactar nada, revisa la clasificación elemento a elemento y corrige o devuelve al clasificador lo que incumpla estas reglas:
-   - Consultas ITSMECOM (Solicitud de servicio): solo 🟡 o ⚪.
-   - PRE y entornos previos: solo 🟡 o ⚪, también en incidentes.
-   - Incidentes: como mínimo 🟠 (salvo el tope de PRE).
-   - Nada ya corregido/resuelto en Jira marcado 🔴 sin justificarlo.
+3. **Clasificación**: el `product-forge-incidencias-classifier` asigna criticidad, estado de atención, informativos y omisiones. Pásale los datos **íntegros** de ambos extractores, tal y como los devuelven (sin resumir, recortar ni reformular, e incluyendo los hilos con PR mergeada u otros que creas omitibles), la lista de miembros y si se incluyen PR cerradas: la decisión de criticidad, estado y omisión es suya y necesita toda la información. Si devuelve **solicitudes de aclaración**, trasládalas al subagente correspondiente (`teams-extractor` o `jira-extractor`, reutilizando su sesión) y devuelve la respuesta al clasificador. Itera hasta que no queden dudas relevantes.
+4. **Cotejo (obligatorio, tuyo):** antes de presentar o redactar nada, revisa la clasificación del `classifier` elemento a elemento (los criterios de criticidad, topes y estado son suyos; no los reescribas aquí) y devuélvele lo que parezca incoherente con sus reglas o con los datos. Comprueba además:
    - Coherencia con clasificaciones previas de la sesión para el mismo hilo o ticket.
    - Las limitaciones y la cobertura de los subagentes de lectura (rango cubierto, canales inaccesibles, miembros no verificados) se muestran al usuario.
-   Las decisiones relevantes o dudosas son tuyas: si no puedes decidir, pregunta al usuario con `question`.
+   Las decisiones relevantes o dudosas sobre la criticidad las toma el `classifier`; si queda una duda que no puede resolver, pregunta al usuario con `question`.
 5. **Presentación (informe mínimo)**: compón el informe según «Formato del informe» y muéstralo. Ampliar contexto solo si el usuario lo pide (vuelve a delegar el hilo/ticket concreto).
 6. **Si no se publica**: termina ofreciendo ampliar contexto o publicar el resumen, sin más texto.
 7. **Si se publica** (acción que modifica estado):

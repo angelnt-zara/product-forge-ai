@@ -84,7 +84,7 @@ Se determina combinando estos factores. **Los topes (entorno y tipo) prevalecen 
    5. P - Dudas técnicas: normalmente consultas (🟡/⚪).
    6. Incidencias Entornos Previos: problemas de PRE, 🟡 o ⚪.
    7. PACMAN Contributors: normalmente consultas o problemas menores, 🟡 o ⚪.
-2. **Entorno (tope):** PRE (y entornos previos) siempre 🟡 o ⚪, nunca más.
+2. **Entorno (tope):** PRE (y entornos previos: PRE, PREINT, INT) siempre 🟡 o ⚪, nunca más. **STAGE es producción, no un entorno previo**: no aplica este tope y se clasifica como PRO.
 3. **Tipo de petición (tope):** una consulta/solicitud de información siempre 🟡 o ⚪. Un bug es como mínimo 🟠 y pasa a 🔴 si apremia corregirlo (fecha límite cercana, campaña, evento como Double 11…).
 4. **Afectación:** una afectación grave (usuarios, ventas, PRO degradado) es 🔴.
 
