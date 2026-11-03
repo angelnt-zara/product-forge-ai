@@ -23,6 +23,13 @@ Un error de impacto bajo que **deja jobs o eventos en KO** no se reduce a una l�
 ### Jobs/eventos en `TO_RETRY`
 - Un job/evento en `TO_RETRY` **no es un error no conocido**, aunque su error no figure en el catálogo: se reintenta solo. Solo se informa de ellos en el bloque "Alta carga de reintentos" si hay acumulación: **más de 3-4 attempts** o **más de 20 jobs/eventos** (por tenant, flujo o error).
 
+### Campo «Escalar»
+- Una entrada puede incluir el campo **Escalar**, que indica el equipo al que hay que reportar ese error cuando no es responsabilidad de Products.
+- **Si la entrada no lo indica, se entiende que la responsabilidad es del Squad Products** (no hay a quién escalar fuera del squad).
+- En el informe, cuando un error conocido tenga un equipo en **Escalar**, indícalo junto al error (equipo, volumen y tenants) y sugiere reportárselo al equipo correspondiente. Esto aplica aunque el impacto sea bajo.
+- **Aviso obligatorio al sacar el informe:** si hay KOs achacables a otros squads, avisa al usuario en una sección propia («KOs achacables a otros squads», por equipo, con excepción, tenants, nº, tipo de job/evento e IDs) y sugiérele notificarlo.
+- **Cómo se notifica:** como **hilo nuevo** en el canal «Incidencias 🐞» de Pacman en Teams (groupId `1301738f-827e-48ec-8770-3f0922c1c295`, channelId `19:d311bbd5ba844456a3f88ca0f8fcc1ec@thread.tacv2`, tenantId `c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75`; enlace: https://teams.microsoft.com/l/channel/19%3Ad311bbd5ba844456a3f88ca0f8fcc1ec%40thread.tacv2/Incidencias%20%F0%9F%90%9E?groupId=1301738f-827e-48ec-8770-3f0922c1c295&tenantId=c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75). Redacta un borrador, muéstralo y publícalo solo tras confirmación explícita del usuario (cada versión nueva requiere confirmación nueva).
+
 ### Reglas de tratamiento
 - Los errores conocidos no cuentan como grupos de error. Los de impacto bajo tampoco son hallazgos destacados (salvo la regla anterior).
 - Al consultar logs, no excluyas los conocidos con filtros LogQL: consúltalos y agrúpalos igual que el resto, y clasifícalos como conocidos después.
@@ -82,6 +89,16 @@ Un error de impacto bajo que **deja jobs o eventos en KO** no se reduce a una l�
 - **Reejecutar:** no sirve.
 - **Descartar:** sí, si se cumplen las dos condiciones anteriores (tenant `zh` y productId `475405155` o `475345385`); en cualquier otro caso no.
 - **Acotación estricta:** la misma excepción en otro tenant o con cualquier otro productId es error **no conocido**.
+- **Escalar:** Squad de Imagen. `XMediaConcurrentException` es un error al **escribir en XMedia/Assets**, no un problema de Products. Aplica también a los casos que, por la acotación anterior, se tratan como no conocidos.
+
+### `XMediaConnectionException` (error de conexión con XMedia)
+- **Impacto:** medio
+- **Se reconoce por:** `XMediaConnectionException: Connection exception in XMedia for <id>`, en jobs `ASSETS_CHANGED`, `OPTIMIZED_ASSET_UPDATED` y `OUTFIT_EXPORTED`, normalmente en el intento máximo (50) y marcados como KO. Observado en oy (dataset 203644292, del 27/10 al 29/10/2026).
+- **Causa:** fallo de conexión con XMedia al escribir assets, no un problema de Products.
+- **Escalar:** Squad de Imagen.
+- **Reejecutar:** solo si XMedia está operativo; si persiste el error de conexión, volverán a fallar.
+- **Descartar:** no, salvo indicación explícita del usuario.
+- **Acotación:** si coincide con una incidencia general de autenticación (401 de Heimdal en el cuerpo), sigue la entrada «Degradación de Heimdal».
 
 ### Degradación APICE
 - **Impacto:** medio
@@ -120,7 +137,8 @@ Un error de impacto bajo que **deja jobs o eventos en KO** no se reduce a una l�
 ### Timeouts con otros servicios de terceros
 - **Impacto:** bajo
 - **Se reconoce por:** timeouts de conexión o lectura contra servicios de terceros. Casos conocidos:
-  - **DataGravity:** `Timeout fetching from /v1/datasets/<dataset>/search` (p. ej. dataset `mocaco-novelties-by-mocaco-za`), en `SyncBilledProductColor` y `MaintenanceNewInRestController`.
+  - **DataGravity:** `Timeout fetching from /v1/datasets/<dataset>/search` (p. ej. dataset `mocaco-novelties-by-mocaco-za`), en `SyncBilledProductColor` y `MaintenanceNewInRestController`. En jobs aparece como `DataGravityTimeoutException` en `FACTU_RETRY` (normalmente KO con attempt 8).
+    - **Escalar:** Squad de Tags. `DataGravityTimeoutException` es un error al **cargar las facturaciones**, no un problema de Products.
   - **Amanda:** `SocketTimeoutException: Read timed out` contra `amanda.inditex.com`, p. ej. en `AmandaAssetsDao.fetchContent`.
   - (Heimdal tiene su propia entrada.) Esta lista irá creciendo si se identifican más servicios de terceros.
 - **Causa:** timeouts esporádicos de dependencias externas.

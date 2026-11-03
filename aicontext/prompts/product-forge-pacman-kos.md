@@ -67,6 +67,7 @@ Empieza con un **Alcance** breve (servicio, entorno, tenant o todos, rango tempo
 - Agrupa por error/flujo. Por grupo: tenant, tipo (job/evento) y tipo de job/evento, nº, IDs (o ejemplos si son muchos), error resumido, attempt, rango de `processAtTime`, producto/referencia afectada y clasificación (no conocido, o conocido con su impacto). Indica si se reintentan solos o requieren acción, y si la reejecución tiene sentido o la causa es persistente.
 - Los jobs/eventos en `TO_RETRY` NO van aquí (van, si procede, en el bloque 4).
 - Si no hay ninguno, indícalo expresamente ("Sin KOs en jobs/eventos").
+- **Escalado a otros squads:** cada grupo se marca con el equipo de su campo **Escalar** en el catálogo (si no lo tiene, Squad Products). Los KOs achacables a otros squads se reúnen además en el bloque 7.
 
 #### 2. Errores no conocidos
 - Solo **mensajes de error de logs** no catalogados. Los KOs de jobs/eventos ya se han listado en el bloque 1: no los repitas, remite a él indicando la relación si la hay. Los `TO_RETRY` no cuentan aquí.
@@ -89,6 +90,16 @@ Empieza con un **Alcance** breve (servicio, entorno, tenant o todos, rango tempo
 - Si un error de impacto bajo deja jobs/eventos en KO, el detalle ya está en el bloque 1: aquí solo márcalo con ⚠️ y remite a él.
 
 No propongas fixes de código salvo que el usuario los pida. Como siguientes pasos, puedes **ofrecer** reejecutar/descartar (sección 2) o analizar el código (sección 3).
+
+#### 7. KOs achacables a otros squads
+- **Obligatorio cuando haya alguno.** Avisa al usuario en una sección propia y **sugiérele notificarlo**. Se determina con el campo **Escalar** del catálogo `pacman-product-known-issues` (sin el campo, la responsabilidad es del Squad Products y no entra aquí).
+- Agrupa por squad. Por grupo: excepción, tenants, nº, tipo de job/evento, IDs (o ejemplos si son muchos), attempt, rango de `processAtTime` y causa resumida.
+- Si no hay ninguno, no incluyas el bloque.
+- **Notificación (solo si el usuario acepta):** se envía como **hilo nuevo** en el canal «Incidencias 🐞» de Pacman en Teams (`groupId` `1301738f-827e-48ec-8770-3f0922c1c295`, `channelId` `19:d311bbd5ba844456a3f88ca0f8fcc1ec@thread.tacv2`, `tenantId` `c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75`; enlace: https://teams.microsoft.com/l/channel/19%3Ad311bbd5ba844456a3f88ca0f8fcc1ec%40thread.tacv2/Incidencias%20%F0%9F%90%9E?groupId=1301738f-827e-48ec-8770-3f0922c1c295&tenantId=c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75). Puede ser un único hilo con todos los squads o uno por squad, según prefiera el usuario.
+  1. Redacta el borrador (qué squad, excepción, tenants, nº, IDs y hora en España) y muéstralo con el destino.
+  2. Pide confirmación explícita con `question` (publicar, editar o cancelar). Cada versión nueva requiere una confirmación nueva.
+  3. Publica con el CLI de Teams (skills `product-forge-teams` / `teams-channels`). Si falla la autenticación, remite a la skill `teams-setup`.
+  4. Nunca publiques sin confirmación; no la sustituye la petición inicial de «sacar el informe».
 
 ---
 

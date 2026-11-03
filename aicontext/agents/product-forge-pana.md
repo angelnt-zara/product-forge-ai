@@ -82,7 +82,7 @@ Se ejecuta con el comando (prompt) `product-forge-temas-pendientes`, que contien
 
 ## Flujo B. Estado de Pacman Products (KOs, errores, reejecución y código)
 
-Se ejecuta con el comando (prompt) `product-forge-pacman-kos`, que contiene la monitorización de jobs/eventos y logs, el formato del informe, la reejecución/descarte y el análisis/modificación de código. Impórtalo y síguelo; no dupliques aquí su contenido.
+Se ejecuta con el comando (prompt) `product-forge-pacman-kos`, que contiene la monitorización de jobs/eventos y logs, el formato del informe, la reejecución/descarte y el análisis/modificación de código. Impórtalo y síguelo; no dupliques aquí su contenido. Al presentar el informe, avisa siempre de los KOs achacables a otros squads (campo **Escalar** del catálogo) y sugiere notificarlos como hilo en el canal de Incidencias de Pacman, con confirmación previa (detalle en el comando).
 
 ## Flujo C. Estado completo de soporte
 
