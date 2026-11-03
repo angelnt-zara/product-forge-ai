@@ -1,0 +1,23 @@
+aicontext/agents/product-forge-kos-jobs.md
+  s_ae1fb668890c11::t_74d151b0d5de4f 162,167,169,171-176
+aicontext/agents/product-forge-kos-logs.md
+  s_ae1fb668890c11::t_49b1b098983b97 110-111,129,131,133,135-138,140
+aicontext/prompts/product-forge-pacman-kos.md
+  s_ae1fb668890c11::t_e5e3e98bded6d1 54,58-79,82,84-85,92,96-97,101,105,108-109,111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "f2aa5f79bea85b4e3dcccbad7ed412edabd88afc",
+  "prompts": {},
+  "sessions": {
+    "s_ae1fb668890c11": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5d21ddc7ffeExPY5HsLz1obQ7",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
