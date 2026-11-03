@@ -1,0 +1,18 @@
+aicontext/agents/product-forge-incidencias-teams-extractor.md
+  h_46798eb9f7d88a 91
+aicontext/skills/product-forge-incidencias/SKILL.md
+  h_46798eb9f7d88a 38
+aicontext/skills/product-forge-teams/SKILL.md
+  h_46798eb9f7d88a 35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "24bc41cab53106c67052ef0274345d675810a072",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
