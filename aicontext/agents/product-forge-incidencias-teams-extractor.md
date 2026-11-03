@@ -78,7 +78,7 @@ Por cada hilo (entrada completa):
 - Referencias a tickets (ITSMECOM-N, PACMAN-N) y a PR con su estado.
 - Si el hilo está titulado con `[CLOSED]` o similar, indícalo.
 
-Añade un bloque de **cobertura y limitaciones** por canal: nº de mensajes leídos, mensaje más antiguo leído y si el rango queda cubierto, errores de acceso y miembros no verificados. No inventes datos: todo sale del CLI.
+Añade un bloque de **cobertura y limitaciones** por canal: nº de mensajes leídos, si el rango queda cubierto según el criterio de parada de la skill `/product-forge-teams` (mensajes raíz consecutivos anteriores al inicio del rango, ignorando outliers aislados), errores de acceso y miembros no verificados. No inventes datos: todo sale del CLI.
 
 ## Informes previos en la daily
 
