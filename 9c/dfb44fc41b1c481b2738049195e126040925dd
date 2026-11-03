@@ -1,0 +1,19 @@
+aicontext/agents/product-forge-pana.md
+  s_ae1fb668890c11::t_9a616803e72ae0 62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "9cdfb44fc41b1c481b2738049195e126040925dd",
+  "prompts": {},
+  "sessions": {
+    "s_ae1fb668890c11": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5d21ddc7ffeExPY5HsLz1obQ7",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
