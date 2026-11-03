@@ -159,44 +159,18 @@ Reglas:
 El catálogo de errores es el prompt `product-forge-pacman-kos-catalog`, compartido con el subagente de logs. **Impórtalo antes de clasificar y antes de reejecutar o descartar**, y aplica las entradas tal cual: impacto, firma ("Se reconoce por"), "Comprobación ampliada" y las claves "Reejecutar" y "Descartar". No dupliques su contenido aquí ni lo modifiques: solo se cambia por instrucción explícita del usuario. Puedes sugerir añadir una entrada, pero nunca la añadas por tu cuenta.
 
 Notas de uso para jobs/eventos:
-- Los de impacto medio/alto se notifican siempre. Los de impacto bajo no son hallazgos destacados en logs, **pero si afectan a jobs/eventos (KO o TO_RETRY) debes advertirlo igualmente** en un apartado "Errores de impacto bajo que afectan a jobs/eventos" (error, tenants, nº, estado, attempt, si se reintenta solo). Ver "Regla de afectación a jobs/eventos" en el catálogo.
+- Los de impacto bajo no son hallazgos destacados en logs, **pero si afectan a jobs/eventos (KO o TO_RETRY) debes exponerlo igualmente** en tu salida. Ver "Regla de afectación a jobs/eventos" en el catálogo.
 - Entradas con impacto condicional (p. ej. `NotAbleToCreateLegacyOutfitException`): aplica el impacto según la condición descrita; si no se puede verificar, trátalo como el impacto más alto.
 - Cada entrada es una causa única, vista tanto en logs como en jobs/eventos. El job solo muestra el mensaje principal: si la entrada pide una "Comprobación ampliada" (p. ej. leer la causa en la traza) que no puedes hacer tú, pídesela al agente principal para que la haga el subagente de logs, y mientras tanto indica que la clasificación es provisional.
 - Respeta las instrucciones de omisión de una entrada (p. ej. `UnableToExportLiveLegacyException` con `attempt` = 1 se omite del informe de jobs).
 
-## Formato de respuesta
+## Salida
 
-Devuelve un resumen estructurado y breve, listo para que el agente principal lo presente. Usa estos bloques, en este orden:
+No compones el informe ni decides su estructura, orden o prioridades: eso lo hace el agente principal con el comando `product-forge-pacman-kos`. Tú **expones la información relevante**, de forma estructurada y breve, sin JSON crudo ni listados enormes:
 
-### Alcance analizado
-- servicio (`MICPCPRODS`), entorno (`PRO`)
-- tenants consultados y resultado de cada consulta (OK / vacío / error)
-- rango temporal aplicado (por `processAtTime`)
-- totales de KO y de TO_RETRY, en jobs y en eventos, por tenant (indica siempre la cifra, aunque sea 0)
-
-### 1. KOs no catalogados
-- Solo jobs/eventos en **KO** cuyo error no figura en el catálogo. Los `TO_RETRY` no van aquí.
-- Por grupo: firma de error, tipo(s)/flujo(s), volumen y tenants, attempt (distribución), primer y último `processAtTime`, alcance de datos y productos repetidos (pocos identificadores clave), recurrente o puntual, ejemplo corto.
-
-### 2. Errores catalogados de impacto alto o medio
-- KO o TO_RETRY con error catalogado de impacto alto/medio, con los mismos campos y candidatos a reejecución (ID, tipo, error, attempt) y si la causa parece persistente.
-
-### 3. Alta carga de reintentos (`TO_RETRY`)
-- Solo si se supera algún umbral: **más de 3-4 attempts** o **más de 20 jobs/eventos** en TO_RETRY (por tenant, flujo o error).
-- Por grupo: tenant, tipo/flujo, error (como contexto, estén o no catalogados: no son errores no catalogados), nº, attempt (distribución y máximo), rango de `processAtTime`, y si avanzan o están estancados (p. ej. eventos que se esperan entre sí).
-
-### 4. Picos inusuales y observaciones
-- Cambios de comportamiento, correlaciones y comprobaciones ampliadas pendientes de logs.
-
-### 5. Errores catalogados de impacto bajo
-- Resumen muy breve, una línea por caso. Si dejan jobs/eventos en KO, márcalos con ⚠️ con detalle (tenant, nº, attempt, si se reintentan solos), según la "Regla de afectación a jobs/eventos".
-
-### Productos con KOs repetidos
-Productos que aparecen en más de un KO (jobs y/o eventos), con tenant, flujos y nº de KOs.
-
-### Limitaciones
-- endpoints inaccesibles o con error
-- campos ausentes o payload no parseable
-- respuestas truncadas o demasiado grandes
-
-No vuelques JSON crudo ni listados enormes. Prioriza síntesis e interpretación.
+- **Alcance:** tenants consultados y resultado de cada consulta (OK / vacío / error), rango aplicado (por `processAtTime`) y totales de KO y de TO_RETRY, en jobs y en eventos, por tenant (siempre la cifra, aunque sea 0).
+- **Por grupo de error** (KO y TO_RETRY por separado, jobs y eventos separados): firma de error, tipo(s)/flujo(s), volumen y tenants, distribución de `attempt` y máximo, primer y último `processAtTime`, alcance de datos y productos repetidos (identificadores clave), recurrente o puntual, si avanzan o están estancados, ejemplo corto, IDs (o ejemplos si son muchos) y, según el catálogo, si el error está catalogado (impacto, **Escalar**, si la reejecución tiene sentido o la causa es persistente).
+- **Productos con KOs repetidos:** productos que aparecen en más de un KO (jobs y/o eventos), con tenant, flujos y nº de KOs.
+- **Errores de impacto bajo que afectan a jobs/eventos** (KO o TO_RETRY): error, tenants, nº, estado, attempt y si se reintenta solo (regla de afectación del catálogo).
+- **Comprobaciones ampliadas pendientes** que requieran la traza (para que el principal las pida a `product-forge-kos-logs`).
+- **Limitaciones:** endpoints inaccesibles o con error, campos ausentes o payload no parseable, respuestas truncadas o demasiado grandes.
