@@ -5,7 +5,6 @@ description: >
   todos sus comentarios y devuelve datos estructurados y objetivos. No clasifica
   ni redacta el informe. Solo lectura.
 mode: subagent
-model: github-copilot/claude-sonnet-5.5
 temperature: 0.1
 tools:
   bash: true

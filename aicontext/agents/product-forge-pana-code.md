@@ -5,7 +5,6 @@ description: >
   errores en logs. Solo actúa ante petición o autorización explícita del usuario.
   Opera siempre sobre la copia local de mic-pacmanproducts indicada por el usuario.
 mode: subagent
-model: github-copilot/claude-sonnet-5.5
 temperature: 0.1
 permission:
   external_directory:

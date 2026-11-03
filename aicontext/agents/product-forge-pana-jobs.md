@@ -5,7 +5,6 @@ description: >
   reintentos, processAtTime y producto afectado), consulta también los marcados
   para reintentar (TO_RETRY) y, bajo confirmación explícita, reejecuta jobs/eventos.
 mode: subagent
-model: github-copilot/claude-sonnet-5.5
 temperature: 0.1
 permission:
   external_directory:

@@ -15,7 +15,6 @@ description: >
   - "Reejecuta los KOs de ST"
   - "Dame el estado completo de soporte de hoy"
 mode: primary
-model: github-copilot/claude-sonnet-5.5
 temperature: 0.1
 permission:
   external_directory:

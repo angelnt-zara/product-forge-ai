@@ -5,7 +5,6 @@ description: >
   criticidad, estado de atención, si es informativo y si se omite, con el motivo.
   No consulta fuentes ni redacta el informe. Solo razona sobre los datos recibidos.
 mode: subagent
-model: github-copilot/claude-sonnet-5.5
 temperature: 0.1
 permission:
   external_directory:
