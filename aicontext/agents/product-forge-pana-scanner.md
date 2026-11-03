@@ -71,8 +71,8 @@ Los hilos cuyo **post raíz** lo escribe un miembro de ProductForge son, en su m
 
 - Extrae todos los enlaces `https://github.com/inditex/<repo>/pull/<n>` del post raíz y sus respuestas, y consulta su estado con `gh pr view <n> -R inditex/<repo> --json state,mergedAt,closedAt,title`.
 - Si **todas** las PR del hilo están cerradas (`MERGED` o `CLOSED`), el hilo se da por solucionado: **no lo incluyas en el informe** (ni en tabla ni en listas). Solo indica en Observaciones cuántos has omitido por este motivo.
-- Si alguna PR sigue `OPEN`, el hilo es 🔴 **Pendiente** (o 🟡 si el squad ya comentó y quedó una pregunta sin atender). Indica en el motivo qué PR sigue abierta y su enlace.
-- Si el hilo no contiene enlace a PR, clasifícalo con los criterios normales (suele ser ⚪ informativo o 🟢 resuelto; los resueltos de miembros del squad no se listan).
+- Si alguna PR sigue `OPEN`, el hilo es **Pendiente** (🫥 no atendido; 🏃‍♂️‍➡️ si el squad ya contestó algo concreto y queda una pregunta sin atender). Indica en el motivo qué PR sigue abierta y su enlace.
+- Si el hilo no contiene enlace a PR, clasifícalo con los criterios normales (suele ser informativo o ✅ resuelto; los resueltos de miembros del squad no se listan).
 - Resuelve la lista de miembros antes de filtrar; si no puedes hacerlo con certeza, díselo al usuario.
 - Si el usuario pide incluir también los cerrados, desactiva esta omisión en esa ejecución.
 
@@ -89,23 +89,53 @@ Se considera dada respuesta si **al menos una persona perteneciente a la etiquet
 
 Para cada hilo relevante asigna un estado:
 
-| Estado | Criterio |
-|--------|----------|
-| 🔴 **Pendiente** | Ninguna respuesta concreta de un miembro de ProductForge. |
-| 🟡 **Pendiente de seguimiento** | Hay respuesta concreta del squad, pero el último mensaje es una nueva pregunta/petición/queja del solicitante posterior a esa respuesta, sin contestar. |
-| 🟢 **Resuelto** | Hay respuesta concreta de un miembro de ProductForge y no hay mensajes posteriores sin atender. |
-| ⚪ **Informativo** | Mención sin petición accionable (avisos, FYI). Márcalo aparte, no lo cuentes como pendiente. |
+Cada hilo o ticket se etiqueta con **dos emojis**, siempre **los primeros de cada viñeta** y en este orden: 1º criticidad, 2º atendido (`- <criticidad> <atendido> ...`).
 
-En caso de duda entre resuelto y pendiente, clasifica como pendiente y explica por qué en una línea.
+### Atendido (2º emoji)
+
+| Emoji | Estado | Criterio en hilos de Teams | Criterio en ITSMECOM |
+|-------|--------|----------------------------|----------------------|
+| 🫥 | **No atendido** | Ninguna respuesta concreta de un miembro de ProductForge (solo «lo miramos» o similar). | Sin asignar o no en progreso (En Cartera). |
+| 🏃‍♂️‍➡️ | **Atendido** (en curso) | Hay respuesta concreta del squad, pero el hilo sigue abierto (p. ej. el último mensaje es una nueva pregunta/petición/queja del solicitante sin contestar, o queda trabajo pendiente). | Asignado y En Curso. |
+| ✅ | **Resuelto** | Hay respuesta concreta de un miembro de ProductForge y no hay mensajes posteriores sin atender. | Resuelto/cerrado (no entra en la query de abiertos). |
+
+Los hilos **informativos** (avisos, FYI, sin petición accionable) no se cuentan como pendientes: márcalos aparte y, si se listan, llevan ⚪ de criticidad.
+
+### Criticidad (1º emoji)
+
+| Emoji | Nivel |
+|-------|-------|
+| 🔴 | Urgente |
+| 🟠 | Importante |
+| 🟡 | Baja |
+| ⚪ | Nula |
+
+Se determina combinando estos cuatro factores (el más severo aplicable manda, salvo los topes de entorno y tipo):
+
+1. **Prioridad del canal** donde se reporta:
+   1. PRO Validación Pruebas: siempre 🔴.
+   2. B - Gestión incidencias Tecnología: siempre 🔴.
+   3. Incidencias 🐞: 🔴 o 🟠 según el impacto.
+   4. SQUAD Product Forge 🛠: según el contenido, puede ser cualquier nivel.
+   5. P - Dudas técnicas: normalmente consultas (🟡/⚪).
+   6. Incidencias Entornos Previos: problemas de PRE, 🟡 o ⚪.
+   7. PACMAN Contributors: normalmente consultas o problemas menores, 🟡 o ⚪.
+2. **Entorno**: PRE (y entornos previos) siempre 🟡 o ⚪, nunca más.
+3. **Tipo de petición**: una consulta/solicitud de información siempre 🟡 o ⚪. Un bug es como mínimo 🟠 y pasa a 🔴 si apremia corregirlo (fecha límite cercana, campaña, evento como Double 11…).
+4. **Afectación**: una afectación grave (usuarios, ventas, PRO degradado) es 🔴.
+
+Para ITSMECOM aplica los mismos factores sobre el ticket: tipo (Incidente = bug; Solicitud de servicio = consulta/petición), entorno y afectación descritos en él. Si no hay datos suficientes para decidir, elige el nivel más prudente (más alto) y di en una línea por qué. No inventes la afectación.
+
+En caso de duda entre resuelto y pendiente, clasifica como pendiente (🫥 o 🏃‍♂️‍➡️) y explica por qué en una línea.
 
 ## Formato de salida
 
 **Por defecto el informe es mínimo.** El contexto se da solo si el usuario lo pide ("más detalle de X", "enséñame los resueltos"). No muestres preview largo ni explicaciones no solicitadas.
 
 1. Una línea de alcance: canales, rango y nº de hilos relevantes.
-2. Tabla resumen por canal (relevantes / 🔴 / 🟡 / 🟢 / ⚪ / omitidos), solo con los canales con actividad.
-3. **Pendientes (🔴 y 🟡)**, del más antiguo al más reciente, **una sola línea por hilo**: emoji · fecha · antigüedad · canal · autor · tema en pocas palabras · URL `webUrl` completa en texto visible. Marca con "(PR abierta)" los hilos del equipo.
-4. No listes por defecto resueltos (🟢), informativos (⚪), motivos, últimos mensajes ni observaciones. Añade una única línea final "Omitidos: N resueltos, N informativos, N PR cerradas" y avisa solo de limitaciones que afecten al resultado (canal inaccesible, miembros no verificados, truncado).
+2. Tabla resumen por canal (relevantes / por criticidad 🔴 🟠 🟡 ⚪ / por atención 🫥 🏃‍♂️‍➡️ ✅ / informativos / omitidos), solo con los canales con actividad.
+3. **Pendientes (🫥 y 🏃‍♂️‍➡️)**, del más antiguo al más reciente, **una sola línea por hilo**: emoji de criticidad + emoji de atendido · fecha · antigüedad · canal · autor · tema en pocas palabras · URL `webUrl` completa en texto visible. Marca con "(PR abierta)" los hilos del equipo.
+4. No listes por defecto resueltos (✅), informativos, motivos, últimos mensajes ni observaciones. Añade una única línea final "Omitidos: N resueltos, N informativos, N PR cerradas" y avisa solo de limitaciones que afecten al resultado (canal inaccesible, miembros no verificados, truncado).
 5. No añadas ofertas ni texto de cierre: eso lo hace el agente principal.
 
 ### Publicación del informe en el hilo de la daily (modos borrador y publicación)
@@ -113,21 +143,21 @@ En caso de duda entre resuelto y pendiente, clasifica como pendiente y explica p
 **Destino y envío:** por defecto, el chat de grupo `19:c464808cd0a54e2ba8ee742d995f2341@thread.v2` (HTML directo); alternativamente, el hilo de la daily o el chat privado del usuario si lo pide. Los informes previos de los últimos 7 días se buscan en ese chat por defecto (`chat messages`) y, si se publicó en la daily, también en su hilo. Comandos, identificadores y cautelas están en la skill `product-forge-teams`. Solo se envía en modo publicación, con la confirmación del principal.
 
 - **Primera línea (título)**: `**Temas pendientes entre dd/mm/aaaa y dd/mm/aaaa**` con la fecha de inicio y fin del informe, seguida de línea en blanco. Es la única línea que no es viñeta ni cabecera de bloque.
-- Mensaje **conciso**: pendientes (🔴 y 🟡) en los bloques 1 a 4; los 🟢 solo en el 5º bloque, iniciados por personas externas.
+- Mensaje **conciso**: pendientes (🫥 y 🏃‍♂️‍➡️) en los bloques 1 a 4; los ✅ solo en el 5º bloque, iniciados por personas externas.
 - **Un tema por línea**, como viñeta Markdown (`- `), con las particularidades de formato de `product-forge-teams`.
-- **Cinco bloques**, en este orden, cada uno ordenado del más antiguo al más reciente y omitido si está vacío: 1º «Hilos abiertos por personas externas» (🔴/🟡 de Teams); 2º «Incidencias ITSMECOM»; 3º «Consultas ITSMECOM»; 4º «Hilos internos» (hilos del equipo con PR abierta); 5º «Hilos externos resueltos» (🟢 iniciados por personas externas).
+- **Cinco bloques**, en este orden, cada uno ordenado del más antiguo al más reciente y omitido si está vacío: 1º «Hilos abiertos por personas externas» (🫥/🏃‍♂️‍➡️ de Teams); 2º «Incidencias ITSMECOM»; 3º «Consultas ITSMECOM»; 4º «Hilos internos» (hilos del equipo con PR abierta); 5º «Hilos externos resueltos» (✅ iniciados por personas externas).
 - **Bloques ITSMECOM (2º y 3º)**: tickets de la query JQL `project = ITSMECOM AND issuetype in (Incidente, "Solicitud de servicio") AND status not in (Resolved, Cerrado, Cancelado) AND labels = C-PacmanProduct AND "Equipo Asignado" in (jsdsoportepacman) ORDER BY created ASC`, obtenidos según la skill `product-forge-jira`. Para repartirlos, lanza la query dos veces añadiendo `AND issuetype = Incidente` y `AND issuetype = "Solicitud de servicio"`.
-- **Formato de línea ITSMECOM**: `- <emoji> [ITSMECOM-N](https://jira.inditex.com/jira/browse/ITSMECOM-N): <título> · dd/mm — <descripción>`. **El enlace va solo sobre el ID**, no sobre el título. Emoji: 🔴 En Cartera, 🟡 En Curso; fecha de creación. Quita `[` y `]` del título.
-- **Orden y estado ITSMECOM**: en los bloques 2º y 3º ponlos primero los En Curso (🟡, más antiguo a más reciente) y después los En Cartera (🔴). En cada línea de los En Curso indica explícitamente «En curso, asignado a <nombre>»; en los En Cartera «En cartera, sin asignar».
+- **Formato de línea ITSMECOM**: `- <criticidad> <atendido> [ITSMECOM-N](https://jira.inditex.com/jira/browse/ITSMECOM-N): <título> · dd/mm — <descripción>`. **El enlace va solo sobre el ID**, no sobre el título. Emojis: criticidad según las reglas anteriores y atendido 🫥 (En Cartera, sin asignar) o 🏃‍♂️‍➡️ (asignado y En Curso); fecha de creación. Quita `[` y `]` del título.
+- **Orden y estado ITSMECOM**: en los bloques 2º y 3º ponlos primero los En Curso (🏃‍♂️‍➡️, más antiguo a más reciente) y después los En Cartera (🫥). En cada línea de los En Curso indica explícitamente «En curso, asignado a <nombre>»; en los En Cartera «En cartera, sin asignar».
 - **Descripción ITSMECOM obligatoria** en todos: breve, del problema indicado en el ticket. Sácala de los últimos comentarios del ticket (según `product-forge-jira`) o, si no hay, de la descripción. En los En Curso añade el asignado. Sin corchetes ni datos inventados.
-- **Hilos de Teams**: el **enlace va sobre el título** (`[título](webUrl)`), seguido de `· dd/mm` y el emoji de estado (🔴/🟡/🟢) al inicio. En hilos del equipo, el texto es el título de la PR (`gh pr view`), la principal si hay varias.
-- **Resumen de estado**: en TODOS los hilos 🟡 y 🟢, participe o no el squad, añade tras la fecha ` — <resumen breve>`: la solución en los resueltos (aunque la dieran otros equipos o el autor cerrase el hilo) y lo que queda pendiente de revisar en los de seguimiento. Sin corchetes. Los 🔴 no llevan resumen.
-- **Comprobación previa al envío**: valida con regex que cada línea sea `- <emoji> [<texto sin corchetes>](<url>) · dd/mm` (por ejemplo `^- (🔴|🟡|🟢) \[[^\[\]]+\]\(https://[^)\s]+\)(: [^\[\]]+?)? · \d\d/\d\d( — [^\[\]]+)?$`) y no envíes si alguna falla.
+- **Hilos de Teams**: el **enlace va sobre el título** (`[título](webUrl)`), seguido de `· dd/mm`, con los dos emojis (criticidad y atendido) al inicio. En hilos del equipo, el texto es el título de la PR (`gh pr view`), la principal si hay varias.
+- **Resumen de estado**: en TODOS los hilos 🏃‍♂️‍➡️ y ✅, participe o no el squad, añade tras la fecha ` — <resumen breve>`: la solución en los resueltos (aunque la dieran otros equipos o el autor cerrase el hilo) y lo que queda pendiente de revisar en los de seguimiento. Sin corchetes. Los 🫥 no llevan resumen.
+- **Comprobación previa al envío**: valida con regex que cada línea sea `- <criticidad> <atendido> [<texto sin corchetes>](<url>) · dd/mm` (por ejemplo `^- (🔴|🟠|🟡|⚪) (🏃‍♂️‍➡️|🫥|✅) \[[^\[\]]+\]\(https://[^)\s]+\)(: [^\[\]]+?)? · \d\d/\d\d( — [^\[\]]+)?$`) y no envíes si alguna falla.
 - **Texto sin corchetes ni truncados** y formato de borrador/envío (Markdown o HTML): según `product-forge-teams`. Mantén una única fuente del texto.
-- **Informes previos en la daily (modos borrador y publicación)**: antes de construir el mensaje, lee el hilo de la daily (según `product-forge-teams`) y localiza los mensajes de los **últimos 7 días** cuyo título sea `Temas pendientes entre …` (mismo tipo de informe). Si hay alguno, **omite del 5º bloque («Hilos externos resueltos») los hilos 🟢 que ya aparezcan como resueltos en alguno de esos mensajes** (identifícalos por el enlace/`webUrl` del hilo). Los hilos todavía abiertos (🔴/🟡, incluidos ITSMECOM) **se incluyen siempre**, aunque ya estuvieran en un mensaje anterior, y un hilo que antes estaba pendiente y ahora está resuelto se incluye como resuelto. Si el 5º bloque queda vacío, omítelo. Devuelve al principal cuántos resueltos has omitido y de qué mensaje(s) previo(s), o que no había informe previo en la semana. Si no puedes leer el hilo, indícalo como limitación y no omitas nada.
+- **Informes previos en la daily (modos borrador y publicación)**: antes de construir el mensaje, lee el hilo de la daily (según `product-forge-teams`) y localiza los mensajes de los **últimos 7 días** cuyo título sea `Temas pendientes entre …` (mismo tipo de informe). Si hay alguno, **omite del 5º bloque («Hilos externos resueltos») los hilos ✅ que ya aparezcan como resueltos en alguno de esos mensajes** (identifícalos por el enlace/`webUrl` del hilo). Los hilos todavía abiertos (🫥/🏃‍♂️‍➡️, incluidos ITSMECOM) **se incluyen siempre**, aunque ya estuvieran en un mensaje anterior, y un hilo que antes estaba pendiente y ahora está resuelto se incluye como resuelto. Si el 5º bloque queda vacío, omítelo. Devuelve al principal cuántos resueltos has omitido y de qué mensaje(s) previo(s), o que no había informe previo en la semana. Si no puedes leer el hilo, indícalo como limitación y no omitas nada.
 - **Sin duplicados**: antes de mostrar o enviar, comprueba que cada hilo o ticket aparece una sola vez en todo el mensaje.
-- **Canal en el 1er bloque**: cada línea del bloque «Hilos abiertos por personas externas» empieza por el nombre completo del canal, dentro del texto del enlace: `- <emoji> [<Canal>: <título>](url) · dd/mm` (y ` — <resumen>` en los 🟡). Sin sufijo «Canal …».
-- **Informativo vs petición**: un aviso de un tercero que incluye una pregunta o petición de apoyo sin responder (p. ej. «agradecería el apoyo para entender las diferencias») es 🔴, no ⚪. Lee el cuerpo completo antes de marcar un hilo como informativo. Los mensajes borrados se ignoran.
+- **Canal en el 1er bloque**: cada línea del bloque «Hilos abiertos por personas externas» empieza por el nombre completo del canal, dentro del texto del enlace: `- <criticidad> <atendido> [<Canal>: <título>](url) · dd/mm` (y ` — <resumen>` en los 🏃‍♂️‍➡️). Sin sufijo «Canal …».
+- **Informativo vs petición**: un aviso de un tercero que incluye una pregunta o petición de apoyo sin responder (p. ej. «agradecería el apoyo para entender las diferencias») es una petición (🫥), no informativo. Lee el cuerpo completo antes de marcar un hilo como informativo. Los mensajes borrados se ignoran.
 - Sin línea de «Urgente» ni texto adicional.
 - Avisa de que los mensajes enviados no se pueden editar ni borrar.
 

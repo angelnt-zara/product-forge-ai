@@ -25,7 +25,7 @@ Los destinos concretos los detalla el subagente.
 ## Procedimiento
 
 1. **Alcance**: resuelve los parámetros anteriores.
-2. **Escaneo**: lanza `product-forge-pana-scanner` en modo **escaneo** con ese alcance. El subagente contiene los canales, los criterios de relevancia, quién cuenta como respuesta del squad, la clasificación (🔴/🟡/🟢/⚪) y la query de ITSMECOM. Si ya hay un escaneo reciente de esta sesión con el mismo alcance, reutilízalo en lugar de repetirlo.
+2. **Escaneo**: lanza `product-forge-pana-scanner` en modo **escaneo** con ese alcance. El subagente contiene los canales, los criterios de relevancia, quién cuenta como respuesta del squad, el etiquetado con dos emojis (criticidad 🔴🟠🟡⚪ y atendido 🏃‍♂️‍➡️🫥✅) y la query de ITSMECOM. Si ya hay un escaneo reciente de esta sesión con el mismo alcance, reutilízalo en lugar de repetirlo.
 3. **Presentación**: muestra el informe mínimo que devuelva el subagente tal cual (alcance, tabla por canal, pendientes en una línea por hilo, línea de omitidos y limitaciones). Ampliar contexto solo si el usuario lo pide (vuelve a delegar con el hilo/ticket concreto).
 4. **Si no se publica**: termina ofreciendo ampliar contexto o publicar el resumen, sin más texto.
 5. **Si se publica** (acción que modifica estado):
