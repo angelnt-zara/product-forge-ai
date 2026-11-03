@@ -1,0 +1,14 @@
+aicontext/agents/product-forge-incidencias-teams-extractor.md
+  h_46798eb9f7d88a 56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "51a62cb6bd7f2a123680a7b8aff29fdcaa157492",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
