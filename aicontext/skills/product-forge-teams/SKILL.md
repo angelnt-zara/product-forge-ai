@@ -48,7 +48,13 @@ Modifica estado y **no se puede editar ni borrar lo enviado**. Solo se publica c
 
 ### Destinos
 
-- **Hilo de la daily** (destino por defecto): canal «SQUAD Product Forge 🛠️», mensaje raíz `1789993863727`. Se envía como respuesta (Markdown):
+- **Chat de grupo por defecto** (destino por defecto, definido por el usuario el 03/11/2026): chat `19:c464808cd0a54e2ba8ee742d995f2341@thread.v2` («[INCIDENCIAS] Product Forge 🛠️»). Es un chat con otros miembros (p. ej. Jose Manuel Neto Delgado y Francisco Javier Corchado Bernal), no unas notas personales: indica siempre este destino en la confirmación. Se envía como **HTML directo** (ver «Formato del mensaje»):
+
+  ```bash
+  python3 -m teams chat send --chat "19:c464808cd0a54e2ba8ee742d995f2341@thread.v2" --message "<html>" --yes
+  ```
+
+- **Hilo de la daily** (solo si el usuario lo pide): canal «SQUAD Product Forge 🛠️», mensaje raíz `1789993863727`. Se envía como respuesta (Markdown):
 
   ```bash
   python3 -m teams channel reply --team 1301738f-827e-48ec-8770-3f0922c1c295 --channel "19:c2d93e0c05834c5f885f7ebbb2a82da8@thread.tacv2" --thread 1789993863727 --message "<md>" --yes

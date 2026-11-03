@@ -16,7 +16,8 @@ Escanear y publicar son el mismo flujo: la única diferencia es que la publicaci
 - **PRs cerradas**: si incluir hilos con PR cerradas (por defecto no).
 - **Publicar**: por defecto **no**. Solo se publica si el usuario lo pide en la petición o lo solicita tras ver el informe.
 - **Destino** (solo si publica):
-  - **Por defecto:** hilo de la daily en el canal «SQUAD Product Forge 🛠️».
+  - **Por defecto:** chat de grupo `19:c464808cd0a54e2ba8ee742d995f2341@thread.v2` (HTML directo). Es un chat con otras personas: indícalo en la confirmación.
+  - **Hilo de la daily** en el canal «SQUAD Product Forge 🛠️», solo si lo pide.
   - **Chat privado del usuario** (`48:notes`), solo si lo pide expresamente.
 
 Los destinos concretos los detalla el subagente.

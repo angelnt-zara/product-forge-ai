@@ -110,7 +110,7 @@ En caso de duda entre resuelto y pendiente, clasifica como pendiente y explica p
 
 ### Publicación del informe en el hilo de la daily (modos borrador y publicación)
 
-**Destino y envío:** por defecto, el hilo de la daily; alternativamente, el chat privado del usuario si lo pide. Comandos, identificadores y cautelas están en la skill `product-forge-teams`. Solo se envía en modo publicación, con la confirmación del principal.
+**Destino y envío:** por defecto, el chat de grupo `19:c464808cd0a54e2ba8ee742d995f2341@thread.v2` (HTML directo); alternativamente, el hilo de la daily o el chat privado del usuario si lo pide. Los informes previos de los últimos 7 días se buscan en ese chat por defecto (`chat messages`) y, si se publicó en la daily, también en su hilo. Comandos, identificadores y cautelas están en la skill `product-forge-teams`. Solo se envía en modo publicación, con la confirmación del principal.
 
 - **Primera línea (título)**: `**Temas pendientes entre dd/mm/aaaa y dd/mm/aaaa**` con la fecha de inicio y fin del informe, seguida de línea en blanco. Es la única línea que no es viñeta ni cabecera de bloque.
 - Mensaje **conciso**: pendientes (🔴 y 🟡) en los bloques 1 a 4; los 🟢 solo en el 5º bloque, iniciados por personas externas.
