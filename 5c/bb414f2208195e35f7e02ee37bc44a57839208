@@ -1,0 +1,19 @@
+aicontext/agents/product-forge-incidencias-jira-extractor.md
+  s_a79f8d16e8c570::t_af1f2d3d7b2fcf 54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "5cbb414f2208195e35f7e02ee37bc44a57839208",
+  "prompts": {},
+  "sessions": {
+    "s_a79f8d16e8c570": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5cad7f14ffekUa8qGJzG6qn6F",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
