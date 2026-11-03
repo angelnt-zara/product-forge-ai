@@ -1,0 +1,19 @@
+aicontext/skills/product-forge-teams/SKILL.md
+  s_a79f8d16e8c570::t_5a839b23fc49a9 31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "142920f93c1e6a110ca9a69c31ad85fedd4a5840",
+  "prompts": {},
+  "sessions": {
+    "s_a79f8d16e8c570": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5cad7f14ffekUa8qGJzG6qn6F",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
