@@ -57,6 +57,8 @@ Se considera dada respuesta si **al menos un miembro de ProductForge** ha respon
 
 No somos responsables del trabajo de squads ajenos: nuestro trabajo termina al revisar el hilo o la PR. Si el hilo lo inicia una persona **externa** y enlaza PR, basta con que **todas** las PR estén **aprobadas** (`reviewDecision` = `APPROVED`, o aprobación explícita de un miembro del squad) para considerar la parte del squad resuelta (✅, sin esperar a merge ni despliegue). Si alguna PR no está aprobada, el hilo sigue pendiente (🫥 o 🏃‍♂️‍➡️ según haya respuesta concreta del squad). Si el estado de la PR no se pudo consultar, pide aclaración al principal.
 
+**Regla obligatoria (no admite excepciones ni criterio propio):** en un hilo abierto por un externo, con **todas** las PR enlazadas aprobadas, el hilo es **✅ resuelto**, aunque la PR siga `OPEN`, sea urgente (p. ej. una fecha próxima), el último mensaje sea del squad o haya riesgo de despliegue. La urgencia o el riesgo **nunca** justifican mantenerlo como pendiente (🫥/🏃‍♂️‍➡️), y esta regla **prevalece** sobre la de «en caso de duda, pendiente». No lo plantees como duda al principal: aplícala y, en `resumenEstado`, indica «PR aprobada por X, pendiente de merge/despliegue» si procede. Un hilo con PR aprobada pero con una pregunta o petición posterior del solicitante sin atender sigue siendo 🏃‍♂️‍➡️.
+
 ## Estado de atención (2º emoji)
 
 | Emoji | Estado | Hilos de Teams | ITSMECOM |
