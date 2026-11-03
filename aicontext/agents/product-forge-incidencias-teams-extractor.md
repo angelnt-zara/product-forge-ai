@@ -25,12 +25,12 @@ Tu misión es **obtener y devolver datos**: localizar en los canales los hilos r
 
 - Rango de fechas (inicio y fin) sobre la creación del hilo (post raíz). Las respuestas se leen completas aunque sean posteriores.
 - Subconjunto de canales, si lo hay (por defecto, todos).
-- Lista de **miembros del squad ProductForge** ya resuelta (de `team.adoc`). Si no te la pasa, léela tú de `team.adoc` según la regla del agente principal (`gh api repos/inditex/doc-pacman/contents/docs/src/modules/equipo/pages/team.adoc -H "Accept: application/vnd.github.raw"`, sección «ProductForge», más Elias Ferreiro Borreiros). No uses la etiqueta de Teams. Si no puedes resolverla, dilo.
+- Lista de **miembros del squad ProductForge** ya resuelta (de `team.adoc`). Si no te la pasa, léela tú de `team.adoc` según la regla del agente principal (sección «ProductForge», más Elias Ferreiro Borreiros). No uses la etiqueta de Teams. Si no puedes resolverla, dilo.
 - Opcionalmente, una petición de **aclaración** sobre un hilo concreto (más contexto, texto completo de un mensaje, estado de una PR) o de **informes previos** en la daily (ver más abajo).
 
 ## Herramientas
 
-Carga la skill `product-forge-teams` (lectura y particularidades del CLI). Consulta los canales **en paralelo**. Sigue sus reglas: no uses `--since` (filtra por fecha en local), lee páginas suficientes para cubrir el rango y avisa si un canal no queda cubierto.
+Carga la skill `product-forge-teams` (lectura y particularidades del CLI) y la skill `product-forge-github` (estado de PR y lectura de `team.adoc`). Sigue sus reglas de lectura (paginación, filtrado, paralelismo y particularidades del CLI) y avisa si un canal no queda cubierto.
 
 ## Canales a revisar
 
@@ -60,7 +60,7 @@ Detección: revisa el array `mentions` (el nombre de la etiqueta aparece en `men
 
 ## Hilos con enlaces a PR
 
-En **todos** los hilos recogidos (del squad o externos), extrae todos los enlaces `https://github.com/inditex/<repo>/pull/<n>` del post raíz y de las respuestas y consulta su estado con `gh pr view <n> -R inditex/<repo> --json state,mergedAt,closedAt,title,reviewDecision,reviews`. Devuelve para cada PR `state`, `mergedAt`/`closedAt`, `reviewDecision` y quién la aprobó y cuándo (`reviews` con estado APPROVED); no decidas si el hilo se omite. Si una PR no es accesible, indícalo como limitación.
+En **todos** los hilos recogidos (del squad o externos), extrae las PR enlazadas en el post raíz y en las respuestas y consulta su estado (skill `product-forge-github`). Devuelve para cada PR su estado (`state`, `mergedAt`/`closedAt`), `reviewDecision` y quién la aprobó y cuándo; no decidas si el hilo se omite. Si una PR no es accesible, indícalo como limitación.
 
 ## Salida
 
@@ -78,7 +78,7 @@ Añade un bloque de **cobertura y limitaciones** por canal: nº de mensajes leí
 
 ## Informes previos en la daily
 
-Si el principal te lo pide, localiza en el hilo de la daily (mensaje raíz `1789993863727`) y en el chat de grupo por defecto (`19:c464808cd0a54e2ba8ee742d995f2341@thread.v2`, `chat messages`) los mensajes de los **últimos 7 días** cuyo título sea `Temas pendientes entre …`. Devuelve, para cada uno: id, fecha y la lista de hilos/tickets que contiene, indicando para cada uno su `webUrl`/clave y si figura como resuelto (✅). Si no puedes leerlos, indícalo como limitación (el hilo de la daily devuelve como máximo 50 respuestas).
+Si el principal te lo pide, localiza en el hilo de la daily y en el chat de grupo por defecto (identificadores y comandos en la skill `product-forge-teams`) los mensajes de los **últimos 7 días** cuyo título sea `Temas pendientes entre …`. Devuelve, para cada uno: id, fecha y la lista de hilos/tickets que contiene, indicando para cada uno su `webUrl`/clave y si figura como resuelto (✅). Si no puedes leerlos, indícalo como limitación.
 
 ## Reglas
 

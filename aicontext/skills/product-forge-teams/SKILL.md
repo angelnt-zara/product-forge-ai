@@ -28,6 +28,9 @@ python3 -m teams channel replies  --team <GROUP_ID> --channel "<CHANNEL_ID>" --t
 ```
 
 - **No uses `--since` en `channel messages`:** la API de canales lo rechaza con error 400. Lee con `--top`/`--pages` suficientes y **filtra por fecha en local** (campo de creación del mensaje raíz). Comprueba que el mensaje más antiguo leído es anterior al inicio del rango; si no, itera más páginas.
+- **No leas más páginas de las necesarias:** el CLI solo admite `--pages N` (no hay `--skip`: cada llamada relee desde el principio). Empieza con `--pages 2` y, si el mensaje más antiguo leído sigue dentro del rango, repite ese canal con `--pages 4` y luego `--pages 8`, y así hasta cubrirlo; no uses un número fijo de páginas por canal. Un canal con pocos mensajes en el rango no debe pagar la lectura de uno de mucho volumen.
+- **Filtra con `jq` antes de volcar contenido al contexto:** de cada página conserva solo los mensajes raíz con `createdDateTime` dentro del rango (más los campos mínimos: `id`, `webUrl`, `from`, `mentions`, fecha y cuerpo) y, en los canales que filtran por mención, descarta ya en `jq` los raíz sin mención relevante (salvo que sus respuestas puedan contenerla). Lee `replies` solo de los hilos cuyo post raíz esté en el rango.
+- **Paraleliza las lecturas por hilo y por PR:** lanza las llamadas `channel replies` de todos los hilos en el mismo bloque (en paralelo), no una a una. La consulta de las PR se paraleliza igual (ver skill `product-forge-github`).
 - Usa siempre `--json` para poder inspeccionar `mentions`, `from`, `replyToId`, `webUrl` y fechas. En `mentions`, el nombre de una etiqueta aparece en `mentionText`.
 - Los canales son independientes: consúltalos **en paralelo** (varias llamadas en el mismo bloque, o subagentes `general` si el volumen es grande).
 - Si un canal devuelve el máximo de páginas, es una limitación: avísalo e itera más páginas.
