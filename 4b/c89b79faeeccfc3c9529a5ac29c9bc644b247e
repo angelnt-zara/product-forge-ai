@@ -1,0 +1,21 @@
+aicontext/agents/product-forge-pana-scanner.md
+  s_75d955e79491f9::t_f899900522ba06 74-75,92,94-129,136-138,146,148,150-151,153-155,157,159-160
+aicontext/prompts/product-forge-temas-pendientes.md
+  s_75d955e79491f9::t_c8e24a9ef52671 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "4bc89b79faeeccfc3c9529a5ac29c9bc644b247e",
+  "prompts": {},
+  "sessions": {
+    "s_75d955e79491f9": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5d873e97ffeSzvx4AkMu1SFhU",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
