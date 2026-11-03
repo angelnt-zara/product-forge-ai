@@ -126,6 +126,8 @@ Se determina combinando estos cuatro factores (el más severo aplicable manda, s
 
 Para ITSMECOM aplica los mismos factores sobre el ticket: tipo (Incidente = bug; Solicitud de servicio = consulta/petición), entorno y afectación descritos en él. Si no hay datos suficientes para decidir, elige el nivel más prudente (más alto) y di en una línea por qué. No inventes la afectación.
 
+**Tope para consultas ITSMECOM (Solicitud de servicio):** su criticidad es SIEMPRE 🟡 (baja) o ⚪ (nula), nunca 🔴 ni 🟠, aunque sea PRO, tenga prioridad A en Jira o el ticket lleve mucho tiempo abierto. Elige 🟡 si la prioridad de Jira es A, B o C, y ⚪ si es D o no hay prioridad. Este tope prevalece sobre el criterio de «nivel más prudente» y sobre la prioridad del canal y la afectación.
+
 En caso de duda entre resuelto y pendiente, clasifica como pendiente (🫥 o 🏃‍♂️‍➡️) y explica por qué en una línea.
 
 ## Formato de salida
