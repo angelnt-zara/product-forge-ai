@@ -5,14 +5,14 @@ description: Cómo interactuar con Jira (jira.inditex.com) para el squad Product
 
 # Product Forge: interacción con Jira
 
-Referencia técnica reutilizable para consultar Jira. No contiene criterios de negocio (qué tickets interesan, qué JQL usar, cómo se presentan en un informe): eso es de cada flujo que la use. Las skills base `jira-pacman` y `jira-cli` aportan el contexto y el CLI; esta skill recoge los detalles técnicos del squad.
+Referencia técnica reutilizable para consultar Jira. No contiene criterios de negocio (qué tickets interesan, qué JQL usar, cómo se presentan en un informe): eso es de cada flujo que la use. Las skills base `/jira-pacman` y `/jira-cli` aportan el contexto y el CLI; esta skill recoge los detalles técnicos del squad.
 
 ## Herramientas
 
 - **Preferente: MCP de Jira.**
   - `jira_search`: búsqueda con JQL.
   - `jira_get_issue`: detalle de un ticket (sin comentarios ni changelog; para los comentarios usa `jira_get_issue_comments`).
-- **Alternativa:** si el MCP falla, usa el CLI (skill `jira-cli`) con la misma consulta.
+- **Alternativa:** si el MCP falla, usa el CLI (skill `/jira-cli`) con la misma consulta.
 - Si falla la autenticación o la herramienta no está disponible, indícalo como limitación en lugar de inventar datos.
 
 ## Búsqueda (`jira_search`)
@@ -31,15 +31,15 @@ Referencia técnica reutilizable para consultar Jira. No contiene criterios de n
 ## Enlaces
 
 - URL de un ticket: `https://jira.inditex.com/jira/browse/<CLAVE>` (p. ej. `https://jira.inditex.com/jira/browse/ITSMECOM-123`).
-- Si el ticket se enlaza dentro de un mensaje de Teams, sigue las reglas de formato de la skill `product-forge-teams` (corchetes en títulos, etc.).
+- Si el ticket se enlaza dentro de un mensaje de Teams, sigue las reglas de formato de la skill `/product-forge-teams` (corchetes en títulos, etc.).
 
 ## Operaciones que modifican estado
 
-Crear, comentar, transicionar o asignar tickets **modifica estado**: solo con petición explícita del usuario y tras su confirmación, mostrando exactamente lo que se va a hacer. Por defecto, todo uso de Jira es de solo lectura. Usa para ello las skills `jira-pacman`/`jira-cli`.
+Crear, comentar, transicionar o asignar tickets **modifica estado**: solo con petición explícita del usuario y tras su confirmación, mostrando exactamente lo que se va a hacer. Por defecto, todo uso de Jira es de solo lectura. Usa para ello las skills `/jira-pacman`/`/jira-cli`.
 
 ### Label del squad al crear tickets
 
-El label del squad Product Forge es siempre `sq#product`. No uses `sq#productforge`, `sq#productForge` ni variantes similares, aunque otras skills (p. ej. `jira-pacman`) lo mencionen para flujos de roadmap.
+El label del squad Product Forge es siempre `sq#product`. No uses `sq#productforge`, `sq#productForge` ni variantes similares, aunque otras skills (p. ej. `/jira-pacman`) lo mencionen para flujos de roadmap.
 
 ### Formato de la descripción al crear tickets
 

@@ -1,6 +1,13 @@
+---
+name: product-forge-pacman-kos
+description: Flujo de estado de Pacman Products (MICPCPRODS): KOs y reintentos de jobs/eventos, errores en logs y, bajo petición, reejecución/descarte y cambios de código. SOLO se ejecuta si el usuario la invoca explícitamente (pide revisar KOs/errores o nombra esta skill); no cargarla por iniciativa propia ni como parte de otro flujo.
+---
+
 # Product Forge: estado de Pacman Products (KOs y errores)
 
-Comando para conocer el estado de Pacman Products (`MICPCPRODS`): KOs y reintentos de jobs/eventos y errores en logs. Incluye, bajo petición explícita, la reejecución/descarte de jobs/eventos y el análisis o modificación de código. Lo ejecuta el agente principal `product-forge-pana`, delegando en los subagentes `product-forge-kos-jobs`, `product-forge-kos-logs` y `product-forge-kos-code`.
+> **Invocación explícita obligatoria:** esta skill solo se ejecuta cuando el usuario la pide de forma explícita. No la cargues ni ejecutes por inferencia, por coincidencia con la descripción ni desde otra skill o subagente. Si dudas de que la petición sea explícita, pregunta antes con la herramienta `question`.
+
+Flujo para conocer el estado de Pacman Products (`MICPCPRODS`): KOs y reintentos de jobs/eventos y errores en logs. Incluye, bajo petición explícita, la reejecución/descarte de jobs/eventos y el análisis o modificación de código. Lo ejecuta el agente principal `product-forge-pana`, delegando en los subagentes `product-forge-kos-jobs`, `product-forge-kos-logs` y `product-forge-kos-code`.
 
 ## Disparadores típicos
 
@@ -20,7 +27,7 @@ Pasa a cada subagente todo el contexto que necesite (alcance, tenant, rango, IDs
 
 ## Reglas
 
-- **Catálogo de errores:** fuente única de verdad es el prompt `product-forge-pacman-kos-catalog`, que importan `jobs` y `logs`. Impórtalo tú solo si necesitas interpretar o cruzar una clasificación. No dupliques su contenido ni lo modifiques salvo instrucción explícita del usuario.
+- **Catálogo de errores:** fuente única de verdad es el fichero auxiliar `catalog.md` de esta skill (`.opencode/skills/product-forge-pacman-kos/catalog.md`), que leen `jobs` y `logs`. Léelo tú solo si necesitas interpretar o cruzar una clasificación. No dupliques su contenido ni lo modifiques salvo instrucción explícita del usuario.
 
 ---
 
@@ -51,7 +58,7 @@ Pasa a cada subagente todo el contexto que necesite (alcance, tenant, rango, IDs
    - `product-forge-kos-logs`: errores en Loki, agrupación por firma, recurrencia y alcance de datos.
 3. **Cruzar resultados**: correlaciona KOs con firmas de logs (mismo error, producto o franja). Si `jobs` pide una "Comprobación ampliada" que requiere traza, lanza `logs` con esa petición concreta y marca la clasificación como provisional hasta tenerla.
 4. **Validar**: si algún subagente reporta ambigüedad de labels, endpoints con error o datos insuficientes, indícalo claramente.
-5. **Componer y presentar** el informe tú, con el formato siguiente. Los subagentes solo exponen la información relevante (grupos de error, volúmenes, tenants, ventanas, alcance de datos, limitaciones): la estructura, el orden de prioridad y los criterios de presentación son los de este comando.
+5. **Componer y presentar** el informe tú, con el formato siguiente. Los subagentes solo exponen la información relevante (grupos de error, volúmenes, tenants, ventanas, alcance de datos, limitaciones): la estructura, el orden de prioridad y los criterios de presentación son los de esta skill.
 
 ### Formato del informe
 
@@ -111,10 +118,10 @@ Empieza con **Alcance** y un **Resumen**, y sigue con los bloques 1 a 7 en este 
 No propongas fixes de código salvo que el usuario los pida. Como siguientes pasos, puedes **ofrecer** reejecutar/descartar o analizar el código.
 
 #### 7. KOs achacables a otros squads
-- **Obligatorio cuando haya alguno.** Avisa al usuario en una sección propia y **sugiérele notificarlo**. Se determina con el campo **Escalar** del catálogo `product-forge-pacman-kos-catalog` (sin el campo, la responsabilidad es del Squad Products y no entra aquí).
+- **Obligatorio cuando haya alguno.** Avisa al usuario en una sección propia y **sugiérele notificarlo**. Se determina con el campo **Escalar** del catálogo (`catalog.md`) (sin el campo, la responsabilidad es del Squad Products y no entra aquí).
 - Agrupa por squad. Por grupo: excepción, tenants, nº, tipo de job/evento, IDs (o ejemplos si son muchos), attempt, rango de `processAtTime` y causa resumida.
 - Si no hay ninguno, no incluyas el bloque.
-- **Canal de escalado:** el escalado se publica como **hilo nuevo** (con título, según las reglas de `product-forge-teams`). **Sugiere** el canal según el tipo de problema, explica brevemente por qué y deja que el usuario elija:
+- **Canal de escalado:** el escalado se publica como **hilo nuevo** (con título, según las reglas de `/product-forge-teams`). **Sugiere** el canal según el tipo de problema, explica brevemente por qué y deja que el usuario elija:
 
   | Tipo de problema | Canal | `groupId` / `channelId` | Enlace |
   |------------------|-------|-------------------------|--------|
@@ -126,14 +133,14 @@ No propongas fixes de código salvo que el usuario los pida. Como siguientes pas
 - **Notificación (solo si el usuario acepta):** puede ser un único hilo con todos los squads o uno por squad, según prefiera el usuario. **Pide siempre confirmación** del canal y del texto exacto.
   1. Redacta el borrador (qué squad, excepción, tenants, nº, IDs y hora en España) y muéstralo con el canal sugerido.
   2. Pide confirmación explícita con `question` (publicar, editar o cancelar). Cada versión nueva requiere una confirmación nueva.
-  3. Publica el hilo nuevo con el CLI de Teams (skill `teams-channels`).
+  3. Publica el hilo nuevo con el CLI de Teams (skill `/teams-channels`).
   4. Nunca publiques sin confirmación; no la sustituye la petición inicial de «sacar el informe».
 
 ---
 
 ## 2. Reejecución y descarte de jobs/eventos
 
-Únicas acciones de este comando (junto con el código) que **modifican estado**.
+Únicas acciones de esta skill (junto con el código) que **modifican estado**.
 
 1. **Delegación**: la ejecución la hace `product-forge-kos-jobs`, que contiene los endpoints y las reglas. Los IDs salen de su listado de KOs o los aporta el usuario; nunca los inventes. Si el usuario pide "reejecuta los KOs" sin más, pide primero al subagente los candidatos (ID, tipo, error, attempt) y propón cuáles reejecutar.
 2. **Confirmación obligatoria**: antes de delegar la ejecución, muestra tenant, número de IDs y listado (y motivo, en un descarte) y pide confirmación explícita con `question`. No ejecutes sin ella.

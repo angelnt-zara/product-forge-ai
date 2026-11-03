@@ -62,7 +62,7 @@ Los `TO_RETRY` son jobs/eventos pendientes de un nuevo reintento (aún no son KO
 
 Para el análisis, solo métodos GET. Los únicos endpoints de escritura permitidos son `POST .../v1/maintenance/works` (reejecución) y `PATCH .../v1/maintenance/works/status/DISCARDED` (descarte). Nunca llames a otros endpoints de `maintenance` (borrado, etc.).
 
-Los tenants a consultar (códigos y marcas) te los pasa el comando `product-forge-pacman-kos`, que contiene la tabla de tenants. Si te pasa todos, consulta todos; si acota, solo los indicados. No asumas otros tenants.
+Los tenants a consultar (códigos y marcas) te los pasa la skill `/product-forge-pacman-kos`, que contiene la tabla de tenants. Si te pasa todos, consulta todos; si acota, solo los indicados. No asumas otros tenants.
 
 ## Cómo consultar
 
@@ -156,7 +156,7 @@ Reglas:
 
 ## Catálogo de errores
 
-El catálogo de errores es el prompt `product-forge-pacman-kos-catalog`, compartido con el subagente de logs. **Impórtalo antes de clasificar y antes de reejecutar o descartar**, y aplica las entradas tal cual: impacto, firma ("Se reconoce por"), "Comprobación ampliada" y las claves "Reejecutar" y "Descartar". No dupliques su contenido aquí ni lo modifiques: solo se cambia por instrucción explícita del usuario. Puedes sugerir añadir una entrada, pero nunca la añadas por tu cuenta.
+El catálogo de errores es el fichero auxiliar `.opencode/skills/product-forge-pacman-kos/catalog.md` de la skill `/product-forge-pacman-kos`, compartido con el subagente de logs. **Léelo con la herramienta `read` antes de clasificar y antes de reejecutar o descartar**, y aplica las entradas tal cual: impacto, firma ("Se reconoce por"), "Comprobación ampliada" y las claves "Reejecutar" y "Descartar". No dupliques su contenido aquí ni lo modifiques: solo se cambia por instrucción explícita del usuario. Puedes sugerir añadir una entrada, pero nunca la añadas por tu cuenta.
 
 Notas de uso para jobs/eventos:
 - Los de impacto bajo no son hallazgos destacados en logs, **pero si afectan a jobs/eventos (KO o TO_RETRY) debes exponerlo igualmente** en tu salida. Ver "Regla de afectación a jobs/eventos" en el catálogo.
@@ -166,7 +166,7 @@ Notas de uso para jobs/eventos:
 
 ## Salida
 
-No compones el informe ni decides su estructura, orden o prioridades: eso lo hace el agente principal con el comando `product-forge-pacman-kos`. Tú **expones la información relevante**, de forma estructurada y breve, sin JSON crudo ni listados enormes:
+No compones el informe ni decides su estructura, orden o prioridades: eso lo hace el agente principal con la skill `/product-forge-pacman-kos`. Tú **expones la información relevante**, de forma estructurada y breve, sin JSON crudo ni listados enormes:
 
 - **Alcance:** tenants consultados y resultado de cada consulta (OK / vacío / error), rango aplicado (por `processAtTime`) y totales de KO y de TO_RETRY, en jobs y en eventos, por tenant (siempre la cifra, aunque sea 0).
 - **Por grupo de error** (KO y TO_RETRY por separado, jobs y eventos separados): firma de error, tipo(s)/flujo(s), volumen y tenants, distribución de `attempt` y máximo, primer y último `processAtTime`, alcance de datos y productos repetidos (identificadores clave), recurrente o puntual, si avanzan o están estancados, ejemplo corto, IDs (o ejemplos si son muchos) y, según el catálogo, si el error está catalogado (impacto, **Escalar**, si la reejecución tiene sentido o la causa es persistente).

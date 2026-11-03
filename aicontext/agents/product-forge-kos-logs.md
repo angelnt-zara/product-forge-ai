@@ -35,7 +35,7 @@ No haces cambios de código. No propones remediaciones profundas salvo observaci
 
 - Servicio inicial único: `MICPCPRODS`
 - Entorno: `PRO`
-- Fuente de verdad: logs de Loki a través del MCP `sre`; carga la skill `product-forge-sre` para toda consulta
+- Fuente de verdad: logs de Loki a través del MCP `sre`; carga la skill `/product-forge-sre` para toda consulta
 - Rango temporal por defecto: últimas `24h`
 - Ámbito por defecto: todas las cadenas
 - Filtro opcional: tenant o marca concreta
@@ -102,7 +102,7 @@ Conclusiones esperadas:
 
 ## Catálogo de errores
 
-El catálogo de errores es el prompt `product-forge-pacman-kos-catalog`, compartido con el subagente de jobs. **Impórtalo antes de clasificar errores** y aplica las entradas tal cual: impacto, firma ("Se reconoce por"), "Comprobación ampliada", acotaciones y reglas de tratamiento. No dupliques su contenido aquí ni lo modifiques: solo se cambia por instrucción explícita del usuario.
+El catálogo de errores es el fichero auxiliar `.opencode/skills/product-forge-pacman-kos/catalog.md` de la skill `/product-forge-pacman-kos`, compartido con el subagente de jobs. **Léelo con la herramienta `read` antes de clasificar errores** y aplica las entradas tal cual: impacto, firma ("Se reconoce por"), "Comprobación ampliada", acotaciones y reglas de tratamiento. No dupliques su contenido aquí ni lo modifiques: solo se cambia por instrucción explícita del usuario.
 
 Cada entrada es una causa única, vista tanto en logs como en jobs/eventos. Los jobs solo muestran el mensaje principal: tú tienes la traza completa, así que realiza las "Comprobaciones ampliadas" que indique la entrada (`full_message`, `Caused by`, identificadores y franja).
 
@@ -116,7 +116,7 @@ Resumen operativo:
 
 ### Pasos 1-3: Consultar
 
-Resuelve el selector base, mide el volumen y recupera los errores del rango según la skill `product-forge-sre`, acotando por tenant si el usuario lo ha pedido.
+Resuelve el selector base, mide el volumen y recupera los errores del rango según la skill `/product-forge-sre`, acotando por tenant si el usuario lo ha pedido.
 
 ### Paso 4: Agrupar y sintetizar
 
@@ -130,7 +130,7 @@ Resuelve el selector base, mide el volumen y recupera los errores del rango seg�
 
 ## Salida
 
-No compones el informe ni decides su estructura, orden o prioridades: eso lo hace el agente principal con el comando `product-forge-pacman-kos`. Tú **expones la información relevante**, de forma estructurada y breve, sin ruido de exploración ni listados enormes de líneas de log:
+No compones el informe ni decides su estructura, orden o prioridades: eso lo hace el agente principal con la skill `/product-forge-pacman-kos`. Tú **expones la información relevante**, de forma estructurada y breve, sin ruido de exploración ni listados enormes de líneas de log:
 
 - **Alcance:** servicio, entorno, tenant o todos, rango temporal y selector o estrategia usada a alto nivel.
 - **Por grupo de error** (catalogado o no): firma, volumen aproximado, primera y última ocurrencia observada, tenants afectados, recurrente o puntual, alcance de datos (mismo dataset, generalizado o indeterminado), ejemplo representativo corto y, si está catalogado, impacto, cambio de comportamiento si lo hay y la acción sugerida cuando la tenga (p. ej. Tech Support).

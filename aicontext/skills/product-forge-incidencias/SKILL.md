@@ -1,6 +1,13 @@
+---
+name: product-forge-incidencias
+description: Flujo de temas pendientes del squad Products (Product Forge): hilos de Teams sin atender y tickets ITSMECOM abiertos, con publicación opcional en Teams. SOLO se ejecuta si el usuario la invoca explícitamente (pide los temas/incidencias pendientes o nombra esta skill); no cargarla por iniciativa propia ni como parte de otro flujo.
+---
+
 # Product Forge: incidencias pendientes (Teams + Jira)
 
-Comando para obtener los temas pendientes del squad Products (Product Forge): hilos de Teams que mencionan al squad y tickets ITSMECOM abiertos. Opcionalmente, publica el resumen en Teams. Lo ejecuta el agente principal `product-forge-pana`, que **coordina** tres subagentes, **compone el informe** y **publica** en Teams.
+> **Invocación explícita obligatoria:** esta skill solo se ejecuta cuando el usuario la pide de forma explícita. No la cargues ni ejecutes por inferencia, por coincidencia con la descripción ni desde otra skill o subagente. Si dudas de que la petición sea explícita, pregunta antes con la herramienta `question`.
+
+Flujo para obtener los temas pendientes del squad Products (Product Forge): hilos de Teams que mencionan al squad y tickets ITSMECOM abiertos. Opcionalmente, publica el resumen en Teams. Lo ejecuta el agente principal `product-forge-pana`, que **coordina** tres subagentes, **compone el informe** y **publica** en Teams.
 
 Escanear y publicar son el mismo flujo: la publicación añade los pasos de borrador, confirmación y envío.
 
@@ -22,7 +29,7 @@ Los subagentes no comparten memoria: pásales todo el contexto que necesiten, in
   - **Hilo de la daily** en el canal «SQUAD Product Forge 🛠️», solo si lo pide.
   - **Chat privado del usuario** (`48:notes`), solo si lo pide expresamente.
 
-Comandos, identificadores y cautelas de publicación están en la skill `product-forge-teams`.
+Comandos, identificadores y cautelas de publicación están en la skill `/product-forge-teams`.
 
 ## Procedimiento
 
@@ -38,7 +45,7 @@ Comandos, identificadores y cautelas de publicación están en la skill `product
 7. **Si se publica** (acción que modifica estado):
    1. Con los informes previos devueltos por `teams-extractor`, aplica las reglas de «Informes previos» y compón el **borrador** según «Mensaje de publicación», con validación regex. Indica al usuario cuántos resueltos se han omitido.
    2. Muestra al usuario el borrador tal y como se verá en Teams y el **destino exacto**, y pide confirmación con `question`. Cada versión nueva requiere una confirmación nueva.
-   3. Solo con un "sí" claro, **publica tú** el texto exacto confirmado en el destino (skill `product-forge-teams`), tras volver a validarlo con la regex. No permitas que el texto cambie entre borrador y envío.
+   3. Solo con un "sí" claro, **publica tú** el texto exacto confirmado en el destino (skill `/product-forge-teams`), tras volver a validarlo con la regex. No permitas que el texto cambie entre borrador y envío.
    4. Informa del resultado. Recuerda que los mensajes enviados no se pueden editar ni borrar.
 
 ## Formato del informe (escaneo)
@@ -56,9 +63,9 @@ Cada hilo o ticket lleva **dos emojis**, siempre **los primeros de cada viñeta*
 
 ## Mensaje de publicación (borrador y envío)
 
-- **Primera línea (título)**: `**Temas pendientes entre dd/mm/aaaa y dd/mm/aaaa**` con la fecha de inicio y fin del informe, seguida de línea en blanco. Es la única línea que no es viñeta ni cabecera de bloque. Va después del aviso de IA obligatorio (skill `product-forge-teams`).
+- **Primera línea (título)**: `**Temas pendientes entre dd/mm/aaaa y dd/mm/aaaa**` con la fecha de inicio y fin del informe, seguida de línea en blanco. Es la única línea que no es viñeta ni cabecera de bloque. Va después del aviso de IA obligatorio (skill `/product-forge-teams`).
 - Mensaje **conciso**: pendientes (🫥 y 🏃‍♂️‍➡️) en los bloques 1 a 4; los ✅ solo en el 5º bloque, iniciados por personas externas.
-- **Un tema por línea**, como viñeta, con las particularidades de formato de `product-forge-teams`.
+- **Un tema por línea**, como viñeta, con las particularidades de formato de `/product-forge-teams`.
 - **Cinco bloques**, en este orden, cada uno ordenado según «Orden» y omitido si está vacío: 1º «Hilos abiertos por personas externas» (🫥/🏃‍♂️‍➡️ de Teams); 2º «Incidencias ITSMECOM»; 3º «Consultas ITSMECOM»; 4º «Hilos internos» (hilos del equipo con PR abierta); 5º «Hilos externos resueltos» (✅ iniciados por personas externas).
 - **Formato de línea ITSMECOM**: `- <criticidad> <atendido> [ITSMECOM-N](https://jira.inditex.com/jira/browse/ITSMECOM-N): <título> · dd/mm — <descripción>`. **El enlace va solo sobre el ID**. Atendido: 🫥 (En Cartera, sin asignar) o 🏃‍♂️‍➡️ (asignado y En Curso); fecha de creación. Quita `[` y `]` del título.
 - **Estado ITSMECOM**: en los En Curso indica «En curso, asignado a <nombre>»; en los En Cartera «En cartera, sin asignar».

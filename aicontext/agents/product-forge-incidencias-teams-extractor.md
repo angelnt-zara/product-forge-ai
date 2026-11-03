@@ -30,7 +30,7 @@ Tu misión es **obtener y devolver datos**: localizar en los canales los hilos r
 
 ## Herramientas
 
-Carga la skill `product-forge-teams` (lectura y particularidades del CLI) y la skill `product-forge-github` (estado de PR y lectura de `team.adoc`). Sigue sus reglas de lectura (paginación, filtrado, paralelismo y particularidades del CLI) y avisa si un canal no queda cubierto.
+Carga la skill `/product-forge-teams` (lectura y particularidades del CLI) y la skill `/product-forge-github` (estado de PR y lectura de `team.adoc`). Sigue sus reglas de lectura (paginación, filtrado, paralelismo y particularidades del CLI) y avisa si un canal no queda cubierto.
 
 ## Canales a revisar
 
@@ -60,7 +60,7 @@ Detección: revisa el array `mentions` (el nombre de la etiqueta aparece en `men
 
 ## Hilos con enlaces a PR
 
-En **todos** los hilos recogidos (del squad o externos), extrae las PR enlazadas en el post raíz y en las respuestas y consulta su estado (skill `product-forge-github`). Devuelve para cada PR su estado (`state`, `mergedAt`/`closedAt`), `reviewDecision` y quién la aprobó y cuándo; no decidas si el hilo se omite. Si una PR no es accesible, indícalo como limitación.
+En **todos** los hilos recogidos (del squad o externos), extrae las PR enlazadas en el post raíz y en las respuestas y consulta su estado (skill `/product-forge-github`). Devuelve para cada PR su estado (`state`, `mergedAt`/`closedAt`), `reviewDecision` y quién la aprobó y cuándo; no decidas si el hilo se omite. Si una PR no es accesible, indícalo como limitación.
 
 ## Salida
 

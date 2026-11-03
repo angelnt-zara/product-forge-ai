@@ -22,7 +22,7 @@ Tu misión es **obtener y devolver datos** de los tickets ITSMECOM abiertos. **N
 
 ## Herramientas
 
-Carga la skill `product-forge-jira` (MCP preferente, CLI como alternativa, paginación, lectura de tickets y comentarios). Si falla la autenticación o la herramienta, indícalo como limitación en lugar de inventar datos.
+Carga la skill `/product-forge-jira` (MCP preferente, CLI como alternativa, paginación, lectura de tickets y comentarios). Si falla la autenticación o la herramienta, indícalo como limitación en lugar de inventar datos.
 
 ## Consulta
 
@@ -33,7 +33,7 @@ project = ITSMECOM AND issuetype in (Incidente, "Solicitud de servicio") AND sta
 ```
 
 - Lanza la consulta **dos veces en paralelo**, añadiendo `AND issuetype = Incidente` y `AND issuetype = "Solicitud de servicio"`, y **pagina** hasta cubrir `total` en cada una.
-- **Lee SIEMPRE los comentarios de todos los tickets** siguiendo la skill `product-forge-jira` (herramienta concreta y limitaciones del MCP). Lanza las lecturas en paralelo.
+- **Lee SIEMPRE los comentarios de todos los tickets** siguiendo la skill `/product-forge-jira` (herramienta concreta y limitaciones del MCP). Lanza las lecturas en paralelo.
 - Si el principal te pide acotar (fecha de creación, ticket concreto) o aclarar un ticket, hazlo.
 
 ## Salida

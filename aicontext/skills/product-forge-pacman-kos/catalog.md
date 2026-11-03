@@ -1,6 +1,6 @@
 # Pacman Products: catálogo de errores
 
-Fuente única de verdad del catálogo de errores de `MICPCPRODS`. La usan los subagentes `product-forge-kos-logs` y `product-forge-kos-jobs`, y el comando `product-forge-pacman-kos`.
+Fuente única de verdad del catálogo de errores de `MICPCPRODS`. La usan los subagentes `product-forge-kos-logs` y `product-forge-kos-jobs`, y la skill `/product-forge-pacman-kos`. Es un fichero auxiliar de esa skill: los subagentes lo leen directamente; no es una skill ni un comando invocable.
 
 Cada entrada describe **una causa única**, sin distinguir si se observa en logs o en jobs/eventos: un error en un job va acompañado de logs de error y ambos delatan el mismo problema. Los jobs/eventos solo dejan constancia del mensaje de error principal; los logs aportan la traza completa y más contexto. Por eso, cuando una comprobación necesita más información de la que muestra el job, se deja indicada en **Comprobación ampliada**: se hace consultando los logs (`full_message`, `Caused by`, mismos identificadores y franja).
 
