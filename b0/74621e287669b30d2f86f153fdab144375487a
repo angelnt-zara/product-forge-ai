@@ -1,0 +1,23 @@
+aicontext/agents/product-forge-kos-code.md
+  s_ae1fb668890c11::t_ae84eeb733eeac 42,88-89
+aicontext/prompts/product-forge-pacman-kos-catalog.md
+  s_ae1fb668890c11::t_2cf1d550eac11c 3
+aicontext/prompts/product-forge-pacman-kos.md
+  s_ae1fb668890c11::t_117892408dbe97 3,15-17,50-51,115,125
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "b074621e287669b30d2f86f153fdab144375487a",
+  "prompts": {},
+  "sessions": {
+    "s_ae1fb668890c11": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5d21ddc7ffeExPY5HsLz1obQ7",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
