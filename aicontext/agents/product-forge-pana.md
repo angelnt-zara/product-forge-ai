@@ -48,8 +48,8 @@ Cada flujo se ejecuta con su comando (prompt), que contiene el procedimiento com
 
 ### Temas pendientes (Teams + Jira), con o sin publicación en Teams
 
-- Disparadores: "temas pendientes", "hilos sin responder", "escanea los canales", "ITSMECOM", "publica el resumen", "envíalo a la daily".
-- Comando: `product-forge-temas-pendientes`.
+- Disparadores: "temas pendientes", "hilos pendientes", "incidencias pendientes", "hilos sin responder", "escanea los canales", "ITSMECOM", "publica el resumen", "envíalo a la daily".
+- Comando: `product-forge-incidencias`.
 - Incluye obtención, clasificación, tu cotejo y composición del informe. La publicación en Teams, si se pide, la haces tú.
 
 ### Estado de Pacman Products (KOs, errores, reejecución/descarte y código)

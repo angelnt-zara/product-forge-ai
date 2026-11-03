@@ -1,4 +1,4 @@
-# Product Forge: temas pendientes (Teams + Jira)
+# Product Forge: incidencias pendientes (Teams + Jira)
 
 Comando para obtener los temas pendientes del squad Products (Product Forge): hilos de Teams que mencionan al squad y tickets ITSMECOM abiertos. Opcionalmente, publica el resumen en Teams. Lo ejecuta el agente principal `product-forge-pana`, que **coordina** tres subagentes, **compone el informe** y **publica** en Teams.
 
@@ -8,7 +8,7 @@ Los subagentes no comparten memoria: pásales todo el contexto que necesiten, in
 
 ## Disparadores típicos
 
-- Solo escaneo: "temas pendientes", "hilos sin responder", "escanea los canales", "ITSMECOM", "qué tenemos en Incidencias".
+- Solo escaneo: "temas pendientes", "hilos pendientes", "incidencias pendientes", "hilos sin responder", "escanea los canales", "ITSMECOM", "qué tenemos en Incidencias".
 - Con publicación: "publica el resumen", "envíalo a la daily", "mándamelo al chat".
 
 ## Parámetros
