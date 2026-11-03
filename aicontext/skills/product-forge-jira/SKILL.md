@@ -23,7 +23,7 @@ Referencia técnica reutilizable para consultar Jira. No contiene criterios de n
 
 ## Lectura de un ticket (`jira_get_issue`)
 
-- Pide los comentarios cuando necesites entender el estado real del problema: los **últimos comentarios** suelen reflejarlo mejor que la descripción original.
+- **Lee SIEMPRE los comentarios** de cada ticket (`jira_get_issue` con comentarios, o el CLI), también si `jira_search` ya devuelve la descripción: la búsqueda no trae comentarios. Los **últimos comentarios** reflejan el estado real mejor que la descripción original (causa ya identificada, corrección aplicada, ticket pendiente solo de cierre) y deben condicionar la criticidad y la descripción de cada línea. Si no puedes leerlos, indícalo como limitación.
 - Si hay muchos comentarios, pondera los que mencionan a Pacman, Products o Adapter. Sin comentarios, usa la descripción.
 - Campos habituales: clave, título (`summary`), tipo, estado, asignado, fecha de creación. No inventes ninguno.
 - Fechas en UTC: conviértelas a `Europe/Madrid` al mostrarlas.

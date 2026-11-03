@@ -1,6 +1,6 @@
 ---
 name: product-forge-teams
-description: Cómo leer y publicar mensajes en Teams para el squad Product Forge (Pacman Products) con el CLI `teams`. Incluye destinos de publicación del squad, resolución de miembros de la etiqueta ProductForge, comandos de lectura/publicación y particularidades de formato (Markdown/HTML). Úsala en cualquier flujo que lea canales de Teams o publique en la daily o en el chat privado.
+description: Cómo leer y publicar mensajes en Teams para el squad Product Forge (Pacman Products) con el CLI `teams`. Incluye destinos de publicación del squad, comandos de lectura/publicación y particularidades de formato (Markdown/HTML). Úsala en cualquier flujo que lea canales de Teams o publique en la daily o en el chat privado.
 ---
 
 # Product Forge: interacción con Teams
@@ -22,25 +22,18 @@ CLI desde la raíz del runtime. Requiere `az login`:
 
 ```bash
 export PYTHONPATH="$PWD/.opencode/skills/_shared/scripts"
-python3 -m teams channel messages --team <GROUP_ID> --channel "<CHANNEL_ID>" --since <ISO> --top 50 --pages 3 --json
+python3 -m teams channel messages --team <GROUP_ID> --channel "<CHANNEL_ID>" --top 50 --pages 4 --json \
+  | jq --arg since "<ISO, p. ej. 2026-10-18T00:00:00Z>" '[.[] | select(.messageType=="message" and .createdDateTime >= $since)]'
 python3 -m teams channel replies  --team <GROUP_ID> --channel "<CHANNEL_ID>" --thread <MESSAGE_ID> --json
 ```
 
+- **No uses `--since` en `channel messages`:** la API de canales lo rechaza con error 400. Lee con `--top`/`--pages` suficientes y **filtra por fecha en local** (campo de creación del mensaje raíz). Comprueba que el mensaje más antiguo leído es anterior al inicio del rango; si no, itera más páginas.
 - Usa siempre `--json` para poder inspeccionar `mentions`, `from`, `replyToId`, `webUrl` y fechas. En `mentions`, el nombre de una etiqueta aparece en `mentionText`.
 - Los canales son independientes: consúltalos **en paralelo** (varias llamadas en el mismo bloque, o subagentes `general` si el volumen es grande).
 - Si un canal devuelve el máximo de páginas, es una limitación: avísalo e itera más páginas.
 - Ignora mensajes de sistema, eventos de unión/salida de canal, eventos/grabaciones de reuniones y mensajes eliminados.
 - Las fechas vienen en UTC: conviértelas a `Europe/Madrid` al mostrarlas.
 - El hilo de la daily (mensaje raíz `1789993863727`) devuelve como máximo 50 respuestas, casi todas eventos de sistema: no sirve para analizar temas, pero sí para localizar mensajes ya publicados (p. ej. informes anteriores del agente). Filtra por texto y por fecha; si el máximo de 50 puede dejar fuera mensajes del rango pedido, indícalo como limitación.
-
-## Miembros de la etiqueta `ProductForge`
-
-Resuélvelos al inicio de la ejecución y cachéalos durante la sesión:
-
-1. Preferente: Graph `GET /teams/{teamId}/tags` → localizar `displayName == "ProductForge"` → `GET /teams/{teamId}/tags/{tagId}/members` (token con `az account get-access-token --resource-type ms-graph`). Prueba con el team `1301738f-...` y, si no aparece, con los demás.
-2. Alternativa: leer `team.adoc` del squad (`gh api repos/inditex/doc-pacman/contents/docs/src/modules/equipo/pages/team.adoc -H "Accept: application/vnd.github.raw"`) o `tech-support`/`squad-rotation`.
-3. **Excepción fija:** considera siempre miembro de `ProductForge` a **Elias Ferreiro Borreiros**, aunque no figure en la etiqueta ni en `team.adoc`.
-4. Si no puedes resolver la lista con certeza, dilo y pide los nombres al usuario; no la inventes.
 
 ## Publicación
 

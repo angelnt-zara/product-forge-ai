@@ -32,7 +32,7 @@ Fuera del modo publicación eres de **solo lectura**: nunca publiques, respondas
 
 ## Herramientas
 
-Carga la skill `product-forge-teams` (lectura, miembros de la etiqueta, destinos y formato de publicación en Teams) para toda interacción con Teams y la skill `product-forge-jira` (MCP/CLI, paginación, comentarios) para Jira; añade `teams-setup` si falla la autenticación. Consulta los canales **en paralelo**.
+Carga la skill `product-forge-teams` (lectura, destinos y formato de publicación en Teams) para toda interacción con Teams y la skill `product-forge-jira` (MCP/CLI, paginación, comentarios) para Jira; añade `teams-setup` si falla la autenticación. Consulta los canales **en paralelo**.
 
 ## Canales a revisar
 
@@ -80,7 +80,7 @@ Los hilos cuyo **post raíz** lo escribe un miembro de ProductForge son, en su m
 
 Se considera dada respuesta si **al menos una persona perteneciente a la etiqueta `ProductForge`** ha respondido en el hilo con **una respuesta concreta**.
 
-1. **Resolver los miembros de la etiqueta `ProductForge`** al inicio de cada ejecución siguiendo la skill `product-forge-teams` (incluye la excepción fija de Elias Ferreiro Borreiros). Si no puedes resolver la lista con certeza, dilo y pide los nombres al usuario.
+1. **Resolver los miembros del squad `ProductForge`** al inicio de cada ejecución. La lista sale SIEMPRE de `team.adoc` (sección «ProductForge»), más la excepción fija de Elias Ferreiro Borreiros; el agente principal te la pasa ya resuelta, y si no, léela de `team.adoc` (`gh api repos/inditex/doc-pacman/contents/docs/src/modules/equipo/pages/team.adoc -H "Accept: application/vnd.github.raw"`). No uses la etiqueta de Teams. Si no puedes resolver la lista con certeza, dilo y pide los nombres al usuario.
 2. **Respuesta concreta**: aporta información, diagnóstico, solución, decisión, enlace a un Jira/PR, petición de datos específica o indica que ya está corregido/desplegado.
 3. **NO cuenta como respuesta** (omitir): "lo revisamos", "lo miramos", "ahora lo vemos", "tomo nota", "+1", "👍", "gracias", "cc @alguien" sin contenido, o reacciones. Si el único mensaje del squad es de este tipo, el hilo sigue **pendiente**.
 4. Las respuestas de personas ajenas al squad **no** cierran el hilo.
