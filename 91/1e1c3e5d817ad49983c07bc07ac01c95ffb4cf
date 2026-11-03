@@ -1,0 +1,25 @@
+aicontext/agents/product-forge-incidencias-classifier.md
+  s_ae1fb668890c11::t_bf64ed2c6fee45 1-109
+aicontext/agents/product-forge-incidencias-jira-extractor.md
+  s_ae1fb668890c11::t_ff255e6df2d79c 1-54
+aicontext/agents/product-forge-incidencias-teams-extractor.md
+  s_ae1fb668890c11::t_2c41bf51c87f2c 3-7,17,19,21,23,25,27-30,34,48,50,58,60,62,64,66,68,70-76,78,80,82,86-87
+aicontext/prompts/product-forge-temas-pendientes.md
+  s_ae1fb668890c11::t_bbdd70743d35ff 3,5-7,16,25,29-43,45,48-81,84,86-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "911e1c3e5d817ad49983c07bc07ac01c95ffb4cf",
+  "prompts": {},
+  "sessions": {
+    "s_ae1fb668890c11": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5d21ddc7ffeExPY5HsLz1obQ7",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
