@@ -1,0 +1,19 @@
+aicontext/agents/product-forge-pana-scanner.md
+  s_75d955e79491f9::t_9ed4c79cd71b93 137,147,149,152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "2e6a5667ad8d09e0b2bebbd89fb6108b6d0b3ccf",
+  "prompts": {},
+  "sessions": {
+    "s_75d955e79491f9": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5d873e97ffeSzvx4AkMu1SFhU",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
