@@ -5,7 +5,7 @@ description: Cómo consultar logs de Loki mediante el MCP `sre` para Pacman Prod
 
 # Product Forge: consulta de logs en Loki (MCP `sre`)
 
-Referencia técnica reutilizable para consultar logs. No contiene criterios de análisis (agrupación por firma, recurrencia, clasificación de errores conocidos, formato de informe): eso es de cada flujo que la use.
+Referencia técnica reutilizable para consultar logs. No contiene criterios de análisis (agrupación por firma, recurrencia, clasificación según el catálogo de errores, formato de informe): eso es de cada flujo que la use.
 
 ## Herramientas
 

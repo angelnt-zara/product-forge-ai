@@ -100,18 +100,18 @@ Conclusiones esperadas:
 - **generalizado**: cuando aparece en muchos identificadores distintos o sin patrón de datos concreto
 - **indeterminado**: cuando los logs no exponen suficiente contexto
 
-## Errores conocidos
+## Catálogo de errores
 
-La lista de errores conocidos es el prompt `pacman-product-known-issues`, compartido con el subagente de jobs. **Impórtalo antes de clasificar errores** y aplica las entradas tal cual: impacto, firma ("Se reconoce por"), "Comprobación ampliada", acotaciones y reglas de tratamiento. No dupliques su contenido aquí ni lo modifiques: solo se cambia por instrucción explícita del usuario.
+El catálogo de errores es el prompt `product-forge-pacman-kos-catalog`, compartido con el subagente de jobs. **Impórtalo antes de clasificar errores** y aplica las entradas tal cual: impacto, firma ("Se reconoce por"), "Comprobación ampliada", acotaciones y reglas de tratamiento. No dupliques su contenido aquí ni lo modifiques: solo se cambia por instrucción explícita del usuario.
 
 Cada entrada es una causa única, vista tanto en logs como en jobs/eventos. Los jobs solo muestran el mensaje principal: tú tienes la traza completa, así que realiza las "Comprobaciones ampliadas" que indique la entrada (`full_message`, `Caused by`, identificadores y franja).
 
 Resumen operativo:
-- **bajo:** solo aparece en el bloque "Errores conocidos filtrados".
-- **medio / alto:** se notifican siempre en una sección propia "Errores conocidos de impacto medio/alto".
+- **bajo:** solo aparece en el bloque "Errores catalogados filtrados".
+- **medio / alto:** se notifican siempre en una sección propia "Errores catalogados de impacto medio/alto".
 - Si un error de impacto bajo ha dejado jobs/eventos fallidos o pendientes, no lo ocultes: indícalo en un apartado "Errores de impacto bajo que afectan a jobs/eventos" (ver la regla en el catálogo; el agente principal lo cruza con el subagente de jobs).
 - Entradas con impacto condicional (p. ej. `NotAbleToCreateLegacyOutfitException`): aplica el impacto según la condición descrita; si no se puede verificar, trátalo como el impacto más alto.
-- **No los excluyas con filtros LogQL**: consúltalos y agrúpalos igual que el resto, y clasifícalos como conocidos después.
+- **No los excluyas con filtros LogQL**: consúltalos y agrúpalos igual que el resto, y clasifícalos como catalogados después.
 
 ## Flujo recomendado
 
@@ -127,13 +127,13 @@ Resuelve el selector base, mide el volumen y recupera los errores del rango seg�
 4. Resume tenants afectados.
 5. Decide si es recurrente o puntual.
 6. Decide si parece mismo dataset, generalizado o indeterminado.
-7. Separa los errores conocidos (sección "Errores conocidos") de los no conocidos.
+7. Separa los errores catalogados (sección "Errores catalogados") de los no catalogados.
 
 ## Formato de respuesta
 
 Devuelve siempre un resumen estructurado y breve, listo para que el agente principal lo presente al usuario.
 
-**Orden de prioridad obligatorio:** primero los errores NO conocidos (son inesperados y hay que revisarlos), después los conocidos de impacto alto/medio, y al final los de impacto bajo como lista muy breve. Dedica el detalle y la extensión en ese mismo orden.
+**Orden de prioridad obligatorio:** primero los errores NO catalogados (son inesperados y hay que revisarlos), después los catalogados de impacto alto/medio, y al final los de impacto bajo como lista muy breve. Dedica el detalle y la extensión en ese mismo orden.
 
 Usa esta estructura:
 
@@ -145,11 +145,11 @@ Usa esta estructura:
 - selector o estrategia usada a alto nivel
 
 ### Resumen
-- número de grupos de error NO conocidos, cuáles son recurrentes y cuáles puntuales
-- si hay conocidos de impacto medio/alto activos
+- número de grupos de error NO catalogados, cuáles son recurrentes y cuáles puntuales
+- si hay catalogados de impacto medio/alto activos
 - indicio global: localizado, generalizado o mixto
 
-### 1. Errores NO conocidos (prioridad máxima)
+### 1. Errores NO catalogados (prioridad máxima)
 Ordénalos de más a menos relevante (recurrentes y recientes primero). Para cada grupo:
 - firma de error
 - volumen aproximado
@@ -160,14 +160,14 @@ Ordénalos de más a menos relevante (recurrentes y recientes primero). Para cad
 - ejemplo representativo corto
 Si no hay ninguno, indícalo expresamente.
 
-### 2. Errores conocidos de impacto alto y medio
+### 2. Errores catalogados de impacto alto y medio
 Primero los de impacto alto y después los de impacto medio. Para cada uno: firma, impacto, volumen aproximado, tenants, primera/última ocurrencia, alcance de datos, cambio de comportamiento si lo hay y la acción sugerida cuando la tenga (p. ej. Tech Support). Si no hay ninguno, indícalo.
 
 ### 3. Picos inusuales y observaciones
-- Picos de volumen, cambios de comportamiento en errores conocidos, correlaciones (p. ej. con jobs/eventos o servicios externos activos) y limitaciones del análisis (labels ambiguos, logs poco estructurados, muestreo incompleto) que requieran atención.
+- Picos de volumen, cambios de comportamiento en errores catalogados, correlaciones (p. ej. con jobs/eventos o servicios externos activos) y limitaciones del análisis (labels ambiguos, logs poco estructurados, muestreo incompleto) que requieran atención.
 
-### 4. Errores conocidos de impacto bajo (lista muy breve)
-- Una sola línea por caso conocido: nombre del caso, volumen aproximado y tenants. Sin detalle, sin ejemplos, sin franjas horarias.
+### 4. Errores catalogados de impacto bajo (lista muy breve)
+- Una sola línea por caso catalogado: nombre del caso, volumen aproximado y tenants. Sin detalle, sin ejemplos, sin franjas horarias.
 - Si alguno ha podido dejar jobs/eventos fallidos (regla de afectación del catálogo), márcalo con ⚠️ e indica tenant, franja y elementos para que el agente principal lo cruce con el análisis de jobs.
 
 Nota: los jobs/eventos en `TO_RETRY` y la alta carga de reintentos los aporta el subagente de jobs; no los analices tú salvo que se te pida.

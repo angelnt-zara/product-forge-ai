@@ -4,7 +4,7 @@ description: >
   subagentes para (1) escanear Teams + Jira ITSMECOM y detectar temas pendientes,
   publicando el resumen en Teams bajo confirmación, y (2) analizar KOs de
   jobs/eventos y errores en logs de Pacman Products (MICPCPRODS) en PRO, con la
-  clasificación de errores conocidos. También reejecuta/descarta jobs y analiza
+  clasificación según el catálogo de errores. También reejecuta/descarta jobs y analiza
   o modifica código bajo petición explícita. Responde también consultas sobre
   datos de Pacman Products (estructura, visibilidad, mapeos con Core) con los
   comandos de tech-support.

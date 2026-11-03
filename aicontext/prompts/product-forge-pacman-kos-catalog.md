@@ -1,6 +1,6 @@
-# Pacman Products: errores conocidos
+# Pacman Products: catálogo de errores
 
-Fuente única de verdad de los errores conocidos de `MICPCPRODS`. La usan los subagentes `product-forge-pana-logs` y `product-forge-pana-jobs`, y el agente principal `product-forge-pana`.
+Fuente única de verdad del catálogo de errores de `MICPCPRODS`. La usan los subagentes `product-forge-pana-logs` y `product-forge-pana-jobs`, y el comando `product-forge-pacman-kos`.
 
 Cada entrada describe **una causa única**, sin distinguir si se observa en logs o en jobs/eventos: un error en un job va acompañado de logs de error y ambos delatan el mismo problema. Los jobs/eventos solo dejan constancia del mensaje de error principal; los logs aportan la traza completa y más contexto. Por eso, cuando una comprobación necesita más información de la que muestra el job, se deja indicada en **Comprobación ampliada**: se hace consultando los logs (`full_message`, `Caused by`, mismos identificadores y franja).
 
@@ -10,32 +10,32 @@ Cada entrada describe **una causa única**, sin distinguir si se observa en logs
 
 ### Niveles de impacto
 El impacto indica si el error señala un problema latente sobre el que el usuario debería actuar.
-- **alto / medio:** se notifican siempre, en una sección propia "Errores conocidos de impacto medio/alto" (firma, volumen, tenants, primera/última ocurrencia, alcance de datos), después de los no conocidos y antes de los de impacto bajo. No se ocultan.
-- **bajo:** errores "normales" a los que no hay que prestar atención. Solo aparecen en una lista muy breve de conocidos. **Excepción obligatoria:** si dejan jobs/eventos en KO, se advierte igualmente (ver siguiente regla).
+- **alto / medio:** se notifican siempre, en una sección propia "Errores catalogados de impacto medio/alto" (firma, volumen, tenants, primera/última ocurrencia, alcance de datos), después de los no catalogados y antes de los de impacto bajo. No se ocultan.
+- **bajo:** errores "normales" a los que no hay que prestar atención. Solo aparecen en una lista muy breve de catalogados. **Excepción obligatoria:** si dejan jobs/eventos en KO, se advierte igualmente (ver siguiente regla).
 
 ### Regla de afectación a jobs/eventos (obligatoria al presentar el informe)
-Un error de impacto bajo que **deja jobs o eventos en KO** no se reduce a una línea en el bloque 5 del informe ("Otros errores conocidos de impacto bajo"). Se marca con ⚠️ al inicio de ese bloque, con: error, tenants, nº de jobs/eventos, estado (KO), attempt y si se reintentan solos o requieren acción.
+Un error de impacto bajo que **deja jobs o eventos en KO** no se reduce a una línea en el bloque 5 del informe ("Otros errores catalogados de impacto bajo"). Se marca con ⚠️ al inicio de ese bloque, con: error, tenants, nº de jobs/eventos, estado (KO), attempt y si se reintentan solos o requieren acción.
 - Cruza ambas fuentes: un error de impacto bajo visto en logs cuya consecuencia son jobs/eventos en KO entra en esta regla (p. ej. un redespliegue que deja eventos sin completar).
 - Si hay jobs/eventos en `TO_RETRY` por este error y se supera el umbral de acumulación, además se informa en el bloque "Alta carga de reintentos".
 - Si no hay jobs/eventos afectados, se mantiene como una línea breve.
 - Excepción: las entradas con instrucción expresa de omisión (p. ej. `UnableToExportLiveLegacyException` con `attempt` = 1) siguen omitiéndose.
 
 ### Jobs/eventos en `TO_RETRY`
-- Un job/evento en `TO_RETRY` **no es un error no conocido**, aunque su error no figure en el catálogo: se reintenta solo. Solo se informa de ellos en el bloque "Alta carga de reintentos" si hay acumulación: **más de 3-4 attempts** o **más de 20 jobs/eventos** (por tenant, flujo o error).
+- Un job/evento en `TO_RETRY` **no es un error no catalogado**, aunque su error no figure en el catálogo: se reintenta solo. Solo se informa de ellos en el bloque "Alta carga de reintentos" si hay acumulación: **más de 3-4 attempts** o **más de 20 jobs/eventos** (por tenant, flujo o error).
 
 ### Campo «Escalar»
 - Una entrada puede incluir el campo **Escalar**, que indica el equipo al que hay que reportar ese error cuando no es responsabilidad de Products.
 - **Si la entrada no lo indica, se entiende que la responsabilidad es del Squad Products** (no hay a quién escalar fuera del squad).
-- En el informe, cuando un error conocido tenga un equipo en **Escalar**, indícalo junto al error (equipo, volumen y tenants) y sugiere reportárselo al equipo correspondiente. Esto aplica aunque el impacto sea bajo.
+- En el informe, cuando un error catalogado tenga un equipo en **Escalar**, indícalo junto al error (equipo, volumen y tenants) y sugiere reportárselo al equipo correspondiente. Esto aplica aunque el impacto sea bajo.
 - **Aviso obligatorio al sacar el informe:** si hay KOs achacables a otros squads, avisa al usuario en una sección propia («KOs achacables a otros squads», por equipo, con excepción, tenants, nº, tipo de job/evento e IDs) y sugiérele notificarlo.
 - **Cómo se notifica:** como **hilo nuevo** en el canal «Incidencias 🐞» de Pacman en Teams (groupId `1301738f-827e-48ec-8770-3f0922c1c295`, channelId `19:d311bbd5ba844456a3f88ca0f8fcc1ec@thread.tacv2`, tenantId `c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75`; enlace: https://teams.microsoft.com/l/channel/19%3Ad311bbd5ba844456a3f88ca0f8fcc1ec%40thread.tacv2/Incidencias%20%F0%9F%90%9E?groupId=1301738f-827e-48ec-8770-3f0922c1c295&tenantId=c8e8bdb6-8e7c-41d5-bc41-37fff3c33b75). Redacta un borrador, muéstralo y publícalo solo tras confirmación explícita del usuario (cada versión nueva requiere confirmación nueva).
 
 ### Reglas de tratamiento
-- Los errores conocidos no cuentan como grupos de error. Los de impacto bajo tampoco son hallazgos destacados (salvo la regla anterior).
-- Al consultar logs, no excluyas los conocidos con filtros LogQL: consúltalos y agrúpalos igual que el resto, y clasifícalos como conocidos después.
-- Si un error conocido cambia claramente (pico de volumen muy superior al habitual o excepción distinta), avísalo como observación.
+- Los errores catalogados no cuentan como grupos de error. Los de impacto bajo tampoco son hallazgos destacados (salvo la regla anterior).
+- Al consultar logs, no excluyas los catalogados con filtros LogQL: consúltalos y agrúpalos igual que el resto, y clasifícalos como catalogados después.
+- Si un error catalogado cambia claramente (pico de volumen muy superior al habitual o excepción distinta), avísalo como observación.
 - **Reejecutar** y **Descartar** de cada entrada fijan qué operaciones de mantenimiento se admiten sobre jobs/eventos con ese error. Si una entrada no admite descartar, no se descarta salvo indicación explícita del usuario, según las reglas del subagente de jobs. Un `504` al reejecutar es esperable (el gateway corta a 30 s): evalúa reconsultando los KO y TO_RETRY, sin repetir la llamada automáticamente.
-- Una entrada que dice "acotación estricta" solo aplica dentro de esas condiciones; fuera de ellas, el error se reporta como no conocido.
+- Una entrada que dice "acotación estricta" solo aplica dentro de esas condiciones; fuera de ellas, el error se reporta como no catalogado.
 
 ---
 
@@ -88,8 +88,8 @@ Un error de impacto bajo que **deja jobs o eventos en KO** no se reduce a una l�
 - **Causa:** estos dos productos fallan siempre y tienen algún problema propio en XMedia (bloqueados). Los reintentos fallan de forma sistemática (dato corrupto).
 - **Reejecutar:** no sirve.
 - **Descartar:** sí, si se cumplen las dos condiciones anteriores (tenant `zh` y productId `475405155` o `475345385`); en cualquier otro caso no.
-- **Acotación estricta:** la misma excepción en otro tenant o con cualquier otro productId es error **no conocido**.
-- **Escalar:** Squad de Imagen. `XMediaConcurrentException` es un error al **escribir en XMedia/Assets**, no un problema de Products. Aplica también a los casos que, por la acotación anterior, se tratan como no conocidos.
+- **Acotación estricta:** la misma excepción en otro tenant o con cualquier otro productId es error **no catalogado**.
+- **Escalar:** Squad de Imagen. `XMediaConcurrentException` es un error al **escribir en XMedia/Assets**, no un problema de Products. Aplica también a los casos que, por la acotación anterior, se tratan como no catalogados.
 
 ### `XMediaConnectionException` (error de conexión con XMedia)
 - **Impacto:** medio
@@ -109,7 +109,7 @@ Un error de impacto bajo que **deja jobs o eventos en KO** no se reduce a una l�
 - **Causa:** APICE no es capaz de asumir la carga que envía Pacman, especialmente durante las propagaciones nocturnas; o carga puntual en un sistema externo al que llama APICE (transitorio).
 - **Reejecutar:** sí, es la solución. Conviene que APICE esté ya estable; si siguiera degradado, volverán a fallar.
 - **Descartar:** no.
-- **Acotación:** `ApiCeVisibilityUnknownException` con cualquier otra causa (otro código HTTP u origen) NO entra aquí: se reporta como error no conocido.
+- **Acotación:** `ApiCeVisibilityUnknownException` con cualquier otra causa (otro código HTTP u origen) NO entra aquí: se reporta como error no catalogado.
 
 ---
 
@@ -142,7 +142,7 @@ Un error de impacto bajo que **deja jobs o eventos en KO** no se reduce a una l�
   - **Amanda:** `SocketTimeoutException: Read timed out` contra `amanda.inditex.com`, p. ej. en `AmandaAssetsDao.fetchContent`.
   - (Heimdal tiene su propia entrada.) Esta lista irá creciendo si se identifican más servicios de terceros.
 - **Causa:** timeouts esporádicos de dependencias externas.
-- **Acotación:** los timeouts contra DB2 no entran aquí; siguen su propio caso (impacto alto). Un volumen claramente superior al habitual o un servicio de terceros distinto a los listados se reporta como observación o como error no conocido.
+- **Acotación:** los timeouts contra DB2 no entran aquí; siguen su propio caso (impacto alto). Un volumen claramente superior al habitual o un servicio de terceros distinto a los listados se reporta como observación o como error no catalogado.
 
 ### Redespliegue de la aplicación
 - **Impacto:** bajo
@@ -193,7 +193,7 @@ Un error de impacto bajo que **deja jobs o eventos en KO** no se reduce a una l�
   
   Cada fallo puede generar además una segunda línea ERROR en `org.springframework.integration.handler.LoggingHandler` (consumer Kafka batch-pipe), que forma parte del mismo caso.
 - **Causa:** conflicto de concurrencia (optimistic locking) en la escritura de shootings/assets, normalmente en ráfagas por el mismo `_id`.
-- **Acotación:** aplica a casos de uso de shootings (`*Shooting*`) y de assets (`*Asset*`, incluida la asignación/reemplazo/cálculo de estado de assets). `OptimisticLockingFailureException` o `MongoBulkWriteException` E11000 en casos de uso **ajenos** a shootings/assets sigue siendo error **no conocido**.
+- **Acotación:** aplica a casos de uso de shootings (`*Shooting*`) y de assets (`*Asset*`, incluida la asignación/reemplazo/cálculo de estado de assets). `OptimisticLockingFailureException` o `MongoBulkWriteException` E11000 en casos de uso **ajenos** a shootings/assets sigue siendo error **no catalogado**.
 
 ### Health check de DataSource fallido
 - **Impacto:** bajo si aparece aislado; alto si se solapa con errores de DB2 (se clasifica entonces dentro de "Timeouts de DB2 en `SyncProduct`").
@@ -212,7 +212,7 @@ Un error de impacto bajo que **deja jobs o eventos en KO** no se reduce a una l�
   - **Cadena compuesta:** un ID válido seguido de `:` y otro identificador (p. ej. `billCycle-03-09-2026:d0aeadca…`).
 - **Comprobación ampliada:** ejemplos observados: `GetElementAssetConfigurations` en za ("Can't find milestone now"), `GetEntitiesVisibilitySnapshots` en md ("Milestone now not found") y `GetNewInTimeline` en oy (`billCycle-03-09-2026:d0aeadca…`).
 - **Causa:** el cliente envía un valor que no es un ID de milestone válido. Uso incorrecto de la API, no un fallo del servicio.
-- **Acotación estricta:** si el milestone tiene un formato válido (p. ej. `billCycle-21-10-2026` o `night-propagation-06-10-2026`) y aun así no se encuentra, **no** es este caso: error no conocido.
+- **Acotación estricta:** si el milestone tiene un formato válido (p. ej. `billCycle-21-10-2026` o `night-propagation-06-10-2026`) y aun así no se encuentra, **no** es este caso: error no catalogado.
 
 ### Peticiones HTTP inválidas (uso incorrecto de la API)
 - **Impacto:** bajo
