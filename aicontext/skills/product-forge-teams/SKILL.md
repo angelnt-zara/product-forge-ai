@@ -13,7 +13,7 @@ Si falla la autenticación (`az login`, token expirado), indícalo y remite a la
 
 Aplican SIEMPRE, en cualquier flujo que use esta skill y sea cual sea el destino:
 
-- **Aviso de IA:** TODO mensaje que se publique en Teams (respuesta en canal, hilo nuevo, chat privado o cualquier otro destino) empieza por la línea `🤖 Mensaje generado con IA`, para advertir al lector de que lo ha generado un agente. Va siempre **al principio**, antes de cualquier título o contenido, separada del resto por una línea en blanco (en HTML, como `<p>🤖 Mensaje generado con IA</p>`). Forma parte del texto exacto que se muestra al usuario y que este confirma; no la omitas ni la modifiques.
+- **Aviso de IA:** TODO mensaje que se publique en Teams (respuesta en canal, hilo nuevo, chat privado o cualquier otro destino) empieza por la línea `🤖 Mensaje generado con IA` **en cursiva** (Markdown: `*🤖 Mensaje generado con IA*`), para advertir al lector de que lo ha generado un agente. Va siempre **al principio**, antes de cualquier título o contenido, separada del resto por una línea en blanco (en HTML, como `<p><i>🤖 Mensaje generado con IA</i></p>`). Forma parte del texto exacto que se muestra al usuario y que este confirma; no la omitas ni la modifiques.
 - **Título en hilos nuevos:** si el mensaje **abre un hilo nuevo** (no es una respuesta), debe incluir siempre un título que resuma la petición o el problema en un **máximo de 10-15 palabras**. Si el CLI admite asunto (`subject`), úsalo; si no, es la primera línea en negrita tras el aviso de IA. Las respuestas a hilos existentes no necesitan título adicional.
 
 ## Lectura
