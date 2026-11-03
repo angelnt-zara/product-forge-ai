@@ -11,7 +11,7 @@ Referencia técnica reutilizable para consultar Jira. No contiene criterios de n
 
 - **Preferente: MCP de Jira.**
   - `jira_search`: búsqueda con JQL.
-  - `jira_get_issue`: detalle de un ticket, con comentarios si se solicitan.
+  - `jira_get_issue`: detalle de un ticket (sin comentarios ni changelog; para los comentarios usa `jira_get_issue_comments`).
 - **Alternativa:** si el MCP falla, usa el CLI (skill `jira-cli`) con la misma consulta.
 - Si falla la autenticación o la herramienta no está disponible, indícalo como limitación en lugar de inventar datos.
 
@@ -23,7 +23,7 @@ Referencia técnica reutilizable para consultar Jira. No contiene criterios de n
 
 ## Lectura de un ticket (`jira_get_issue`)
 
-- **Lee SIEMPRE los comentarios** de cada ticket (`jira_get_issue` con comentarios, o el CLI), también si `jira_search` ya devuelve la descripción: la búsqueda no trae comentarios. Los **últimos comentarios** reflejan el estado real mejor que la descripción original (causa ya identificada, corrección aplicada, ticket pendiente solo de cierre) y deben condicionar la criticidad y la descripción de cada línea. Si no puedes leerlos, indícalo como limitación.
+- **Lee SIEMPRE los comentarios** de cada ticket con `jira_get_issue_comments` (o el CLI), también si `jira_search` ya devuelve la descripción: ni la búsqueda ni `jira_get_issue` traen los comentarios (llegan vacíos). El `changelog` (histórico de estados/asignaciones) tampoco llega con `expand=changelog`: si hace falta, indícalo como limitación. Los **últimos comentarios** reflejan el estado real mejor que la descripción original (causa ya identificada, corrección aplicada, ticket pendiente solo de cierre) y deben condicionar la criticidad y la descripción de cada línea. Si no puedes leerlos, indícalo como limitación.
 - Si hay muchos comentarios, pondera los que mencionan a Pacman, Products o Adapter. Sin comentarios, usa la descripción.
 - Campos habituales: clave, título (`summary`), tipo, estado, asignado, fecha de creación. No inventes ninguno.
 - Fechas en UTC: conviértelas a `Europe/Madrid` al mostrarlas.

@@ -60,7 +60,7 @@ Detección: revisa el array `mentions` (el nombre de la etiqueta aparece en `men
 
 ## Hilos con enlaces a PR
 
-Para los hilos cuyo post raíz lo escribe un miembro del squad, extrae todos los enlaces `https://github.com/inditex/<repo>/pull/<n>` del post raíz y de las respuestas y consulta su estado con `gh pr view <n> -R inditex/<repo> --json state,mergedAt,closedAt,title`. Devuelve el estado de cada PR; no decidas si el hilo se omite.
+En **todos** los hilos recogidos (del squad o externos), extrae todos los enlaces `https://github.com/inditex/<repo>/pull/<n>` del post raíz y de las respuestas y consulta su estado con `gh pr view <n> -R inditex/<repo> --json state,mergedAt,closedAt,title,reviewDecision,reviews`. Devuelve para cada PR `state`, `mergedAt`/`closedAt`, `reviewDecision` y quién la aprobó y cuándo (`reviews` con estado APPROVED); no decidas si el hilo se omite. Si una PR no es accesible, indícalo como limitación.
 
 ## Salida
 
@@ -84,3 +84,4 @@ Si el principal te lo pide, localiza en el hilo de la daily (mensaje raíz `1789
 
 - No inventes hilos, autores ni fechas.
 - No analices jobs, logs ni código ni consultes Jira: eso es de otros subagentes.
+- Devuelve solo **hechos objetivos** con autor y fecha/hora (quién dijo qué y cuándo, última actividad, PR enlazadas y su estado). No incluyas valoraciones ni conclusiones sobre el estado del hilo («queda sin conclusión», «resuelto», «sin cierre», «urgente»…): decidir si está resuelto, atendido o pendiente es del `classifier`. Si el hilo no tiene respuestas o cierre explícito, descríbelo como hecho («sin respuestas posteriores al dd/mm hh:mm»).

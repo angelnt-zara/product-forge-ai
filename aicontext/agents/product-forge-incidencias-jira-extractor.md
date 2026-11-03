@@ -33,7 +33,7 @@ project = ITSMECOM AND issuetype in (Incidente, "Solicitud de servicio") AND sta
 ```
 
 - Lanza la consulta **dos veces en paralelo**, añadiendo `AND issuetype = Incidente` y `AND issuetype = "Solicitud de servicio"`, y **pagina** hasta cubrir `total` en cada una.
-- **Lee SIEMPRE los comentarios de todos los tickets** (`jira_get_issue` con comentarios o CLI); la búsqueda no los trae. Lanza las lecturas en paralelo.
+- **Lee SIEMPRE los comentarios de todos los tickets** siguiendo la skill `product-forge-jira` (herramienta concreta y limitaciones del MCP). Lanza las lecturas en paralelo.
 - Si el principal te pide acotar (fecha de creación, ticket concreto) o aclarar un ticket, hazlo.
 
 ## Salida

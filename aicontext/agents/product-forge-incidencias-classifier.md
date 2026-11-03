@@ -48,9 +48,14 @@ Se considera dada respuesta si **al menos un miembro de ProductForge** ha respon
 ## Hilos iniciados por miembros del squad (peticiones de revisión de PR)
 
 - Si **todas** las PR del hilo están cerradas (`MERGED` o `CLOSED`), el hilo se da por solucionado: **omitir** (`omitir: true`, motivo «PR cerradas»).
+- «Cerrada» significa literalmente `MERGED` o `CLOSED`: una PR aprobada pero `OPEN` no está cerrada.
 - Si alguna PR sigue `OPEN`, el hilo es **interno pendiente** (🫥 no atendido; 🏃‍♂️‍➡️ si el squad ya contestó algo concreto y queda una pregunta sin atender). Indica qué PR sigue abierta.
 - Si no contiene enlace a PR, clasifícalo con los criterios normales; los resueltos de miembros del squad se omiten.
 - Si se indica que se incluyan PR cerradas, no omitas por este motivo.
+
+## Hilos iniciados por personas externas con PR
+
+No somos responsables del trabajo de squads ajenos: nuestro trabajo termina al revisar el hilo o la PR. Si el hilo lo inicia una persona **externa** y enlaza PR, basta con que **todas** las PR estén **aprobadas** (`reviewDecision` = `APPROVED`, o aprobación explícita de un miembro del squad) para considerar la parte del squad resuelta (✅, sin esperar a merge ni despliegue). Si alguna PR no está aprobada, el hilo sigue pendiente (🫥 o 🏃‍♂️‍➡️ según haya respuesta concreta del squad). Si el estado de la PR no se pudo consultar, pide aclaración al principal.
 
 ## Estado de atención (2º emoji)
 

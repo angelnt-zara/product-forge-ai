@@ -48,9 +48,9 @@ Comandos, identificadores y cautelas de publicación están en la skill `product
 Cada hilo o ticket lleva **dos emojis**, siempre **los primeros de cada viñeta** y en este orden: 1º criticidad (🔴 urgente, 🟠 importante, 🟡 baja, ⚪ nula), 2º atendido (🫥 no atendido, 🏃‍♂️‍➡️ atendido en curso, ✅ resuelto).
 
 1. Una línea de alcance: canales, rango, zona horaria (`Europe/Madrid`) y nº de hilos relevantes.
-2. Tabla resumen por canal (relevantes / por criticidad 🔴 🟠 🟡 ⚪ / por atención 🫥 🏃‍♂️‍➡️ ✅ / informativos / omitidos), solo con los canales con actividad.
+2. Tabla resumen por canal **solo sobre pendientes** (🫥 y 🏃‍♂️‍➡️): nº de pendientes y su desglose por criticidad 🔴 🟠 🟡 ⚪ y por atención 🫥 🏃‍♂️‍➡️, solo con los canales que tengan pendientes. Los recuentos se obtienen contando la clasificación del `classifier` y no se estiman. Incluye ITSMECOM como una fila más.
 3. **Pendientes (🫥 y 🏃‍♂️‍➡️)**, ordenados según «Orden», **una sola línea por elemento**: criticidad + atendido · fecha · antigüedad · canal · autor · tema en pocas palabras · URL completa en texto visible. Marca con «(PR abierta)» los hilos del equipo. Separa hilos de Teams, incidencias ITSMECOM y consultas ITSMECOM.
-4. No listes por defecto resueltos (✅), informativos, motivos ni observaciones. Añade una única línea final «Omitidos: N resueltos, N informativos, N PR cerradas» y avisa solo de limitaciones que afecten al resultado (canal inaccesible, miembros no verificados, truncado).
+4. No listes por defecto resueltos (✅), informativos, motivos ni observaciones. Añade una única línea final «Omitidos: N resueltos, N informativos, N PR cerradas» (contados desde la clasificación, no estimados) y avisa solo de limitaciones que afecten al resultado (canal inaccesible, miembros no verificados, truncado).
 
 **Orden dentro de cada bloque** (informe y mensaje): primero por criticidad (🔴, 🟠, 🟡, ⚪) y, dentro de la misma, por atendido (🫥, 🏃‍♂️‍➡️, ✅). A igualdad de ambos, del más antiguo al más reciente.
 
