@@ -1,0 +1,16 @@
+aicontext/skills/product-forge-incidencias/SKILL.md
+  h_46798eb9f7d88a 3
+aicontext/skills/product-forge-pacman-kos/SKILL.md
+  h_46798eb9f7d88a 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "703cb9511ed878e741f71f1596c8e432110eb240",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
