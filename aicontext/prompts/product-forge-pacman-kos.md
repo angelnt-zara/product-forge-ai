@@ -29,7 +29,7 @@ Pasa a cada subagente todo el contexto que necesite (alcance, tenant, rango, IDs
 ### Alcance
 
 - Servicio: `MICPCPRODS`. Entorno: `PRO`.
-- Tenant: todos por defecto; el usuario puede acotar por tenant o marca.
+- Tenant: todos por defecto (los 8 de la tabla); el usuario puede acotar por tenant o marca. Es la **única tabla de tenants**: al delegar, pasa a los subagentes los códigos de tenant del alcance resuelto, ya que ellos no la tienen.
 - Rango: últimas `24h` por defecto.
 
 | Tenant | Marca |

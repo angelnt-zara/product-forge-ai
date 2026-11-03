@@ -62,20 +62,7 @@ Los `TO_RETRY` son jobs/eventos pendientes de un nuevo reintento (aún no son KO
 
 Para el análisis, solo métodos GET. Los únicos endpoints de escritura permitidos son `POST .../v1/maintenance/works` (reejecución) y `PATCH .../v1/maintenance/works/status/DISCARDED` (descarte). Nunca llames a otros endpoints de `maintenance` (borrado, etc.).
 
-Tenants:
-
-| Tenant | Marca |
-|--------|-------|
-| `za` | Zara |
-| `zh` | Zara Home |
-| `pb` | Pull&Bear |
-| `st` | Stradivarius |
-| `bk` | Bershka |
-| `md` | Massimo Dutti |
-| `oy` | Oysho |
-| `lf` | Lefties |
-
-Si el usuario no acota tenant, consulta los 8. Si acota, solo ese.
+Los tenants a consultar (códigos y marcas) te los pasa el comando `product-forge-pacman-kos`, que contiene la tabla de tenants. Si te pasa todos, consulta todos; si acota, solo los indicados. No asumas otros tenants.
 
 ## Cómo consultar
 
