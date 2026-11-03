@@ -66,7 +66,7 @@ En **todos** los hilos recogidos (del squad o externos), extrae las PR enlazadas
 
 **Formato compacto (obligatorio):** devuelve **JSON compacto** (sin prosa introductoria ni explicaciones), con textos literales recortados a lo imprescindible. Para evitar repetir datos, indica una sola vez por canal el patrón de `webUrl` y en cada hilo solo el `rootId`, salvo que el patrón varíe.
 
-**Hilos del squad sin respuestas cuyas PR enlazadas estén todas cerradas/mergeadas:** devuélvelos en una **entrada mínima** (`rootId`, `fechaCreacion`, `autor`, `titulo`, PR con `state` y `mergedAt`/`closedAt`, `sinRespuestas: true`), sin `cuerpoResumen` ni resto de campos. No decides si se omiten: el agente principal conserva la decisión y el recuento. Los hilos con PR abierta o con respuestas llevan la entrada completa.
+**Hilos del squad con todas sus PR cerradas/mergeadas (con o sin respuestas):** no los devuelvas como entradas completas. Agrúpalos en una única lista `hilosPRCerradas` con una línea por hilo: `rootId`, `fechaCreacion`, `autor`, `titulo` y PR con `state` y `mergedAt`/`closedAt`, sin `cuerpoResumen`, respuestas ni resto de campos. Para detectar las PR sí debes leer el post raíz y las respuestas, pero no las devuelvas. No decides si se omiten: el agente principal conserva la decisión y el recuento. Los hilos con alguna PR abierta, sin PR o abiertos por externos llevan la entrada completa. Si el principal indica que se incluyan las PR cerradas, devuelve entradas completas.
 
 Por cada hilo (entrada completa):
 
