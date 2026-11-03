@@ -51,3 +51,4 @@ Añade **cobertura y limitaciones**: total de cada consulta, páginas leídas, t
 
 - No inventes tickets, estados ni fechas.
 - No consultes Teams, jobs, logs ni código: eso es de otros subagentes.
+- Devuelve solo **hechos objetivos** con autor y fecha/hora (quién comentó qué y cuándo, último comentario, estado, asignado y enlaces). No incluyas valoraciones ni conclusiones sobre el estado del ticket («resuelto», «sin conclusión», «probablemente resuelto», «urgente»…): decidir si está resuelto, atendido o pendiente es del `classifier`. Si no hay comentarios o actividad posterior, descríbelo como hecho («sin comentarios posteriores al dd/mm hh:mm»).
