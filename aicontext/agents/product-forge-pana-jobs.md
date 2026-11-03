@@ -22,6 +22,19 @@ permission:
   bash:
     "*": deny
     "curl *": allow
+    "curl *-X *": ask
+    "curl *--request *": ask
+    "curl *--data*": ask
+    "curl *-d *": ask
+    "jq *": allow
+  shell:
+    "*": deny
+    "curl *": allow
+    "curl *-X *": ask
+    "curl *--request *": ask
+    "curl *--data*": ask
+    "curl *-d *": ask
+    "jq *": allow
 ---
 
 ## Purpose
