@@ -1,0 +1,27 @@
+aicontext/agents/product-forge-incidencias-classifier.md
+  s_a79f8d16e8c570::t_046e085a733981 51,56-59
+aicontext/agents/product-forge-incidencias-jira-extractor.md
+  s_a79f8d16e8c570::t_4d32779804747c 36
+aicontext/agents/product-forge-incidencias-teams-extractor.md
+  s_a79f8d16e8c570::t_ad8e9b02677b0d 63,87
+aicontext/prompts/product-forge-incidencias.md
+  s_a79f8d16e8c570::t_3795a2bbb75ac5 51,53
+aicontext/skills/product-forge-jira/SKILL.md
+  s_a79f8d16e8c570::t_70b40baaafdb3d 14,26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "dc9a0ae780a51e4281f6b50aac17d0a757caef73",
+  "prompts": {},
+  "sessions": {
+    "s_a79f8d16e8c570": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e5cad7f14ffekUa8qGJzG6qn6F",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
