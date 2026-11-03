@@ -53,7 +53,7 @@ Un hilo (post raíz + respuestas) es relevante si **cualquier mensaje** menciona
 - `ComercialProducto`
 - `ComercialProductoStore`
 - `Pacman Contributors`
-
+- `Pacman Products`
 Detección: revisa el array `mentions` (el nombre de la etiqueta aparece en `mentionText`) **y el texto completo del cuerpo** de cada mensaje (insensible a mayúsculas/tildes y a variantes como "Product Forge", "@ProductForge"); no te limites a los primeros caracteres.
 
 **Excepción canal 1 (SQUAD Product Forge):** no filtres por mención; recoge TODOS los hilos abiertos por personas externas al squad. Los abiertos por miembros del squad también se recogen (el principal decidirá según PR). Omite eventos de reuniones, grabaciones, mensajes de sistema, uniones/salidas de canal y mensajes eliminados.
