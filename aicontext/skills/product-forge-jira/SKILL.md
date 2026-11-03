@@ -36,3 +36,28 @@ Referencia técnica reutilizable para consultar Jira. No contiene criterios de n
 ## Operaciones que modifican estado
 
 Crear, comentar, transicionar o asignar tickets **modifica estado**: solo con petición explícita del usuario y tras su confirmación, mostrando exactamente lo que se va a hacer. Por defecto, todo uso de Jira es de solo lectura. Usa para ello las skills `jira-pacman`/`jira-cli`.
+
+### Label del squad al crear tickets
+
+El label del squad Product Forge es siempre `sq#product`. No uses `sq#productforge`, `sq#productForge` ni variantes similares, aunque otras skills (p. ej. `jira-pacman`) lo mencionen para flujos de roadmap.
+
+### Formato de la descripción al crear tickets
+
+Al crear un ticket, estructura la descripción (Jira Wiki Markup) con **paneles**, no con encabezados:
+
+- Cada sección (Contexto, Hipótesis, Objetivo, Criterios de finalización, etc.) va en su propio `{panel:title=Nombre de la sección}...{panel}`.
+- **Sin color de fondo**: no uses `bgColor`, `titleBGColor` ni otros parámetros de color; solo `title`.
+- No uses encabezados `h1.`–`h6.` para separar secciones.
+- Deja una línea en blanco entre paneles.
+- Dentro de cada panel puedes usar listas (`*`, `#`), `{{código}}` y enlaces con normalidad.
+
+```text
+{panel:title=Contexto}
+Texto del contexto.
+{panel}
+
+{panel:title=Objetivo}
+# Primer objetivo.
+# Segundo objetivo.
+{panel}
+```
