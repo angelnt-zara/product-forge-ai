@@ -1,0 +1,18 @@
+aicontext/agents/product-forge-pana.md
+  h_46798eb9f7d88a 85
+aicontext/prompts/pacman-product-known-issues.md
+  h_46798eb9f7d88a 26-32,92-101,140-141
+aicontext/prompts/product-forge-pacman-kos.md
+  h_46798eb9f7d88a 70,94-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "81081389ea6ede0dbacb99d71bc4da4991a73f92",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
