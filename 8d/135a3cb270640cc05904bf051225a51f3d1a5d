@@ -1,0 +1,14 @@
+aicontext/agents/product-forge-pana-scanner.md
+  h_46798eb9f7d88a 129-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "8d135a3cb270640cc05904bf051225a51f3d1a5d",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
