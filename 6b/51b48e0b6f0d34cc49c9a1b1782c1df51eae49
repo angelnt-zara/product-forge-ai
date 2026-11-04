@@ -1,0 +1,23 @@
+aicontext/skills/product-forge-incidencias/SKILL.md
+  s_aa8bdfa2f29be8::t_e40aeed3622164 18,24,153-164,168,171,187,190,217,228
+aicontext/skills/product-forge-incidencias/scripts/itsmecom.py
+  s_aa8bdfa2f29be8::t_eb269cac5b50bb 1-192
+aicontext/skills/product-forge-incidencias/scripts/test_humo.py
+  s_aa8bdfa2f29be8::t_a5bc6478f59a16 13-14,174-252
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "6b51b48e0b6f0d34cc49c9a1b1782c1df51eae49",
+  "prompts": {},
+  "sessions": {
+    "s_aa8bdfa2f29be8": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e57c61bfbffedKPpDM8NVuEiRh",
+        "model": "inditex/KAIA/deepseek-v4.1-flash_high"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
