@@ -13,20 +13,28 @@ Opciones:
     --sin-filtro          no aplica filtro de relevancia (solo hechos)
     --solo-storefront     filtro reforzado: menciona Storefront Y URL de Producto
     --regex <patron>      filtro propio sobre el texto del hilo completo
+    --menciona <a,b>      exige mención al squad (mentions[] o texto) o a una de
+                          las palabras separadas por comas
     --desde-ultima-actividad
                           incluye también hilos con raíz anterior a la fecha
                           pero con respuestas dentro del rango
-    --workers N           hilos en paralelo (por defecto 16; ver nota de 429)
+    --workers N           hilos en paralelo (por defecto 8; ver nota de 429)
     --json                salida JSON en lugar de resumen legible
     --verbose             trazas de progreso a stderr
 
 Nota sobre paralelismo: medido sobre 60 hilos antiguos, 8 workers tardan 4,6 s,
-16 tardan 2,3 s y 24 tardan 1,8 s. Se usa 16 como equilibrio: por encima
-aparecen 429 de Graph. Los 429 se reintentan con espera exponencial, pero
-subir de 24 no acelera y sí aumenta el riesgo de bloqueo temporal.
+16 tardan 2,3 s y 24 tardan 1,8 s. Se usa 8 por defecto porque varias instancias
+del script suelen ejecutarse a la vez (una por canal) y con 8 ya aparecen 429 de
+Graph en ejecuciones concurrentes. Los 429 se reintentan con espera exponencial.
+
+Nota sobre hilos antiguos con actividad: se resuelven con `$expand=replies` en la
+propia página de raíces, sin una llamada por hilo, y se corta la paginación de un
+hilo en cuanto sus respuestas salen del rango (Graph las da de más reciente a más
+antigua). Antes, dos hilos de 2025 con 3.000 y 2.601 respuestas costaban 113
+llamadas para no aportar nada al informe.
 
 Salida: JSON con una entrada por hilo relevante (id, webUrl, fecha, título,
-autor, nº de respuestas y el texto de cada una).
+autor, nº de respuestas, menciones y el texto de cada una).
 """
 from __future__ import annotations
 
@@ -96,7 +104,42 @@ TAG_RE = re.compile(r"<[^>]+>")
 URL_PRODUCTO = re.compile(r"/(?:products?(?:Array)?)(?:/|$|[?#])", re.I)
 MENCIÓN_SF = re.compile(r"storefront", re.I)
 
-WORKERS_DEFECTO = int(os.environ.get("PF_TEAMS_WORKERS", "16"))
+# Etiquetas y nombres del squad que cuentan como mención (canales 2-7).
+# Se aplican sobre `mentions[].mentionText` y sobre el texto del mensaje, que es
+# lo que antes cada subagente tenía que sacar por su cuenta con el CLI.
+MENCIONES_SQUAD = (
+    "productforge",
+    "product forge",
+    "storefront producto",
+    "comercialproducto",
+    "comercialproductostore",
+    "pacman contributors",
+    "pacman products",
+)
+
+# Miembros del squad (team.adoc, sección ProductForge, más Elias Ferreiro
+# Borreiros). Muchos hilos no etiquetan al squad pero sí nombran a una persona
+# del equipo; sin esto se perdían hilos reales (p. ej. «Irlanda OY» y «wishlist
+# OY» en PRO Validación Pruebas, que solo mencionan a Jose Manuel Neto Delgado).
+MIEMBROS_SQUAD = (
+    "adrian rabade",
+    "angel negrete",
+    "alberto barrio",
+    "adrian touza",
+    "diego garcia ramallal",
+    "beatriz adrian",
+    "jose baz",
+    "juan manuel magarino",
+    "luis gijon",
+    "aaron blanco",
+    "david gomez alvarez",
+    "francisco javier corchado",
+    "jose manuel neto",
+    "vicente vidal",
+    "elias ferreiro",
+)
+
+WORKERS_DEFECTO = int(os.environ.get("PF_TEAMS_WORKERS", "8"))
 
 
 # ── Cliente autenticado ──────────────────────────────────────────────────────
@@ -162,6 +205,54 @@ def autor(m) -> str:
     return ((m.get("from") or {}).get("user") or {}).get("displayName") or "(bot)"
 
 
+def _sin_tildes(s: str) -> str:
+    """Minúsculas y sin tildes, para comparar etiquetas y nombres del squad."""
+    tabla = str.maketrans("áéíóúüàèìòùâêîôûñç", "aeiouuaeiouaeiounc")
+    return s.lower().translate(tabla)
+
+
+def menciones(m) -> list[str]:
+    """Etiquetas mencionadas en el mensaje (`mentions[].mentionText`).
+
+    `ChannelMessage` no expone `mentions`, así que antes cada subagente tenía que
+    sacarlas con el CLI en un volcado aparte. Ahora salen del `raw`.
+    """
+    raw = m.raw if isinstance(m, ChannelMessage) else (m or {})
+    salida = []
+    for men in raw.get("mentions") or []:
+        texto = men.get("mentionText") or ((men.get("mentioned") or {}).get("user") or {}).get("displayName")
+        if texto:
+            salida.append(str(texto))
+    return salida
+
+
+def es_del_squad(nombre: str) -> bool:
+    """True si el nombre corresponde a un miembro de ProductForge."""
+    limpio = _sin_tildes(nombre or "")
+    return any(p in limpio for p in MIEMBROS_SQUAD)
+
+
+def menciona_squad(
+    m,
+    etiquetas: tuple[str, ...] = MENCIONES_SQUAD,
+    miembros: tuple[str, ...] = MIEMBROS_SQUAD,
+) -> bool:
+    """True si el mensaje menciona al squad.
+
+    Las etiquetas y nombres del squad se buscan en `mentions` **y** en el texto
+    (hay quien escribe «ProductForge» sin etiquetar). Los nombres de personas se
+    buscan **solo** en `mentions`: así no se confunde una respuesta escrita por un
+    miembro del squad con una mención a ese miembro.
+    """
+    mencionados = [_sin_tildes(x) for x in menciones(m)]
+    if any(any(p in men for p in miembros) for men in mencionados):
+        return True
+    for c in mencionados + [_sin_tildes(texto(m))]:
+        if any(p in c for p in etiquetas):
+            return True
+    return False
+
+
 # ── GET con reintento ────────────────────────────────────────────────────────
 def _get(client, url: str, intentos: int = 3):
     """GET con reintento: Graph devuelve timeouts y 429 esporádicos."""
@@ -206,6 +297,54 @@ def raices(client, team: str, canal: str, paginas: int = 8) -> list:
     return salida
 
 
+# Nota de rendimiento (medido en este workspace):
+#  - canal 4 (302 hilos, 4.711 respuestas): 43 s con una llamada por hilo → 16 s
+#    con `$expand=replies`.
+#  - canal 1 (316 hilos, 7.847 respuestas): 58 s con una llamada por hilo, 146 s
+#    con `$expand` completo y 18 s con `$expand` + corte por fecha.
+# El corte por fecha de las respuestas es lo que hace que `$expand` gane siempre:
+# los dos hilos de 2025 con 3.000 y 2.601 respuestas costaban 113 páginas.
+
+
+def raices_con_respuestas(
+    client, team: str, canal: str, desde: str = "", paginas: int = 8
+) -> tuple[list, dict[str, list]]:
+    """Posts raíz del canal CON sus respuestas incrustadas en la misma página.
+
+    `$expand=replies` devuelve hasta 200 respuestas por hilo dentro de la propia
+    página de raíces, así que un canal completo se resuelve en ~8 llamadas en vez
+    de una por hilo. Además encuentra más hilos con respuestas que `hasReplies`
+    (345 frente a 302 en el canal 4, sin perder ninguno).
+
+    Los hilos con más de 200 respuestas traen `replies@odata.nextLink`. Se sigue,
+    pero **solo mientras las respuestas vistas sigan dentro del rango**: Graph las
+    devuelve ordenadas de más reciente a más antigua, así que al aparecer una
+    anterior a `desde` el resto ya no interesa. Sin este corte, dos hilos de 2025
+    con 3.000 y 2.601 respuestas costaban 113 páginas (275 llamadas y +90 s en el
+    canal 1) para no aportar nada al informe.
+
+    Devuelve (raíces, {id_raiz: [respuestas]}).
+    """
+    url = f"{GRAPH_BETA}/teams/{team}/channels/{canal}/messages?$top=50&$expand=replies"
+    raices_, por_hilo = [], {}
+    pagina = 0
+    while url and pagina < paginas:
+        datos = _get(client, url)
+        for bruto in datos.get("value", []):
+            raiz = ChannelMessage.from_json(bruto)
+            raices_.append(raiz)
+            rr = [ChannelMessage.from_json(x) for x in (bruto.get("replies") or [])]
+            siguiente = bruto.get("replies@odata.nextLink")
+            while siguiente and (not desde or all((m.created or "") >= desde for m in rr[-50:])):
+                extra = _get(client, siguiente)
+                rr.extend(ChannelMessage.from_json(x) for x in extra.get("value", []))
+                siguiente = extra.get("@odata.nextLink")
+            por_hilo[raiz.id] = rr
+        pagina += 1
+        url = datos.get("@odata.nextLink")
+    return raices_, por_hilo
+
+
 # ── Núcleo ───────────────────────────────────────────────────────────────────
 def extraer(
     team: str,
@@ -213,42 +352,91 @@ def extraer(
     desde: str,
     *,
     filtro=None,
+    mencion_obligatoria: tuple[str, ...] | None = None,
     desde_ultima_actividad: bool = False,
     workers: int = WORKERS_DEFECTO,
     verbose: bool = False,
 ) -> list[dict]:
     client = graph_client()
 
-    todos = raices(client, team, canal)
+    todos, por_hilo = [], {}
+    try:
+        todos, por_hilo = raices_con_respuestas(client, team, canal, desde)
+    except Exception as exc:
+        # Si `$expand=replies` fallara (cambio de contrato de Graph, 400…), se
+        # degrada a la vía clásica: listado plano + respuestas hilo a hilo.
+        print(f"aviso: $expand=replies no disponible ({exc}); vía clásica", file=sys.stderr)
+        todos = raices(client, team, canal)
     # Fuera eventos de sistema (altas/bajas de miembros, reuniones).
     todos = [r for r in todos if r.message_type == "message"]
+
     if verbose:
-        print(f"raíces leídas: {len(todos)}", file=sys.stderr)
+        print(
+            f"raíces leídas: {len(todos)}"
+            + (" (respuestas incluidas en la misma página)" if por_hilo else ""),
+            file=sys.stderr,
+        )
 
     en_rango = [r for r in todos if (r.created or "") >= desde]
 
     # Hilos antiguos que siguen vivos. `lastModifiedDateTime` del raíz NO refleja
-    # las respuestas y `replyCount` no viene en Graph beta, así que el único
-    # indicio barato es `hasReplies`; luego hay que leer sus respuestas.
+    # las respuestas (verificado: 0 de 323 raíces antiguos lo actualizan) y
+    # `replyCount` no viene informado en Graph beta. Si las respuestas vinieron
+    # incrustadas no hay llamadas extra: solo se comprueba la fecha.
     candidatos_antiguos = []
     if desde_ultima_actividad:
-        candidatos_antiguos = [
-            r for r in todos
-            if (r.created or "") < desde and r.raw.get("hasReplies")
-        ]
+        for r in todos:
+            if (r.created or "") >= desde:
+                continue
+            if any((m.created or "") >= desde for m in por_hilo.get(r.id, [])):
+                candidatos_antiguos.append(r)
         if verbose:
-            print(f"hilos antiguos con hasReplies a revisar: {len(candidatos_antiguos)}", file=sys.stderr)
+            print(
+                f"hilos antiguos con actividad en el rango: {len(candidatos_antiguos)}",
+                file=sys.stderr,
+            )
 
     objetivos = en_rango + candidatos_antiguos
 
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        reps = list(pool.map(lambda r: respuestas(client, team, canal, r.id), objetivos))
+    # Solo hace falta pedir respuestas sueltas si no vinieron incrustadas (vía de
+    # respaldo). Con `$expand=replies` los hilos sin respuestas vienen con lista
+    # vacía, que es un hecho, no un fallo de lectura.
+    faltan = [r for r in objetivos if r.id not in por_hilo]
+    if faltan:
+        if verbose:
+            print(f"hilos a completar por separado: {len(faltan)}", file=sys.stderr)
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            completas = list(pool.map(lambda r: respuestas(client, team, canal, r.id), faltan))
+        for r, rr in zip(faltan, completas):
+            por_hilo[r.id] = rr
+
+        if desde_ultima_actividad:
+            # Sin `hasReplies` no se pueden descartar antes: se revisan ahora, con
+            # las respuestas ya leídas, para no perder hilos antiguos vivos.
+            conocidos = {r.id for r in objetivos}
+            for r in todos:
+                if r.id in conocidos or (r.created or "") >= desde:
+                    continue
+                if any((m.created or "") >= desde for m in por_hilo.get(r.id, [])):
+                    objetivos.append(r)
 
     filas = []
-    for raiz, rr in zip(objetivos, reps):
+    for raiz in objetivos:
+        rr = por_hilo.get(raiz.id, [])
+        # Graph devuelve las respuestas de más reciente a más antigua. Se ordenan
+        # aquí para que `ultima_actividad` y el orden de salida sean correctos:
+        # antes se usaba `rr[-1]`, que es la MÁS ANTIGUA, y daba una fecha falsa.
+        rr = sorted(rr, key=lambda m: m.created or "")
         reciente = any((m.created or "") >= desde for m in rr)
         if (raiz.created or "") < desde and not reciente:
             continue  # antiguo sin actividad en el rango
+
+        if mencion_obligatoria:
+            # Relevante si algún mensaje menciona al squad o si el hilo lo abrió un
+            # miembro del equipo (sus hilos en Incidencias 🐞 son trabajo del squad
+            # aunque no se etiquete a sí mismo).
+            if not any(menciona_squad(m) for m in [raiz] + rr) and not es_del_squad(autor(raiz)):
+                continue
 
         cuerpo = " ".join(
             [texto(raiz)]
@@ -269,8 +457,21 @@ def extraer(
                 "autor": autor(raiz),
                 "n_respuestas": len(rr),
                 "ultima_actividad": a_madrid(rr[-1].created) if rr else a_madrid(raiz.created),
+                "menciones_squad": sorted(
+                    {
+                        men
+                        for m in [raiz] + rr
+                        for men in menciones(m)
+                        if any(p in _sin_tildes(men) for p in MENCIONES_SQUAD)
+                    }
+                ),
                 "respuestas": [
-                    {"autor": autor(m), "fecha": a_madrid(m.created), "texto": texto(m)}
+                    {
+                        "autor": autor(m),
+                        "fecha": a_madrid(m.created),
+                        "texto": texto(m),
+                        "menciones": menciones(m),
+                    }
                     for m in rr
                 ],
                 "urls_producto": [
@@ -297,6 +498,14 @@ def main() -> int:
     p.add_argument("--workers", type=int, default=WORKERS_DEFECTO)
     p.add_argument("--json", action="store_true")
     p.add_argument("--verbose", action="store_true")
+    p.add_argument(
+        "--menciona",
+        nargs="?",
+        const="__defecto__",
+        default=None,
+        help="exige mención al squad por etiqueta o texto; sin valor usa las etiquetas "
+        "y nombres del squad, con valor es una lista separada por comas",
+    )
     a = p.parse_args()
 
     filtro = None
@@ -306,11 +515,20 @@ def main() -> int:
         rx = re.compile(a.regex, re.I)
         filtro = lambda t: bool(rx.search(t))  # noqa: E731
 
+    mencion_obligatoria = None
+    if a.menciona:
+        mencion_obligatoria = (
+            MENCIONES_SQUAD
+            if a.menciona == "__defecto__"
+            else tuple(_sin_tildes(x.strip()) for x in a.menciona.split(",") if x.strip())
+        )
+
     filas = extraer(
         a.team,
         a.canal,
         a.desde,
         filtro=filtro,
+        mencion_obligatoria=mencion_obligatoria,
         desde_ultima_actividad=a.desde_ultima_actividad,
         workers=a.workers,
         verbose=a.verbose,
@@ -322,7 +540,10 @@ def main() -> int:
         print(f"{len(filas)} hilos relevantes")
         for f in filas:
             marca = " [raíz fuera de rango]" if f["fecha_raiz_fuera_de_rango"] else ""
-            print(f"  {f['fecha']} · {f['n_respuestas']:>3} resp · {f['titulo'][:70]}{marca}")
+            print(
+                f"  {f['fecha']} · {f['n_respuestas']:>3} resp · "
+                f"últ. {f['ultima_actividad']} · {f['titulo'][:70]}{marca}"
+            )
     return 0
 
 
