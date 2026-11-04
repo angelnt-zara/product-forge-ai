@@ -192,6 +192,34 @@ def enlaces(m) -> list[str]:
     return HREF_RE.findall(((raw.get("body") or {}).get("content") or ""))
 
 
+# PR de GitHub: https://github.com/<owner>/<repo>/pull/<n>
+PR_RE = re.compile(r"github\.com/([\w.-]+)/([\w.-]+)/pull/(\d+)")
+
+
+def prs_del_hilo(raiz, respuestas) -> list[dict]:
+    """PRs enlazadas en el hilo, sin duplicados y en orden de aparición.
+
+    Se miran los `href` de la raíz y de todas las respuestas. Devuelve
+    `{repo, owner, numero, url}`; el estado (OPEN/MERGED/CLOSED, aprobación) lo
+    resuelve después `prs.py` en una sola llamada GraphQL.
+    """
+    vistos: dict[tuple[str, str, int], dict] = {}
+    for m in [raiz] + list(respuestas or []):
+        for url in enlaces(m):
+            for owner, repo, numero in PR_RE.findall(url):
+                clave = (owner, repo, int(numero))
+                vistos.setdefault(
+                    clave,
+                    {
+                        "owner": owner,
+                        "repo": repo,
+                        "numero": int(numero),
+                        "url": f"https://github.com/{owner}/{repo}/pull/{numero}",
+                    },
+                )
+    return list(vistos.values())
+
+
 def a_madrid(iso: str) -> str:
     if not iso:
         return "-"
@@ -518,6 +546,12 @@ def extraer(
                     u for u in (enlaces(raiz) + [h for m in rr for h in enlaces(m)])
                     if URL_PRODUCTO.search(u)
                 ],
+                # PRs enlazadas en el hilo (raíz o respuestas). Se extraen de los
+                # `href` porque el texto visible viene truncado con «…». Las usa
+                # `prs.py` para resolver el estado en lote: sin esto no se podía
+                # aplicar la regla «PR aprobada ⇒ resuelto» y se publicaban como
+                # pendientes hilos ya cerrados.
+                "prs": prs_del_hilo(raiz, rr),
             }
         )
 

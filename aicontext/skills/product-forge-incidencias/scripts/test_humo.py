@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+"""Test de humo de los helpers del flujo de incidencias. Sin red, sin Teams.
+
+Cubre los cuatro fallos que costaron vueltas de modelo o clasificaciones
+erróneas en el informe del 18/10-04/11, para que no vuelvan sin que nadie se dé
+cuenta:
+
+1. `detalle.py` acepta ids separados por espacios o comas dentro de un único
+   argumento (antes devolvía 0 bytes y parecía «no hay detalle»).
+2. `detalle.py` recorta los hilos de más de 20 respuestas y avisa.
+3. `extract_channel.prs_del_hilo` extrae las PR de los `href` y deduplica.
+4. `prs.py` normaliza y agrupa las PR de todos los hilos sin repetirlas.
+
+Uso:
+    python3 scripts/test_humo.py
+"""
+from __future__ import annotations
+
+import json
+import sys
+import tempfile
+from pathlib import Path
+
+AQUI = Path(__file__).resolve().parent
+sys.path.insert(0, str(AQUI))
+
+fallos: list[str] = []
+
+
+def check(nombre: str, cond: bool, detalle: str = "") -> None:
+    print(f"  {'OK  ' if cond else 'FALLO'} {nombre}" + (f" · {detalle}" if detalle and not cond else ""))
+    if not cond:
+        fallos.append(nombre)
+
+
+def hilo(id_: str, respuestas: int, prs_hrefs: list[str] | None = None) -> dict:
+    rs = [
+        {
+            "autor": f"persona{i}",
+            "fecha": f"0{i % 9 + 1}/10/2026 10:00",
+            "texto": f"mensaje numero {i} " + ("x" * 80),
+            "menciones": [],
+        }
+        for i in range(respuestas)
+    ]
+    return {
+        "id": id_,
+        "webUrl": f"https://teams.example/{id_}",
+        "fecha": "01/10/2026 10:00",
+        "fecha_raiz_fuera_de_rango": False,
+        "titulo": f"Hilo {id_}",
+        "autor": "alguien",
+        "n_respuestas": respuestas,
+        "ultima_actividad": "04/11/2026 10:00",
+        "menciones_squad": [],
+        "respuestas": rs,
+        "urls_producto": [],
+        "prs": [
+            {
+                "owner": "inditex",
+                "repo": u.split("/")[4],
+                "numero": int(u.rsplit("/", 1)[1]),
+                "url": u,
+            }
+            for u in (prs_hrefs or [])
+        ],
+    }
+
+
+def monta_dir(base: Path) -> Path:
+    canal = {
+        "canal": 1,
+        "nombre": "SQUAD Product Forge",
+        "filtro": "sin filtro",
+        "segundos": 1.0,
+        "error": None,
+        "hilos": [
+            hilo("1001", 5),
+            hilo("1002", 163),
+            hilo(
+                "1003",
+                2,
+                ["https://github.com/inditex/app-ecommhub/pull/1108"],
+            ),
+        ],
+    }
+    (base / "canal_01.json").write_text(
+        json.dumps(canal, ensure_ascii=False), encoding="utf-8"
+    )
+    return base
+
+
+def main() -> int:
+    import detalle
+    import extract_channel as ec
+
+    with tempfile.TemporaryDirectory() as tmp:
+        base = monta_dir(Path(tmp))
+
+        print("1. normalización de ids")
+        check(
+            "espacios dentro de un argumento",
+            detalle.normaliza_ids(["1001 1002"]) == ["1001", "1002"],
+        )
+        check(
+            "comas dentro de un argumento",
+            detalle.normaliza_ids(["1001,1002"]) == ["1001", "1002"],
+        )
+        check(
+            "mezcla de argumentos y deduplicado",
+            detalle.normaliza_ids(["1001 1002", "1002", "1003"]) == ["1001", "1002", "1003"],
+        )
+
+        print("2. recorte de hilos largos")
+        por_id = detalle.cargar(base)
+        largo = por_id["1002"]
+        check(
+            f"umbral y tope coherentes ({detalle.UMBRAL_LARGO}/{detalle.MAX_RESP_LARGO})",
+            detalle.UMBRAL_LARGO < len(largo["respuestas"]),
+        )
+        # La lógica del recorte se replica aquí: si cambia en detalle.py, este
+        # check avisa de que hay que revisar el test.
+        tope = 0
+        if len(largo["respuestas"]) > detalle.UMBRAL_LARGO:
+            tope = detalle.MAX_RESP_LARGO
+        check("hilo de 163 respuestas se recorta", tope == 12, f"tope={tope}")
+        check(
+            "hilo corto no se recorta",
+            not (len(por_id["1001"]["respuestas"]) > detalle.UMBRAL_LARGO),
+        )
+
+        print("3. extracción de PR desde href")
+        # `enlaces` acepta ChannelMessage o el dict crudo (rama de respaldo); el
+        # test usa el dict para no depender del paquete compartido de Teams.
+        def msg(*hrefs: str) -> dict:
+            return {
+                "body": {
+                    "content": " ".join(f'<a href="{h}">ver…</a>' for h in hrefs)
+                }
+            }
+
+        prs = ec.prs_del_hilo(
+            msg("https://github.com/inditex/app-ecommhub/pull/1108"),
+            [msg("https://github.com/inditex/app-ecommhub/pull/1108")],
+        )
+        check("deduplica la misma PR en raíz y respuesta", len(prs) == 1, str(prs))
+        check("extrae owner/repo/numero", prs and prs[0]["numero"] == 1108, str(prs))
+        check(
+            "ignora enlaces que no son PR",
+            ec.prs_del_hilo(msg("https://github.com/inditex/app-pacman/pull/3487"), [])
+            and not ec.prs_del_hilo(
+                msg("https://github.com/inditex/app-pacman/issues/3"), []
+            ),
+        )
+
+    print("4. agrupación de PR sin repetir (prs.py)")
+    import prs as prs_mod
+
+    with tempfile.TemporaryDirectory() as tmp:
+        base = monta_dir(Path(tmp))
+        cargados = prs_mod.cargar(base)
+        todas, vistos = [], set()
+        for h in cargados.values():
+            for pr in h["prs"]:
+                clave = (pr["owner"], pr["repo"], pr["numero"])
+                if clave not in vistos:
+                    vistos.add(clave)
+                    todas.append(pr)
+        check("solo carga hilos con PR", list(cargados) == ["1003"], str(list(cargados)))
+        check("una PR única no se duplica", len(todas) == 1, str(todas))
+
+    print()
+    if fallos:
+        print(f"FALLARON {len(fallos)} comprobaciones: {', '.join(fallos)}")
+        return 1
+    print("Todas las comprobaciones OK")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

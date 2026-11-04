@@ -15,6 +15,13 @@ Interviene un único subagente de solo lectura, `product-forge-incidencias-teams
 
 La lectura de los canales la hace el script `scripts/barrido.py`, que recorre todos los canales del alcance en una sola invocación y se apoya en `scripts/extract_channel.py` (pagina las respuestas completas, corta por fecha y aplica los filtros de mención y de URL de Producto). El barrido es la vía normal; los subagentes ya no leen canales salvo para un hilo concreto. Nadie debe montar su propio extractor con `jq` y `xargs`, ni reejecutar el script con otros flags para «verificar».
 
+Dos scripts más completan el flujo, y cada uno existe por un motivo medido:
+
+| Script | Para qué | Por qué existe |
+|---|---|---|
+| `scripts/detalle.py` | texto íntegro de los hilos candidatos | evita releer los JSON completos; recorta los hilos largos |
+| `scripts/prs.py` | estado de las PR enlazadas, en lote | sin él la regla «PR aprobada ⇒ resuelto» no se aplicaba nunca |
+
 ## Disparadores típicos
 
 - Solo escaneo: "temas pendientes", "hilos pendientes", "incidencias pendientes", "hilos sin responder", "escanea los canales", "ITSMECOM", "qué tenemos en Incidencias".
@@ -56,12 +63,16 @@ El JSON por canal son ~430 KB y **el 83 % de su texto se descarta al clasificar*
 
 1. **Lee `indice.txt`** (~28 KB, una línea por hilo): `id | fecha | autor | respuestas y respuestas del squad | última actividad y si el último es del squad | urls de Producto | título | último mensaje (300 caracteres)`.
 2. **Decide los candidatos** con esa línea: un hilo con `squad=0` o cuyo `ult` no sea del squad (`-`) es candidato a 🫥; si el último mensaje es del squad (`S`), probablemente esté resuelto.
-3. **Pide el texto íntegro solo de los candidatos**, sin volver a llamar a Teams:
+3. **Pide el texto íntegro de TODOS los candidatos en UNA sola invocación**, sin volver a llamar a Teams:
 
 ```bash
 python3 .opencode/skills/product-forge-incidencias/scripts/detalle.py "<dir_salida>" <id> [<id> ...]
-# opciones: --canal N · --max-resp N (solo las N más recientes) · --chars N · --listar
+# opciones: --canal N · --max-resp N (solo las N más recientes) · --chars N · --listar · --completas
 ```
+
+**Una sola llamada, no cuatro.** Decide todos los candidatos con el índice y pásalos de golpe; en el informe del 18/10–04/11 se hicieron 4 tandas (14 KB + 88 KB + 7 KB + 16 KB) porque se iban descubriendo sobre la marcha, y eso son 3 vueltas de modelo de más para el mismo dato. Los ids se aceptan separados por espacios, comas o dentro de un argumento entrecomillado: antes, un argumento con varios ids se tomaba como un id único, no se encontraba y el comando salía con **0 bytes**, indistinguible de «no hay nada que leer» y con riesgo de clasificar a ciegas.
+
+**Hilos largos: recorte automático.** Por encima de **20 respuestas** `detalle.py` muestra solo las **12 más recientes** y avisa por pantalla. Medido: 5 hilos concentraban 130 KB de los 430 KB del JSON, y los 3 que se abrieron completos (67 KB) se resolvían igual con las 12 últimas respuestas (**8,7 KB, −87 %**). El estado de un hilo lo decide su cola, no su cabecera. Usa `--completas` (o `--max-resp N`) solo cuando el arranque del hilo sea material.
 
 El índice da la señal de triage; `detalle.py` da el texto completo de lo que de verdad hay que clasificar. **No generes un `digest.txt` intermedio ni vuelvas a leer los JSON completos**: eso es releer tres veces el mismo dato y es lo que hacía tardar el informe.
 
@@ -119,20 +130,29 @@ Solo si el script falla (Graph no disponible, cambio de contrato del paquete com
 
    Si un canal sale con `error`, indícalo como limitación del canal. Si el usuario acota canales, pásalos en `--canales`; si pide excluir los de implantación, no incluyas los 9–15 e indícalo en el alcance del informe. Si ya hay datos recientes de esta sesión con el mismo alcance, reutilízalos.
 
-   **Jira: en línea, sin subagente.** Obtén los ITSMECOM abiertos **tú**, con el MCP de Jira, en paralelo con el barrido. La delegación al subagente `product-forge-incidencias-jira-extractor` se retiró porque costaba una sesión de modelo completa (minutos) para un trabajo que son dos llamadas: medido, el JQL de los 9 tickets abiertos responde en **0,5 s** y los 3 últimos comentarios de los 9 tickets en **1,5 s** lanzados en paralelo (28 KB). Procedimiento:
-   1. **Búsqueda**, una llamada por tipo (los nombres con espacios entrecomillados) para no filtrar a posteriori:
-      - `project = ITSMECOM AND status not in (Resolved, Cerrado, Cancelado) AND labels = C-PacmanProduct AND "Equipo Asignado" in (jsdsoportepacman) AND (created >= <desde> OR updated >= <desde>) AND issuetype = Incidente ORDER BY created ASC`
-      - la misma con `issuetype = "Solicitud de servicio"`.
-      Comprueba `total` y pagina con `start_at` hasta cubrirlo: devuelve 10 por página.
-   2. **Comentarios**: `jira_get_issue_comments` con `max_results: 3` de todos los tickets **en paralelo** (`Promise.allSettled`). No pidas el histórico completo: el resto se consulta después solo del ticket que lo necesite. Ojo: `jira_search` y `jira_get_issue` no traen comentarios; hay que pedirlos aparte.
+   **Jira: en línea, sin subagente.** Obtén los ITSMECOM abiertos **tú**, con el MCP de Jira, en paralelo con el barrido. La delegación al subagente `product-forge-incidencias-jira-extractor` se retiró porque costaba una sesión de modelo completa (minutos) para un trabajo que son dos llamadas. Procedimiento:
+   1. **Búsqueda: UNA sola llamada con los dos tipos**, no una por tipo. Medido sobre el mismo alcance: dos búsquedas en paralelo tardan **909 ms** y una combinada **384 ms**, con idéntica cobertura (los mismos 8 tickets):
+      - `project = ITSMECOM AND status not in (Resolved, Cerrado, Cancelado) AND labels = C-PacmanProduct AND "Equipo Asignado" in (jsdsoportepacman) AND (created >= <desde> OR updated >= <desde>) AND issuetype in (Incidente, "Solicitud de servicio") ORDER BY created ASC`
+      Comprueba `total` y pagina con `start_at` hasta cubrirlo: devuelve 10 por página. El tipo de cada ticket viene en `issuetype`, así que se separan incidentes y consultas al clasificar, sin volver a consultar.
+   2. **Comentarios**: `jira_get_issue_comments` con `max_results: 3` de todos los tickets **en paralelo** (`Promise.allSettled`). No pidas el histórico completo: el resto se consulta después solo del ticket que lo necesite. Ojo: `jira_search` y `jira_get_issue` no traen comentarios; hay que pedirlos aparte. No bajes de 3: medido, bajar a 2 ahorra un 29 % pero en ITSMECOM-5850604 el comentario que decide el diagnóstico era el 4º.
    3. Anota el campo `assignee` de la búsqueda: distingue «En curso, asignado a <nombre>» de «En cartera, sin asignar» en el informe.
+
+   **PR enlazadas: estado en lote, obligatorio.** Antes de clasificar, resuelve el estado de las PR que los hilos enlazan. Sin esto la regla «hilo de externo con todas las PR aprobadas ⇒ ✅» y «hilo interno con todas las PR cerradas ⇒ omitir» **no se aplicaba nunca**, y en el informe del 18/10–04/11 se publicó como 🟠 🫥 un hilo cuya única petición era aprobar una PR que ya estaba `MERGED` y `APPROVED` (`app-ecommhub#1108`).
+
+   ```bash
+   python3 .opencode/skills/product-forge-incidencias/scripts/prs.py "<dir_salida>" [--json] [--hilos <id> ...]
+   ```
+
+   - Lee los JSON del barrido (no llama a Teams ni a Jira) y resuelve todas las PR en **una llamada GraphQL en lote** (~1,7 s para 40 PRs, frente a un proceso `gh pr view` por PR). Cada hilo trae ya su campo `prs`, extraído de los `href`.
+   - Si una PR no existe o su repo no es accesible, GraphQL falla el lote entero; el script lo **parte en dos y reintenta**, así una PR borrada cuesta unos reintentos y no pierde el estado de las demás.
+   - Una PR que no se pudo resolver sale como `DESCONOCIDO`: **no apliques la regla de PR cerrada/aprobada** sobre ella y decláralo en limitaciones.
 
    El `teams-extractor` **solo** hace falta para algo que el barrido no da: los **informes previos** de los últimos 7 días cuando se va a publicar, o una duda material sobre un hilo concreto (pásale el `rootId` y dile que **no relea el canal**).
 
 3. **Clasificación y cotejo (tuyos), en una sola pasada de lectura:**
    1. Lee **`indice.txt`** (~28 KB) y haz el triage de los hilos con esa línea.
-   2. Pide el texto íntegro **solo de los candidatos** con `detalle.py` (ver «Lectura en una sola pasada»). No abras los `canal_NN.json` para clasificar ni generes ficheros intermedios.
-   3. Clasifica cada hilo y ticket aplicando [clasificacion.md](clasificacion.md) sobre los datos **íntegros** de los candidatos (sin resumir ni recortar).
+   2. Pide el texto íntegro de **todos** los candidatos en **una sola invocación** de `detalle.py` (ver «Lectura en una sola pasada»). No abras los `canal_NN.json` para clasificar ni generes ficheros intermedios.
+   3. Clasifica cada hilo y ticket aplicando [clasificacion.md](clasificacion.md) sobre los datos **íntegros** de los candidatos (sin resumir ni recortar), y aplica las reglas de PR con el estado que devolvió `prs.py`.
    4. Antes de presentar nada, revisa el conjunto:
       - Coherencia con clasificaciones previas de la sesión para el mismo hilo o ticket.
       - Las limitaciones y la cobertura de los extractores (rango cubierto, canales inaccesibles, miembros no verificados, lecturas fallidas) se muestran al usuario.
@@ -179,4 +199,16 @@ Aplican además tus reglas comunes (castellano, horas en `Europe/Madrid`, no inv
 
 - Pasa a los extractores la norma de castellano y la de horas.
 - Los extractores son de solo lectura; clasificar y publicar lo haces tú, y publicar solo con confirmación explícita.
-- **Eficiencia de lectura (obligatorio):** el barrido tarda ~17-20 s; el resto del tiempo del informe es lectura del modelo. Lee `indice.txt` una vez, pide el texto íntegro solo de los candidatos con `detalle.py` y no generes volcados intermedios ni releas los JSON. Medido en el informe del 18/10–04/11: sin este flujo se leyeron 550 KB para clasificar 26 KB útiles (el 83 % del texto descartado).
+- **Eficiencia de lectura (obligatorio):** el barrido tarda ~17-20 s y la resolución de PR ~2 s; el resto del tiempo del informe es lectura del modelo. Lee `indice.txt` una vez, pide el texto íntegro de todos los candidatos en **una sola invocación** de `detalle.py` y no generes volcados intermedios ni releas los JSON. Medido en el informe del 18/10–04/11: sin este flujo se leyeron 550 KB para clasificar 26 KB útiles (el 83 % del texto descartado).
+
+  Presupuesto medido de ese informe, y de dónde se recortó:
+
+  | Consumo | Antes | Ahora |
+  |---|---|---|
+  | `indice.txt` | 28 KB | 28 KB |
+  | Detalle de candidatos | 116 KB en **4 llamadas** | ~68 KB en **1 llamada** |
+  | Hilos de más de 20 respuestas | 67 KB (3 completos) | 8,7 KB (−87 %) |
+  | Jira (búsqueda + comentarios) | 25 KB en 2 búsquedas | 25 KB en 1 búsqueda |
+  | Resolución de PR | no se hacía | ~1 KB, 1 llamada |
+
+  No merece la pena, y está medido para que no se reintente: recomprimir los JSON (`indent=1` → plano, 430 → 358 KB) no ahorra nada porque el agente no los lee; recortar el cuerpo del índice a 150 caracteres solo baja un 6 %; y bajar los comentarios de Jira a 2 pierde diagnósticos completos.

@@ -35,7 +35,8 @@ Se considera dada respuesta si **al menos un miembro de ProductForge** ha respon
 
 ## Hilos iniciados por miembros del squad (peticiones de revisión de PR)
 
-- Si **todas** las PR del hilo están cerradas (`MERGED` o `CLOSED`), el hilo se da por solucionado: **omitir** (motivo «PR cerradas»). El extractor los entrega ya agrupados en `hilosPRCerradas`. Una PR aprobada pero `OPEN` no está cerrada.
+- El estado de las PR **lo aporta `prs.py`**, no se supone: cada hilo trae su campo `prs` y el script lo resuelve en lote. Si una PR sale como `DESCONOCIDO` (no se pudo consultar), **no apliques esta regla** y decláralo en limitaciones.
+- Si **todas** las PR del hilo están cerradas (`MERGED` o `CLOSED`), el hilo se da por solucionado: **omitir** (motivo «PR cerradas»). Una PR aprobada pero `OPEN` no está cerrada.
 - Si alguna PR sigue `OPEN`, el hilo es **interno pendiente**: 🫥 si no hay respuesta concreta, 🏃‍♂️‍➡️ si el squad ya contestó algo concreto y queda una pregunta sin atender. Indica qué PR sigue abierta.
 - Sin enlace a PR se clasifica con los criterios normales; los resueltos de miembros del squad se omiten.
 - Si el parámetro «PRs cerradas» de la skill está activo, no omitas por este motivo.
@@ -46,7 +47,7 @@ No somos responsables del trabajo de squads ajenos: nuestro trabajo termina al r
 
 **Regla obligatoria (sin excepciones ni criterio propio):** en un hilo abierto por un externo con **todas** las PR enlazadas aprobadas (`reviewDecision` = `APPROVED` o aprobación explícita de un miembro del squad) el hilo es **✅ resuelto**, aunque la PR siga `OPEN`, sea urgente, el último mensaje sea del squad o haya riesgo de despliegue. Esta regla **prevalece** sobre «en caso de duda, pendiente» y no se plantea al usuario. En el resumen de estado indica «PR aprobada por X, pendiente de merge/despliegue» si procede. Un hilo con PR aprobada pero con una pregunta o petición posterior del solicitante sin atender sigue siendo 🏃‍♂️‍➡️.
 
-Si alguna PR no está aprobada, el hilo sigue pendiente (🫥 o 🏃‍♂️‍➡️ según haya respuesta concreta del squad). Si el estado de la PR no se pudo consultar, pídeselo al extractor.
+Si alguna PR no está aprobada, el hilo sigue pendiente (🫥 o 🏃‍♂️‍➡️ según haya respuesta concreta del squad). El estado lo aporta `prs.py`; si una PR sale `DESCONOCIDO`, trátala como no aprobada y declara la limitación.
 
 ## Estado de atención (2º emoji)
 

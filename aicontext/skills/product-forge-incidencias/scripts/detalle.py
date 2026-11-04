@@ -13,24 +13,56 @@ los candidatos.
 Uso:
     python3 detalle.py <dir_salida> <id> [<id> ...]
     python3 detalle.py <dir_salida> --canal 4 <id> [<id> ...]
-    python3 detalle.py <dir_salida> --todos-los-pendientes   # no: no hay criterio
     python3 detalle.py <dir_salida> --listar                 # ids del índice
+
+Una SOLA invocación con todos los candidatos: decidirlos tras leer `indice.txt`
+y pasarlos de golpe. Antes se hacía en 4 tandas según se iban descubriendo, y
+eso son 3 vueltas de modelo de más.
 
 Opciones:
     --canal N          limita la búsqueda a ese canal (más rápido)
     --max-resp N       solo las N respuestas MÁS RECIENTES de cada hilo
     --chars N          trunca cada respuesta a N caracteres (0 = íntegra)
+    --completas        no aplica el recorte automático de hilos largos
 
-Los ids son los de la primera columna de `indice.txt`.
+Los ids son los de la primera columna de `indice.txt`. Se aceptan separados por
+espacios, comas o dentro de un único argumento entrecomillado
+(`"1793 1794"`, `1793,1794`): antes, un argumento con varios ids se trataba como
+un id único, no se encontraba y el comando salía con 0 bytes de detalle, que es
+indistinguible de «no hay nada que leer» y lleva a clasificar a ciegas.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
+
+# Hilos largos: por encima de este número de respuestas se leen solo las N más
+# recientes. Medido en el informe del 18/10-04/11: 5 hilos concentraban 130 KB
+# de los 430 KB del JSON, y los 3 que se abrieron completos (67 KB) se
+# resolvían igual con las 12 últimas respuestas (8,7 KB, -87 %). El estado de un
+# hilo lo decide su cola, no su cabecera.
+UMBRAL_LARGO = 20
+MAX_RESP_LARGO = 12
+
+
+def normaliza_ids(brutos: list[str]) -> list[str]:
+    """Acepta ids separados por espacios o comas, también dentro de un argumento.
+
+    Sin esto, `detalle.py <dir> "1793 1794"` buscaba un id llamado «1793 1794»,
+    no lo encontraba y devolvía 0 bytes: un fallo silencioso que parece «no hay
+    detalle». Se conserva el orden de aparición y se quitan duplicados.
+    """
+    vistos: dict[str, None] = {}
+    for bruto in brutos:
+        for trozo in re.split(r"[\s,;]+", bruto or ""):
+            if trozo:
+                vistos.setdefault(trozo, None)
+    return list(vistos)
 
 
 def cargar(dir_salida: Path, canal: int | None = None) -> dict[str, dict]:
@@ -64,6 +96,11 @@ def main() -> int:
     p.add_argument("--canal", type=int, default=None)
     p.add_argument("--max-resp", type=int, default=0)
     p.add_argument("--chars", type=int, default=0)
+    p.add_argument(
+        "--completas",
+        action="store_true",
+        help=f"no recorta automáticamente los hilos de más de {UMBRAL_LARGO} respuestas",
+    )
     p.add_argument("--listar", action="store_true", help="lista los ids disponibles")
     a = p.parse_intermixed_args()
 
@@ -78,11 +115,12 @@ def main() -> int:
             print(f"{i} | c{h['_canal']:02d} | {h['fecha']} | {h['titulo'][:80]}")
         return 0
 
-    if not a.ids:
+    ids = normaliza_ids(a.ids)
+    if not ids:
         sys.exit("indica al menos un id (o usa --listar)")
 
-    faltan = [i for i in a.ids if i not in por_id]
-    for i in a.ids:
+    faltan = [i for i in ids if i not in por_id]
+    for i in ids:
         h = por_id.get(i)
         if h is None:
             continue
@@ -95,8 +133,18 @@ def main() -> int:
         print(f"MENCIONES_SQUAD: {', '.join(h.get('menciones_squad') or []) or '-'}")
         print(f"URLS_PRODUCTO: {'; '.join(h.get('urls_producto') or []) or '-'}")
         resp = h.get("respuestas") or []
-        if a.max_resp:
-            resp = resp[-a.max_resp :]
+        # Recorte automático de hilos largos, salvo que se pidan completas o se
+        # fije --max-resp a mano.
+        tope = a.max_resp
+        if not tope and not a.completas and len(resp) > UMBRAL_LARGO:
+            tope = MAX_RESP_LARGO
+            print(
+                f"AVISO: hilo largo ({len(resp)} respuestas), se muestran las "
+                f"{MAX_RESP_LARGO} más recientes. Usa --completas o --max-resp N "
+                f"para verlo entero."
+            )
+        if tope:
+            resp = resp[-tope:]
         for r in resp:
             t = r.get("texto") or ""
             if a.chars and len(t) > a.chars:
