@@ -46,7 +46,24 @@ python3 .opencode/skills/product-forge-incidencias/scripts/barrido.py \
   "<desde_iso>" "<dir_salida>" [--desde-ultima-actividad] [--canales 1,2,4] [--workers-canal 5]
 ```
 
-Recorre todos los canales en paralelo dentro de una sola invocación y deja `canal_NN.json` por canal. **Medido: 15 canales en ~80 s** (con 15 subagentes el mismo trabajo tardaba ~25 min). `--desde-ultima-actividad` es obligatorio para el alcance completo: incluye hilos abiertos antes del rango que siguen vivos.
+Recorre todos los canales en paralelo dentro de una sola invocación y deja `canal_NN.json` por canal **y `indice.txt`**. **Medido: 15 canales en ~85 s** (con 15 subagentes el mismo trabajo tardaba ~25 min). `--desde-ultima-actividad` es obligatorio para el alcance completo: incluye hilos abiertos antes del rango que siguen vivos.
+
+### Lectura en una sola pasada (obligatorio)
+
+El JSON por canal son ~430 KB y **el 83 % de su texto se descarta al clasificar** (medido en el informe del 18/10–04/11: 130.529 de 157.594 caracteres). No abras los `canal_NN.json` para clasificar. El flujo es:
+
+1. **Lee `indice.txt`** (~28 KB, una línea por hilo): `id | fecha | autor | respuestas y respuestas del squad | última actividad y si el último es del squad | urls de Producto | título | último mensaje (300 caracteres)`.
+2. **Decide los candidatos** con esa línea: un hilo con `squad=0` o cuyo `ult` no sea del squad (`-`) es candidato a 🫥; si el último mensaje es del squad (`S`), probablemente esté resuelto.
+3. **Pide el texto íntegro solo de los candidatos**, sin volver a llamar a Teams:
+
+```bash
+python3 .opencode/skills/product-forge-incidencias/scripts/detalle.py "<dir_salida>" <id> [<id> ...]
+# opciones: --canal N · --max-resp N (solo las N más recientes) · --chars N · --listar
+```
+
+El índice da la señal de triage; `detalle.py` da el texto completo de lo que de verdad hay que clasificar. **No generes un `digest.txt` intermedio ni vuelvas a leer los JSON completos**: eso es releer tres veces el mismo dato y es lo que hacía tardar el informe.
+
+Si un hilo necesita más contexto del que da el índice, se pide con `detalle.py`, no releyendo el canal.
 
 ### Canales y filtros
 
@@ -79,7 +96,8 @@ Cada hilo del JSON sale con `menciones_squad`, y cada respuesta con sus `mencion
 
 - **No reejecutes el script por canal ni lo verifiques con el CLI.** Relanzarlo con `--sin-filtro`, con otros `--workers` o barriendo respuestas a mano con `xargs` duplica el tiempo sin cambiar el resultado.
 - **No montes extractores propios con `jq`/`xargs`.**
-- Si un hilo concreto necesita más contexto, se lee ese hilo (`channel replies`), no el canal entero.
+- **No reescribas el índice con un script propio ni vuelques los JSON a un fichero intermedio.** `barrido.py` ya deja `indice.txt` y `detalle.py` ya saca el texto íntegro de un id.
+- Si un hilo concreto necesita más contexto, se lee ese hilo con `detalle.py <dir> <id>`, no el canal entero.
 
 ### Respaldo: CLI de Teams
 
@@ -88,20 +106,24 @@ Solo si el script falla (Graph no disponible, cambio de contrato del paquete com
 ## Procedimiento
 
 1. **Alcance**: resuelve los parámetros anteriores y la **lista de miembros de ProductForge** (de `team.adoc`, según tus reglas comunes).
-2. **Obtención en un único barrido** (solo lectura). El trabajo de red lo hace **un proceso**, no 15 subagentes: lanza **tú** `scripts/barrido.py`, que recorre todos los canales del alcance en paralelo dentro de una sola invocación y deja un JSON por canal. El procedimiento y los detalles de lectura están en **«Lectura de Teams»**, más abajo:
+2. **Obtención en un único barrido** (solo lectura). El trabajo de red lo hace **un proceso**, no 15 subagentes: lanza **tú** `scripts/barrido.py`, que recorre todos los canales del alcance en paralelo dentro de una sola invocación y deja un JSON por canal **y el `indice.txt`**. El procedimiento y los detalles de lectura están en **«Lectura de Teams»**, más arriba:
 
    ```bash
    python3 .opencode/skills/product-forge-incidencias/scripts/barrido.py \
      "<desde_iso>" "<dir_salida>" [--desde-ultima-actividad] [--canales 1,2,4] [--workers-canal 5]
    ```
 
-   Lee tú los JSON del directorio de salida y clasifica con ellos. Si un canal sale con `error`, indícalo como limitación del canal. Si el usuario acota canales, pásalos en `--canales`; si pide excluir los de implantación, no incluyas los 9–15 e indícalo en el alcance del informe. Si ya hay datos recientes de esta sesión con el mismo alcance, reutilízalos.
+   Si un canal sale con `error`, indícalo como limitación del canal. Si el usuario acota canales, pásalos en `--canales`; si pide excluir los de implantación, no incluyas los 9–15 e indícalo en el alcance del informe. Si ya hay datos recientes de esta sesión con el mismo alcance, reutilízalos.
 
-   **Subagentes: solo Jira por defecto.** Lanza `product-forge-incidencias-jira-extractor` (ITSMECOM abiertos con todos sus comentarios) siempre. El `teams-extractor` **solo** hace falta para algo que el barrido no da: los **informes previos** de los últimos 7 días cuando se va a publicar, o una duda material sobre un hilo concreto (pásale el `rootId` y dile que **no relea el canal**).
+   **Subagentes: solo Jira por defecto.** Lanza `product-forge-incidencias-jira-extractor` (ITSMECOM abiertos) siempre, **en paralelo con el barrido**. Pídele los **3 últimos comentarios** de cada ticket, no el histórico completo: el resto se consulta después solo del ticket que lo necesite. El `teams-extractor` **solo** hace falta para algo que el barrido no da: los **informes previos** de los últimos 7 días cuando se va a publicar, o una duda material sobre un hilo concreto (pásale el `rootId` y dile que **no relea el canal**).
 
-3. **Clasificación y cotejo (tuyos):** clasifica cada hilo y ticket aplicando [clasificacion.md](clasificacion.md) sobre los datos **íntegros** de los extractores (sin resumir ni recortar). Antes de presentar nada, revisa el conjunto:
-   - Coherencia con clasificaciones previas de la sesión para el mismo hilo o ticket.
-   - Las limitaciones y la cobertura de los extractores (rango cubierto, canales inaccesibles, miembros no verificados, lecturas fallidas) se muestran al usuario.
+3. **Clasificación y cotejo (tuyos), en una sola pasada de lectura:**
+   1. Lee **`indice.txt`** (~28 KB) y haz el triage de los hilos con esa línea.
+   2. Pide el texto íntegro **solo de los candidatos** con `detalle.py` (ver «Lectura en una sola pasada»). No abras los `canal_NN.json` para clasificar ni generes ficheros intermedios.
+   3. Clasifica cada hilo y ticket aplicando [clasificacion.md](clasificacion.md) sobre los datos **íntegros** de los candidatos (sin resumir ni recortar).
+   4. Antes de presentar nada, revisa el conjunto:
+      - Coherencia con clasificaciones previas de la sesión para el mismo hilo o ticket.
+      - Las limitaciones y la cobertura de los extractores (rango cubierto, canales inaccesibles, miembros no verificados, lecturas fallidas) se muestran al usuario.
 4. **Presentación (informe mínimo)**: compón el informe según «Formato del informe» y muéstralo. Ampliar contexto solo si el usuario lo pide (vuelve a delegar el hilo/ticket concreto).
 5. **Si no se publica**: termina ofreciendo ampliar contexto o publicar el resumen, sin más texto.
 6. **Si se publica** (acción que modifica estado):
@@ -145,3 +167,4 @@ Aplican además tus reglas comunes (castellano, horas en `Europe/Madrid`, no inv
 
 - Pasa a los extractores la norma de castellano y la de horas.
 - Los extractores son de solo lectura; clasificar y publicar lo haces tú, y publicar solo con confirmación explícita.
+- **Eficiencia de lectura (obligatorio):** el barrido tarda ~85 s; el resto del tiempo del informe es lectura del modelo. Lee `indice.txt` una vez, pide el texto íntegro solo de los candidatos con `detalle.py` y no generes volcados intermedios ni releas los JSON. Medido en el informe del 18/10–04/11: sin este flujo se leyeron 550 KB para clasificar 26 KB útiles (el 83 % del texto descartado).

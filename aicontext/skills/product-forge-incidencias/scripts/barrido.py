@@ -18,6 +18,18 @@ Opciones:
     --workers-canal N     canales en paralelo (por defecto 5)
     --workers-hilo N      hilos en paralelo dentro de un canal (por defecto 8)
     --sin-ultima-actividad  no busca hilos antiguos con actividad en el rango
+    --sin-resumen         no genera indice.txt (solo los JSON por canal)
+    --chars N             truncado del ultimo mensaje en el indice (300)
+
+Ademas de canal_NN.json, deja en el directorio de salida:
+    indice.txt            UNA linea por hilo de los 15 canales (~13 KB). Es lo
+                          que debe leer el agente para clasificar.
+    detalle.py            helper para sacar el texto integro de los hilos
+                          candidatos SIN volver a llamar a Teams.
+
+Flujo de lectura recomendado (una sola pasada):
+    1. leer indice.txt y decidir que hilos son candidatos;
+    2. python3 detalle.py <salida_dir> <id> [<id> ...]  -> texto integro.
 """
 from __future__ import annotations
 
@@ -105,6 +117,8 @@ def main() -> int:
     p.add_argument("--workers-hilo", type=int, default=8)
     p.add_argument("--workers-canal", type=int, default=5)
     p.add_argument("--sin-ultima-actividad", action="store_true")
+    p.add_argument("--sin-resumen", action="store_true")
+    p.add_argument("--chars", type=int, default=300)
     a = p.parse_args()
 
     seleccion = CANALES
@@ -134,6 +148,24 @@ def main() -> int:
 
     errores = sum(1 for r in resultados if r["error"])
     print(f"\nTOTAL pared: {total:.1f}s  ({len(seleccion)} canales, {errores} con error)")
+
+    # Índice compacto: una línea por hilo de todos los canales. Es lo que lee el
+    # agente; evita que tenga que abrir los ~430 KB de JSON por canal.
+    if not a.sin_resumen:
+        lineas = [
+            f"# ÍNDICE GLOBAL · desde {a.desde} · {len(seleccion)} canales",
+            "# «!» = raíz anterior al rango incluida por actividad · «S» = último mensaje del squad",
+        ]
+        for r in resultados:
+            if not r["hilos"]:
+                continue
+            lineas.append("")
+            lineas.append(f"## canal {r['canal']:02d} · {r['nombre']} · {len(r['hilos'])} hilos")
+            lineas += [ec.linea_indice(h, a.chars) for h in r["hilos"]]
+        texto = "\n".join(lineas) + "\n"
+        (salida / "indice.txt").write_text(texto, encoding="utf-8")
+        print(f"Índice compacto: {salida / 'indice.txt'}  ({len(texto)/1024:.1f} KB)")
+
     print(f"JSON por canal en: {salida}")
     return 0
 

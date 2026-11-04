@@ -20,6 +20,9 @@ Opciones:
                           pero con respuestas dentro del rango
     --workers N           hilos en paralelo (por defecto 8; ver nota de 429)
     --json                salida JSON en lugar de resumen legible
+    --resumen             salida de ÍNDICE compacto (una línea por hilo) en lugar
+                          del volcado íntegro; es lo que debe leer el agente
+    --resumen-chars N     truncado del último mensaje en el índice (por defecto 300)
     --verbose             trazas de progreso a stderr
 
 Nota sobre paralelismo: medido sobre 60 hilos antiguos, 8 workers tardan 4,6 s,
@@ -485,6 +488,77 @@ def extraer(
     return filas
 
 
+# ── Índice compacto (lectura en una sola pasada) ─────────────────────────────
+# Motivo: el volcado íntegro de los 15 canales son ~430 KB de JSON, de los que
+# el 83 % del texto se descarta al clasificar (medido: 130.529 de 157.594
+# caracteres). Con el índice el agente lee una línea por hilo (~13 KB), decide
+# cuáles son candidatos y pide el texto íntegro solo de esos (~26 KB). Es el
+# mismo dato, leído una vez en vez de tres.
+def _ultimo(f: dict):
+    return f["respuestas"][-1] if f["respuestas"] else None
+
+
+def linea_indice(f: dict, chars: int = 300) -> str:
+    """Una línea por hilo con lo justo para triage: quién, cuándo, cuánto, qué."""
+    resp = f["respuestas"]
+    squad = [r for r in resp if es_del_squad(r["autor"])]
+    ult = _ultimo(f)
+    ult_autor = ult["autor"] if ult else f["autor"]
+    ult_squad = "S" if (ult and es_del_squad(ult["autor"])) else "-"
+    cuerpo = (ult["texto"] if ult else "") or ""
+    if len(cuerpo) > chars:
+        cuerpo = cuerpo[:chars].rstrip() + "…"
+    cuerpo = re.sub(r"\s+", " ", cuerpo)
+    fuera = "!" if f["fecha_raiz_fuera_de_rango"] else "-"
+    return (
+        f"{f['id']} | {f['fecha'][:10]} {fuera} | {f['autor']} | "
+        f"resp={f['n_respuestas']:>3} squad={len(squad):>2} | "
+        f"ult={f['ultima_actividad'][:10]} {ult_squad} {ult_autor} | "
+        f"urls={len(f['urls_producto'])} | {f['titulo'][:90]} | {cuerpo}"
+    )
+
+
+def resumen(filas: list[dict], chars: int = 300) -> str:
+    """Índice legible: cabecera con recuentos y una línea por hilo."""
+    total = len(filas)
+    sin_resp = sum(1 for f in filas if f["n_respuestas"] == 0)
+    sin_squad = sum(
+        1 for f in filas if not any(es_del_squad(r["autor"]) for r in f["respuestas"])
+    )
+    cabecera = (
+        f"# ÍNDICE · {total} hilos · {sin_resp} sin respuestas · "
+        f"{sin_squad} sin respuesta del squad\n"
+        f"# id | fecha fueraDeRango | autor | respuestas squad | últimaActividad "
+        f"últimoEsDelSquad últimoAutor | urlsProducto | título | último mensaje\n"
+        f"# «!» = raíz anterior al rango, incluida por actividad. "
+        f"«S» = el último mensaje es del squad."
+    )
+    return cabecera + "\n" + "\n".join(linea_indice(f, chars) for f in filas)
+
+
+def detalle(filas: list[dict], ids: list[str]) -> str:
+    """Texto íntegro de los hilos indicados, a partir de filas ya extraídas."""
+    por_id = {f["id"]: f for f in filas}
+    partes = []
+    for i in ids:
+        f = por_id.get(i)
+        if f is None:
+            partes.append(f"### {i}\n(no está en este canal)")
+            continue
+        partes.append(
+            f"### {f['id']} · {f['fecha']} · {f['autor']} · "
+            f"{f['n_respuestas']} respuestas\n"
+            f"TÍTULO: {f['titulo']}\n"
+            f"WEBURL: {f['webUrl']}\n"
+            f"MENCIONES_SQUAD: {', '.join(f['menciones_squad']) or '-'}\n"
+            f"URLS_PRODUCTO: {'; '.join(f['urls_producto']) or '-'}"
+        )
+        for r in f["respuestas"]:
+            marca = "SQUAD" if es_del_squad(r["autor"]) else "     "
+            partes.append(f"  [{marca}] {r['fecha']} {r['autor']}: {r['texto']}")
+    return "\n".join(partes)
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("team")
@@ -497,6 +571,17 @@ def main() -> int:
     p.add_argument("--desde-ultima-actividad", action="store_true")
     p.add_argument("--workers", type=int, default=WORKERS_DEFECTO)
     p.add_argument("--json", action="store_true")
+    p.add_argument(
+        "--resumen",
+        action="store_true",
+        help="índice compacto: una línea por hilo (lo que debe leer el agente)",
+    )
+    p.add_argument(
+        "--resumen-chars",
+        type=int,
+        default=300,
+        help="truncado del último mensaje en el índice (por defecto 300)",
+    )
     p.add_argument("--verbose", action="store_true")
     p.add_argument(
         "--menciona",
@@ -536,6 +621,8 @@ def main() -> int:
 
     if a.json:
         print(json.dumps(filas, ensure_ascii=False, indent=2))
+    elif a.resumen:
+        print(resumen(filas, a.resumen_chars))
     else:
         print(f"{len(filas)} hilos relevantes")
         for f in filas:
