@@ -1,0 +1,21 @@
+aicontext/agents/product-forge-pana.md
+  s_de87aa52f6a9b3::t_55282a19891fd4 51
+aicontext/skills/product-forge-incidencias/SKILL.md
+  s_de87aa52f6a9b3::t_b09ab656b6f69e 43-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "7ef9bd2709fa3ae9c7ef54b0101e5ad8c643103d",
+  "prompts": {},
+  "sessions": {
+    "s_de87aa52f6a9b3": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e640fc5ddffeBybIKmcm4AvUz4",
+        "model": "claude-opus-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
