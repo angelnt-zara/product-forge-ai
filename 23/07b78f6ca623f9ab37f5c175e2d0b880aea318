@@ -1,0 +1,20 @@
+aicontext/skills/product-forge-incidencias/SKILL.md
+  h_46798eb9f7d88a 49-66,99-100,109,116,118,120-126,170
+aicontext/skills/product-forge-incidencias/scripts/barrido.py
+  h_46798eb9f7d88a 21-32,120-121,151-168
+aicontext/skills/product-forge-incidencias/scripts/detalle.py
+  h_46798eb9f7d88a 1-111
+aicontext/skills/product-forge-incidencias/scripts/extract_channel.py
+  h_46798eb9f7d88a 23-25,491-561,574-584,624-625
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "2307b78f6ca623f9ab37f5c175e2d0b880aea318",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
