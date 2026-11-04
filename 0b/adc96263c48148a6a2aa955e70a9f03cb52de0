@@ -1,0 +1,20 @@
+aicontext/agents/product-forge-incidencias-teams-extractor.md
+  h_46798eb9f7d88a 30,36,38,40,44-46,52,54,56,60,85
+aicontext/skills/product-forge-incidencias/SKILL.md
+  h_46798eb9f7d88a 14,16,26,38-87,91-96,98,100
+aicontext/skills/product-forge-incidencias/scripts/barrido.py
+  h_46798eb9f7d88a 1-142
+aicontext/skills/product-forge-incidencias/scripts/extract_channel.py
+  h_46798eb9f7d88a 16-17,21,26-34,37,107-142,208-255,300-347,355,362-369,372,374-378,383-385,388-392,394-397,401-421,424-429,434-440,460-467,469-474,501-508,518-525,531,543-546
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "0badc96263c48148a6a2aa955e70a9f03cb52de0",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
