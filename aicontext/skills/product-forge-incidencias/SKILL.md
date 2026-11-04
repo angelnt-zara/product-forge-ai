@@ -15,12 +15,13 @@ Interviene un único subagente de solo lectura, `product-forge-incidencias-teams
 
 La lectura de los canales la hace el script `scripts/barrido.py`, que recorre todos los canales del alcance en una sola invocación y se apoya en `scripts/extract_channel.py` (pagina las respuestas completas, corta por fecha y aplica los filtros de mención y de URL de Producto). El barrido es la vía normal; los subagentes ya no leen canales salvo para un hilo concreto. Nadie debe montar su propio extractor con `jq` y `xargs`, ni reejecutar el script con otros flags para «verificar».
 
-Dos scripts más completan el flujo, y cada uno existe por un motivo medido:
+Tres scripts más completan el flujo, y cada uno existe por un motivo medido:
 
 | Script | Para qué | Por qué existe |
 |---|---|---|
 | `scripts/detalle.py` | texto íntegro de los hilos candidatos | evita releer los JSON completos; recorta los hilos largos |
 | `scripts/prs.py` | estado de las PR enlazadas, en lote | sin él la regla «PR aprobada ⇒ resuelto» no se aplicaba nunca |
+| `scripts/itsmecom.py` | ITSMECOM citados por hilo + JQL de verificación | sin él los hilos cuyo caso se cerró en Jira seguían publicándose como pendientes |
 
 ## Disparadores típicos
 
@@ -149,12 +150,25 @@ Solo si el script falla (Graph no disponible, cambio de contrato del paquete com
 
    El `teams-extractor` **solo** hace falta para algo que el barrido no da: los **informes previos** de los últimos 7 días cuando se va a publicar, o una duda material sobre un hilo concreto (pásale el `rootId` y dile que **no relea el canal**).
 
+   **ITSMECOM citados en los hilos: verificación en lote, obligatoria.** Un hilo puede quedarse sin feedback aunque su caso se haya cerrado en Jira, y un ticket puede haberse reasignado fuera de Pacman. Antes de clasificar, resuelve el estado de los ITSMECOM que citan los hilos y **omite los que estén cerrados o ya no estén asignados al squad**:
+
+   ```bash
+   python3 .opencode/skills/product-forge-incidencias/scripts/itsmecom.py "<dir_salida>"
+   ```
+
+   - Extrae las claves del título y de todas las respuestas de cada hilo (no llama a Teams) y emite una JQL `key in (...)` lista para pegar, troceada cada 40 claves.
+   - Con esas claves, **una sola llamada** a `jira_search` con los campos `summary,status,customfield_18260` (`Equipo Asignado`), más los comentarios de los tickets que queden vivos. Marca los hilos cuyo único ITSMECOM viene en un resumen del bot (varios tickets en un mensaje de reunión): esos no son hilos de incidencia.
+   - **La decisión se toma SOLO por estado y `Equipo Asignado`.** Las etiquetas (`C-PacmanProduct`, `C-StoreFront`, `ASIGNACION_INCORRECTA`…) **no se usan**, ni a favor ni en contra. Regla completa en [clasificacion.md](clasificacion.md).
+   - La cola válida es `jsdsoportepacman` («N2 Pacman»), la misma que filtra la consulta principal. Otros equipos —incluido `jsddesarrollopacmanproduct` («N3 Pacman»), que es desarrollo, no soporte— cuentan como fuera de Pacman y el hilo se omite citando el equipo real.
+   - Ojo: la cola `Equipo Asignado = jsdsoportepacman` es **compartida por todos los squads del área**. Esta verificación es solo para los tickets **citados en hilos**; la consulta principal de abiertos mantiene su filtro, porque sin él la misma ventana pasa de 8 a 62 tickets de Imagen, Assets, Grids, Menú y Tags.
+
 3. **Clasificación y cotejo (tuyos), en una sola pasada de lectura:**
    1. Lee **`indice.txt`** (~28 KB) y haz el triage de los hilos con esa línea.
    2. Pide el texto íntegro de **todos** los candidatos en **una sola invocación** de `detalle.py` (ver «Lectura en una sola pasada»). No abras los `canal_NN.json` para clasificar ni generes ficheros intermedios.
-   3. Clasifica cada hilo y ticket aplicando [clasificacion.md](clasificacion.md) sobre los datos **íntegros** de los candidatos (sin resumir ni recortar), y aplica las reglas de PR con el estado que devolvió `prs.py`.
+   3. Clasifica cada hilo y ticket aplicando [clasificacion.md](clasificacion.md) sobre los datos **íntegros** de los candidatos (sin resumir ni recortar), y aplica las reglas de PR con el estado que devolvió `prs.py` y las de ITSMECOM con el estado y el equipo que devolvió Jira.
    4. Antes de presentar nada, revisa el conjunto:
       - Coherencia con clasificaciones previas de la sesión para el mismo hilo o ticket.
+      - Que todo hilo que cita un ITSMECOM se ha cruzado contra Jira por estado y equipo, sin decidir por etiquetas.
       - Las limitaciones y la cobertura de los extractores (rango cubierto, canales inaccesibles, miembros no verificados, lecturas fallidas) se muestran al usuario.
 4. **Presentación (informe mínimo)**: compón el informe según «Formato del informe» y muéstralo. Ampliar contexto solo si el usuario lo pide (vuelve a delegar el hilo/ticket concreto).
 5. **Si no se publica**: termina ofreciendo ampliar contexto o publicar el resumen, sin más texto.
@@ -170,10 +184,10 @@ Solo si el script falla (Graph no disponible, cambio de contrato del paquete com
 
 Cada hilo o ticket lleva **dos emojis**, siempre **los primeros de cada viñeta** y en este orden: 1º criticidad, 2º atendido (significado en [clasificacion.md](clasificacion.md)).
 
-1. Una línea de alcance: canales, rango, zona horaria (`Europe/Madrid`) y nº de hilos relevantes. Indica que Q - Soporte API Storefront y los Imp. XXX se han filtrado por mención a Storefront + URL de API de Producto.
+1. Una línea de alcance: canales, rango, zona horaria (`Europe/Madrid`) y nº de hilos relevantes. Indica que Q - Soporte API Storefront y los Imp. XXX se han filtrado por mención a Storefront + URL de API de Producto, y que los hilos que citan un ITSMECOM se han verificado contra Jira por estado y equipo asignado.
 2. Tabla resumen por canal **solo sobre pendientes** (🫥 y 🏃‍♂️‍➡️): nº de pendientes y su desglose por criticidad 🔴 🟠 🟡 ⚪ y por atención 🫥 🏃‍♂️‍➡️, solo con los canales que tengan pendientes. Los recuentos se obtienen contando tu clasificación, no se estiman. Incluye ITSMECOM como una fila más.
 3. **Pendientes (🫥 y 🏃‍♂️‍➡️)**, ordenados según «Orden», **una sola línea por elemento**: criticidad + atendido · fecha · antigüedad · canal · autor · tema en pocas palabras · URL completa en texto visible. Marca con «(PR abierta)» los hilos del equipo. Separa hilos de Teams, incidencias ITSMECOM y consultas ITSMECOM.
-4. No listes por defecto resueltos (✅), informativos, motivos ni observaciones. Añade una única línea final «Omitidos: N resueltos, N informativos, N PR cerradas» (contados desde tu clasificación) y avisa solo de limitaciones que afecten al resultado (canal inaccesible, miembros no verificados, truncado).
+4. No listes por defecto resueltos (✅), informativos, motivos ni observaciones. Añade una única línea final «Omitidos: N resueltos, N informativos, N PR cerradas, N por ITSMECOM cerrado o fuera de Pacman» (contados desde tu clasificación) y avisa solo de limitaciones que afecten al resultado (canal inaccesible, miembros no verificados, truncado, ticket no consultable).
 
 **Orden dentro de cada bloque** (informe y mensaje): primero por criticidad (🔴, 🟠, 🟡, ⚪) y, dentro de la misma, por atendido (🫥, 🏃‍♂️‍➡️, ✅). A igualdad de ambos, del más antiguo al más reciente.
 
@@ -200,6 +214,7 @@ Aplican además tus reglas comunes (castellano, horas en `Europe/Madrid`, no inv
 - Pasa a los extractores la norma de castellano y la de horas.
 - Los extractores son de solo lectura; clasificar y publicar lo haces tú, y publicar solo con confirmación explícita.
 - **Eficiencia de lectura (obligatorio):** el barrido tarda ~17-20 s y la resolución de PR ~2 s; el resto del tiempo del informe es lectura del modelo. Lee `indice.txt` una vez, pide el texto íntegro de todos los candidatos en **una sola invocación** de `detalle.py` y no generes volcados intermedios ni releas los JSON. Medido en el informe del 18/10–04/11: sin este flujo se leyeron 550 KB para clasificar 26 KB útiles (el 83 % del texto descartado).
+- **ITSMECOM citados: nunca a ojo.** Todo hilo que cite un ticket se cruza contra Jira por **estado** y **`Equipo Asignado`**; las etiquetas no se usan. Un hilo cuyo ticket está en la categoría Done o ya no está en `jsdsoportepacman` **no se lista como pendiente**. Si no se pudo consultar el ticket, dilo como limitación y no apliques la regla.
 
   Presupuesto medido de ese informe, y de dónde se recortó:
 
@@ -210,5 +225,6 @@ Aplican además tus reglas comunes (castellano, horas en `Europe/Madrid`, no inv
   | Hilos de más de 20 respuestas | 67 KB (3 completos) | 8,7 KB (−87 %) |
   | Jira (búsqueda + comentarios) | 25 KB en 2 búsquedas | 25 KB en 1 búsqueda |
   | Resolución de PR | no se hacía | ~1 KB, 1 llamada |
+  | Verificación de ITSMECOM citados | no se hacía | ~1 KB, 1 llamada |
 
   No merece la pena, y está medido para que no se reintente: recomprimir los JSON (`indent=1` → plano, 430 → 358 KB) no ahorra nada porque el agente no los lee; recortar el cuerpo del índice a 150 caracteres solo baja un 6 %; y bajar los comentarios de Jira a 2 pierde diagnósticos completos.

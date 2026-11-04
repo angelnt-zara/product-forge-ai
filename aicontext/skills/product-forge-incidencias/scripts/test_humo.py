@@ -10,6 +10,8 @@ cuenta:
 2. `detalle.py` recorta los hilos de más de 20 respuestas y avisa.
 3. `extract_channel.prs_del_hilo` extrae las PR de los `href` y deduplica.
 4. `prs.py` normaliza y agrupa las PR de todos los hilos sin repetirlas.
+5. `itsmecom.py` extrae los ITSMECOM citados (título y respuestas, sin duplicados)
+   y emite la JQL de verificación troceada.
 
 Uso:
     python3 scripts/test_humo.py
@@ -168,6 +170,85 @@ def main() -> int:
                     todas.append(pr)
         check("solo carga hilos con PR", list(cargados) == ["1003"], str(list(cargados)))
         check("una PR única no se duplica", len(todas) == 1, str(todas))
+
+    print("5. verificación de ITSMECOM citados (itsmecom.py)")
+    import itsmecom
+
+    with tempfile.TemporaryDirectory() as tmp:
+        base = Path(tmp)
+        canal = {
+            "canal": 4,
+            "nombre": "B - Gestion incidencias Tecnologia",
+            "hilos": [
+                {
+                    "id": "2001",
+                    "fecha": "21/10/2026 17:32",
+                    "titulo": "[ZARA][ITSMECOM-5859496] ERROR IMPORTE TR CZ",
+                    "autor": "Bruno Sanchez",
+                    "respuestas": [
+                        {
+                            "autor": "Alba",
+                            "fecha": "21/10/2026 17:56",
+                            "texto": "nos llega de Alemania ITSMECOM-5861950",
+                            "menciones": [],
+                        },
+                        {
+                            "autor": "Vicente",
+                            "fecha": "21/10/2026 18:00",
+                            "texto": "otra vez itsmecom-5859496 en el hilo",
+                            "menciones": [],
+                        },
+                    ],
+                },
+                {
+                    "id": "2002",
+                    "fecha": "04/11/2026 09:00",
+                    "titulo": "Hilo sin tickets",
+                    "autor": "alguien",
+                    "respuestas": [],
+                },
+                {
+                    "id": "2003",
+                    "fecha": "21/09/2026 14:31",
+                    "titulo": "Ha programado una reunión",
+                    "autor": "(bot)",
+                    "respuestas": [
+                        {
+                            "autor": "(bot)",
+                            "fecha": "21/09/2026 14:32",
+                            "texto": " ".join(
+                                f"ITSMECOM-{n}" for n in range(5900000, 5900012)
+                            ),
+                            "menciones": [],
+                        }
+                    ],
+                },
+            ],
+        }
+        (base / "canal_04.json").write_text(
+            json.dumps(canal, ensure_ascii=False), encoding="utf-8"
+        )
+        filas = itsmecom.cargar(base)
+        por_id = {f["id"]: f for f in filas}
+        check("solo hilos con ITSMECOM", sorted(por_id) == ["2001", "2003"], str(list(por_id)))
+        check(
+            "título + respuestas, sin duplicados y normalizado",
+            por_id["2001"]["claves"] == ["ITSMECOM-5859496", "ITSMECOM-5861950"],
+            str(por_id["2001"]["claves"]),
+        )
+        check("marca el resumen automático del bot", por_id["2003"]["bot"], str(por_id["2003"]))
+        consultas = itsmecom.jql(filas)
+        check("una sola consulta si caben todas", len(consultas) == 1, str(consultas))
+        check(
+            "la JQL incluye las claves de todos los hilos",
+            all(
+                f"ITSMECOM-{n}" in consultas[0]
+                for n in list(range(5900000, 5900012)) + [5859496, 5861950]
+            ),
+            consultas[0],
+        )
+        troceadas = itsmecom.jql(filas, tamano_lote=5)
+        check("trocea cuando se pide un lote menor", len(troceadas) == 3, str(len(troceadas)))
 
     print()
     if fallos:

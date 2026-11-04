@@ -25,6 +25,25 @@ Los demás canales externos (B - Gestión incidencias Tecnología, P - Dudas té
 - Al contrario: si un hilo de estos canales trata claramente un problema de Producto pero el extractor lo dejó en `descartadosPorFiltro` por no encajar en la regla literal (p. ej. la URL viene partida o sin esquema), **no lo rescates por iniciativa propia**: indícalo como limitación y, si es material, pide al extractor que lo recupere con su sesión.
 - En estos canales es frecuente que el hilo del rollout de una cadena se abra semanas antes y siga vivo. Clasifícalo por su **última actividad**, no por la fecha del raíz, y ten en cuenta la antigüedad real al valorar criticidad.
 
+## Hilos que citan un ITSMECOM: verificación cruzada obligatoria
+
+Un caso puede quedar resuelto en su Jira sin que nadie deje feedback en el hilo de Teams, y también puede haberse reasignado fuera de Pacman. En los dos casos el hilo parece pendiente sin serlo. Por eso, **todo hilo que cite un ITSMECOM —en el título o en cualquier respuesta— se verifica contra Jira antes de clasificarlo**.
+
+**La verificación se hace SOLO por estado y equipo asignado. Las etiquetas no cuentan**, ni a favor ni en contra: da igual `C-PacmanProduct`, `C-StoreFront`, `C-ProductForge`, `ASIGNACION_INCORRECTA` o cualquier otra; no se usan para decidir ni para matizar.
+
+| Situación del ticket | Decisión sobre el hilo |
+|---|---|
+| Estado en la categoría **Done** (Resuelta, Cerrado, Cancelado) | **Omitir** (motivo «ITSMECOM cerrado»). |
+| Abierto pero `Equipo Asignado` **distinto** de `jsdsoportepacman` | **Omitir** (motivo «ITSMECOM fuera de Pacman»). |
+| Abierto y `Equipo Asignado` = `jsdsoportepacman` | Se clasifica con los criterios normales. |
+| No se pudo consultar | **No apliques la regla** sobre ese hilo: clasifícalo normal y declara la limitación. |
+
+- **Hilo con varios ITSMECOM:** se omite solo si **todos** están cerrados o fuera de la cola de Pacman. Basta un ticket abierto y asignado a Pacman para mantenerlo; en ese caso se indica cuál sigue vivo.
+- **Qué es «Pacman» aquí:** la cola de soporte del squad, `Equipo Asignado` = `jsdsoportepacman` (se muestra como «N2 Pacman»), que es la misma que filtra la consulta principal de abiertos. Un ticket en otro equipo —aunque sea otro equipo de Pacman, como `jsddesarrollopacmanproduct` («N3 Pacman»)— **se omite**, citando el equipo real; no es cartera de soporte del squad.
+- La verificación se aplica **antes** de la criticidad y del estado de atención: un hilo omitido por este motivo no cuenta como pendiente, ni como informativo, ni como resuelto. Va a la línea final de «Omitidos» con su propio recuento.
+- El estado y el equipo se citan tal cual los devuelve Jira («Resuelta», «Cerrado», `Equipo Asignado = <nombre>`). No se interpreta el estado a partir de las etiquetas ni de los comentarios.
+- Los hilos cuyo único ITSMECOM aparece en un resumen automático del bot (varios tickets en un mensaje de reunión) no son hilos de incidencia: se omiten como informativos, no por esta regla.
+
 ## Quién cuenta como «respuesta del squad»
 
 Se considera dada respuesta si **al menos un miembro de ProductForge** ha respondido en el hilo con **una respuesta concreta**.
@@ -60,7 +79,7 @@ Si alguna PR no está aprobada, el hilo sigue pendiente (🫥 o 🏃‍♂️‍
 - En caso de duda entre resuelto y pendiente, clasifica como pendiente y déjalo anotado en una línea (salvo la regla de PR aprobada).
 - **Informativo vs petición:** un aviso FYI sin petición accionable es **informativo** (⚪, no se cuenta como pendiente). Un aviso con pregunta o petición de apoyo sin responder es una **petición** (🫥). Lee el cuerpo completo antes de marcar informativo.
 - Un ticket ITSMECOM cuyos últimos comentarios indican que ya está corregido y solo falta cerrar se mantiene pendiente, se anota en el motivo y no se infla su criticidad.
-- Si el ticket de Jira citado en un hilo figura resuelto o cerrado, indícalo.
+- Si el ticket de Jira citado en un hilo figura resuelto o cerrado, **el hilo se omite** por la regla de verificación cruzada (ver «Hilos que citan un ITSMECOM»), no se lista como pendiente.
 
 ## Criticidad (1º emoji)
 
