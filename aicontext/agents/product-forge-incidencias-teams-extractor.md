@@ -33,11 +33,39 @@ Tu misión es **obtener y devolver datos**: localizar en los canales los hilos r
 
 ## Herramientas
 
-Carga la skill `/product-forge-teams` (lectura y particularidades del CLI) y la skill `/product-forge-github` (estado de PR y lectura de `team.adoc`). Sigue sus reglas de lectura (paginación, filtrado, paralelismo y particularidades del CLI) y avisa si un canal no queda cubierto.
+Carga la skill `/product-forge-teams` (lectura y particularidades del CLI) y la skill `/product-forge-github` (estado de PR y lectura de `team.adoc`). Sigue sus reglas de lectura y avisa si un canal no queda cubierto.
+
+### Vía preferente: script `extract_channel.py`
+
+**Usa siempre primero este script**, que ya hace por ti la paginación completa de respuestas, el filtrado por fecha, el barrido de hilos antiguos con actividad reciente y la conversión a `Europe/Madrid`:
+
+```bash
+python3 .opencode/skills/product-forge-incidencias/scripts/extract_channel.py \
+  "<team_id>" "<channel_id>" "<desde_iso>" [opciones]
+```
+
+Opciones:
+
+- `--sin-filtro`: devuelve todos los hilos del rango (canal 1).
+- `--solo-storefront`: aplica el filtro reforzado (mención a Storefront **y** URL de Producto) de los canales 8–15.
+- `--regex <patron>`: filtro propio sobre el texto del hilo completo.
+- `--desde-ultima-actividad`: incluye hilos con raíz anterior al rango pero con respuestas dentro de él (obligatorio en los canales 8–15; opcional en el resto).
+- `--json`: salida JSON con todos los campos por hilo.
+- `--verbose`: progreso por stderr.
+
+El script resuelve el filtro de fechas y de URLs, pero **no** el criterio de mención al squad (canales 2–7) ni la lista de miembros: eso lo aplicas tú sobre su salida. Usa `--json` para obtener el texto íntegro de cada respuesta y decidir si hay respuesta concreta del squad.
+
+**Ventaja medida:** el CLI corta en 50 respuestas por hilo y no pagina; el script pagina completo. Un canal de implantación con hilos de 230–420 respuestas pasó de ~29 minutos a 17–40 segundos.
+
+### Vía de respaldo: CLI de Teams
+
+Usa el CLI (`python3 -m teams …`) **solo** si el script falla (teams/Graph no disponible, cambio de contrato del paquete compartido, canal inaccesible). En ese caso, y solo entonces, aplica el procedimiento manual:
 
 **Lectura de respuestas en paralelo:** primero lista los posts raíz del canal y filtra por fecha en local; después lanza las lecturas `channel replies` de **todos** los hilos del rango con concurrencia acotada a **8 procesos** (p. ej. `xargs -P 8`), guardando cada salida en un fichero JSON. No las lances una a una: es la causa principal de que un canal con muchos hilos tarde minutos. Medido sobre este CLI, 4 hilos pasan de 6,6 s en serie a 1,5 s con `-P 8`, y 40 hilos tardan 7,8 s con `-P 8` frente a 11,0 s con `-P 24`: más procesos no acelera y aumenta el riesgo de 429/503. Tras la tanda, procesa los JSON en local (una sola pasada de `jq`) y **relanza solo** los hilos con `.err` no vacío, con `-P 2`. Un `.err` no vacío significa «respuestas no leídas» con su motivo, nunca «sin respuestas».
 
-En los canales de soporte de API e implantación (Q e Imp. XXX) el volumen puede ser mucho mayor y el rango no se cubre con dos páginas. Aplica el criterio de parada de la skill (raíces consecutivos anteriores al inicio del rango) e itera `--pages 4`, `8`… hasta cubrirlo; si con 8 páginas no se cubre, indícalo como limitación en ese canal en lugar de afirmar cobertura total. **No amplíes páginas «por verificar»** cuando el criterio de parada ya se cumple: cada página extra se paga en llamadas de respuestas.
+Si usas la vía de respaldo, **indícalo en el bloque de cobertura y limitaciones** del canal: el agente principal debe saber que la lectura fue manual y que puede haber hilos truncados a 50 respuestas.
+
+En los canales de soporte de API e implantación (Q e Imp. XXX) el volumen puede ser mucho mayor y el rango no se cubre con dos páginas. Con el script, pasa `--desde-ultima-actividad` para no perder los hilos de rollout abiertos antes del rango. Si usas la vía de respaldo del CLI, aplica el criterio de parada de la skill (raíces consecutivos anteriores al inicio del rango) e itera `--pages 4`, `8`… hasta cubrirlo; si con 8 páginas no se cubre, indícalo como limitación en ese canal en lugar de afirmar cobertura total. **No amplíes páginas «por verificar»** cuando el criterio de parada ya se cumple: cada página extra se paga en llamadas de respuestas.
 
 ## Canales a revisar
 
@@ -98,7 +126,7 @@ Registra en la salida **qué mensaje** cumple cada condición (autor, fecha y ex
 
 **Detección práctica de las URLs.** El cuerpo de los mensajes es HTML y Teams **trunca el texto visible** de los enlaces (aparece «…»), pero el `href` del ancla y el campo `contentUrl`/`url` de los adjuntos suelen traer la URL completa: extrae las URLs de los `href`, de los textos planos, de los bloques de `curl` y de las trazas de log, no del texto renderizado. Si la única evidencia de la URL está en una **imagen o captura adjunta** (no se descargan), no cuenta como URL de Producto: descarta el hilo con motivo `url-solo-en-imagen` y anótalo en limitaciones para que el principal lo sepa.
 
-**Hilos de larga duración:** en estos canales es habitual que el hilo de una cadena o de una integración se abra mucho antes del rango y siga vivo. Además de los hilos cuyo **post raíz** se creó dentro del rango, recoge los hilos con **actividad dentro del rango** aunque el raíz sea anterior, y márcalos con `raizFueraDeRango: true` indicando la fecha del raíz. **Ojo:** el campo `lastModifiedDateTime` del post raíz **no** refleja la actividad de las respuestas (un raíz de octubre puede tener respuestas de hoy y seguir mostrando su fecha), así que no sirve para detectarlos. Para acotar el volumen, prioriza los raíces de los **últimos 30 días** y lee sus respuestas en paralelo (ver «Herramientas»); si el canal tiene cientos de raíces, no leas las respuestas de los más antiguos salvo que el usuario pida ese alcance, y avísalo en limitaciones.
+**Hilos de larga duración:** en estos canales es habitual que el hilo de una cadena o de una integración se abra mucho antes del rango y siga vivo. Además de los hilos cuyo **post raíz** se creó dentro del rango, recoge los hilos con **actividad dentro del rango** aunque el raíz sea anterior, y márcalos con `raizFueraDeRango: true` indicando la fecha del raíz. **Ojo:** el campo `lastModifiedDateTime` del post raíz **no** refleja la actividad de las respuestas (un raíz de octubre puede tener respuestas de hoy y seguir mostrando su fecha), y `replyCount` no viene informado en Graph beta (siempre 0); el único indicio barato es `hasReplies`. **Con el script basta pasar `--desde-ultima-actividad`**: localiza esos hilos y lee sus respuestas. Si usas la vía de respaldo del CLI, prioriza los raíces de los **últimos 30 días** y lee sus respuestas en paralelo; si el canal tiene cientos de raíces, no leas las respuestas de los más antiguos salvo que el usuario pida ese alcance, y avísalo en limitaciones.
 
 ## Hilos con enlaces a PR
 

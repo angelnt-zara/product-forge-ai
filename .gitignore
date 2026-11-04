@@ -57,3 +57,7 @@ dx/raycast/**/*lock*
 # Workspace repos (cloned by aicontext install)
 /repos/
 # --- aicontext generated files (end) ---
+
+# Python
+__pycache__/
+*.pyc

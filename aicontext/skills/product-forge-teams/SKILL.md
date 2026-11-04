@@ -18,7 +18,17 @@ Aplican SIEMPRE, en cualquier flujo que use esta skill y sea cual sea el destino
 
 ## Lectura
 
-CLI desde la raíz del runtime. Requiere `az login`:
+**Vía preferente para canales completos: `extract_channel.py`.** Para leer un canal entero (raíces de un rango + respuestas completas) usa el script de la skill `/product-forge-incidencias`, que pagina de verdad y evita el bucle de escribir un extractor a mano:
+
+```bash
+python3 .opencode/skills/product-forge-incidencias/scripts/extract_channel.py \
+  "<GROUP_ID>" "<CHANNEL_ID>" "<desde_iso>" [--solo-storefront|--sin-filtro|--regex …] \
+  [--desde-ultima-actividad] [--json]
+```
+
+Motivo: `python3 -m teams channel replies` devuelve **como máximo 50 respuestas y no sigue `@odata.nextLink`** (el método `channel_thread` del paquete compartido hace un único `GET`). El script sí pagina, así que un hilo de 230 respuestas llega completo en ~3 s. Medido: un canal de implantación pasó de ~29 minutos a 17–40 segundos.
+
+**CLI de respaldo.** El resto de comandos de esta sección sirven para lecturas puntuales (un hilo concreto, informes previos, chats) y como respaldo si el script no está disponible. Requiere `az login`:
 
 ```bash
 export PYTHONPATH="$PWD/.opencode/skills/_shared/scripts"
@@ -32,7 +42,7 @@ Cada llamada se hace **a un solo canal**. Los canales se leen en paralelo, cada 
 - **Comprueba el rango con el criterio de parada correcto:** no uses el mensaje más antiguo leído (hay mensajes anómalos de fechas muy antiguas o nuevas dentro de la lista, p. ej. un mensaje de 2025 en la posición ~24 del canal «SQUAD Product Forge 🛠️»). El rango está cubierto cuando hay **mensajes raíz consecutivos anteriores al inicio del rango** (ignora outliers aislados). Si no, itera más páginas. No uses `--since` en `channel messages`: la API de canales lo rechaza con error 400; lee con `--top`/`--pages` y **filtra por fecha en local** (campo de creación del mensaje raíz).
 - **No leas más páginas de las necesarias:** el CLI solo admite `--pages N` (no hay `--skip`: cada llamada relee desde el principio). Empieza con `--pages 2` en todos los canales, incluido «SQUAD Product Forge 🛠️» (en un rango de 7 días ~25 mensajes raíz, cubiertos con 1 página) y, si el criterio de parada anterior no se cumple, repite ese canal con `--pages 4` y luego `--pages 8`, y así hasta cubrirlo. No uses un número fijo de páginas por canal; si con 8 páginas el rango sigue sin cubrirse, avísalo como limitación. Ojo con los canales de mucho tráfico (los de soporte de API e implantación por cadena del flujo de incidencias): ahí es normal necesitar 4 u 8 páginas, y pueden aparecer mensajes raíz con fechas muy anteriores intercaladas que hay que tratar como outliers y no como criterio de parada.
 - **Filtra con `jq` antes de volcar contenido al contexto:** de cada página conserva solo los mensajes raíz con `createdDateTime` dentro del rango (más los campos mínimos: `id`, `webUrl`, `from`, `mentions`, fecha y cuerpo) y, en los canales que filtran por mención, descarta ya en `jq` los raíz sin mención relevante (salvo que sus respuestas puedan contenerla). Lee `replies` solo de los hilos cuyo post raíz esté en el rango.
-- **Paraleliza las lecturas por hilo y por PR:** lanza las llamadas `channel replies` de todos los hilos en el mismo bloque (en paralelo), no una a una. La consulta de las PR se paraleliza igual (ver skill `/product-forge-github`). En shell, usa concurrencia acotada a **8 procesos** contra Graph. Medido sobre este CLI: 4 hilos tardan 6,6 s en serie y 1,5 s con `-P 8`; con 40 hilos, `-P 8` tarda 7,8 s y `-P 24` tarda 11,0 s (más procesos no acelera: hay contención y riesgo de 429/503). Ejemplo para un canal ya listado en `hilos.txt` (un `rootId` por línea):
+- **Paraleliza las lecturas por hilo y por PR:** lanza las llamadas `channel replies` de todos los hilos en el mismo bloque (en paralelo), no una a una. La consulta de las PR se paraleliza igual (ver skill `/product-forge-github`). En shell, usa concurrencia acotada a **8 procesos** contra Graph. Medido sobre este CLI: 4 hilos tardan 6,6 s en serie y 1,5 s con `-P 8`; con 40 hilos, `-P 8` tarda 7,8 s y `-P 24` tarda 11,0 s (más procesos no acelera: hay contención y riesgo de 429/503). El script `extract_channel.py` usa 16 workers en su lugar (`--workers`, o la variable `PF_TEAMS_WORKERS`), porque pagina él mismo y absorbe los 429 con reintento; medido, 16 workers baten a 8 en el barrido de hilos antiguos. Ejemplo para un canal ya listado en `hilos.txt` (un `rootId` por línea):
 
   ```bash
   mkdir -p out
@@ -41,7 +51,7 @@ Cada llamada se hace **a un solo canal**. Los canales se leen en paralelo, cada 
 
   Después procesa los `out/*.json` en local con `jq` (una sola pasada, sin volver a llamar a la API). Comprueba los `.err` no vacíos y relanza **solo** esos hilos, en serie o con `-P 2`: un `.err` no vacío es «respuestas no leídas», nunca «sin respuestas».
 - Usa siempre `--json` para poder inspeccionar `mentions`, `from`, `replyToId`, `webUrl` y fechas. En `mentions`, el nombre de una etiqueta aparece en `mentionText`.
-- **Formato de `channel replies --json`:** devuelve un **objeto** `{parent, replies[]}`, no un array. Los filtros `jq` deben apuntar a `.replies[]` (un filtro que asuma array falla con `Cannot index array`). Inspecciona la salida real antes de filtrar y, si un filtro falla, reintenta sin filtro; un fallo de lectura nunca equivale a «sin respuestas».
+- **Formato de `channel replies --json`:** devuelve un **objeto** `{parent, replies[]}`, no un array. Los filtros `jq` deben apuntar a `.replies[]` (un filtro que asuma array falla con `Cannot index array`). Inspecciona la salida real antes de filtrar y, si un filtro falla, reintenta sin filtro; un fallo de lectura nunca equivale a «sin respuestas». **Recuerda que esta llamada corta en 50 respuestas**: si el hilo tiene más, usa el script.
 - Si un canal devuelve el máximo de páginas, es una limitación: avísalo e itera más páginas.
 - Ignora mensajes de sistema, eventos de unión/salida de canal, eventos/grabaciones de reuniones y mensajes eliminados.
 - Las fechas vienen en UTC: conviértelas a `Europe/Madrid` al mostrarlas.
