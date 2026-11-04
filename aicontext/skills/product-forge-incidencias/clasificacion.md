@@ -68,6 +68,20 @@ No somos responsables del trabajo de squads ajenos: nuestro trabajo termina al r
 
 Si alguna PR no está aprobada, el hilo sigue pendiente (🫥 o 🏃‍♂️‍➡️ según haya respuesta concreta del squad). El estado lo aporta `prs.py`; si una PR sale `DESCONOCIDO`, trátala como no aprobada y declara la limitación.
 
+## Hilos cuya causa está fuera de Pacman/Storefront (escalados a otro equipo)
+
+Nuestro trabajo termina donde acaba nuestro ámbito: si la causa del problema está en otro sistema y el hilo se escala a ese equipo, **el hilo es ✅ resuelto**, aunque la conversación siga viva con otros equipos. Lo que decide no es quién escribió la última respuesta ni quién tiene la última palabra, sino **dónde está ubicada la causa y si alguien sigue reclamando algo a Pacman/Storefront**.
+
+- **Cierra el hilo (✅, motivo «causa fuera de Pacman»)**: un miembro del squad ubica la causa en un sistema ajeno al ámbito de Productos —Core/Product Core, Product Adapter, Imagen/XMedia, Navigation, Grids, Menú, Tags, Search, frontales, infraestructura o el puesto de trabajo del usuario— y la conversación pasa a ese equipo **sin que quede ninguna petición abierta hacia Pacman/Storefront**. Las respuestas posteriores de otros equipos, del solicitante o de bots **no lo reabren**: son seguimiento de un caso que ya no es nuestro.
+- **Reabre el hilo (🫥/🏃‍♂️‍➡️, criticidad normal)**: un mensaje posterior, de cualquier autor, **reclama explícitamente algo a Pacman/Storefront** —pide un dato, un cambio, una validación, un fix de nuestro lado, o pregunta por nuestro ámbito y se queda sin respuesta—. Entonces vuelve a ser pendiente del squad y se clasifica con los criterios habituales.
+- **No cierra el hilo** que el squad solo **sospeche** o **apunte** a otro equipo sin establecerse la ubicación: «creo que es de Core», «revisamos con ellos», «les avisamos». Eso es 🏃‍♂️‍➡️ mientras no haya ubicación cerrada ni petición posterior nuestra.
+- **Diagnóstico en disputa**: si el squad apunta a un sistema ajeno y ese equipo devuelve la pelota a Producto, o nadie asume la causa, el hilo **sigue pendiente** y se anota la discrepancia. La duda se resuelve siempre a favor de pendiente.
+- **Ubicación parcial**: si el hilo tiene varias peticiones y solo una queda fuera de Pacman, se cierra únicamente la parte externa; si queda cualquier acción nuestra viva, el hilo sigue pendiente.
+- En el **resumen de estado** indica el equipo destino y el motivo, sin corchetes: «causa en Core-Legacy, escalado a Product Core; pendiente cargar el catentry en DB2». Nunca lo dejes como pendiente por el solo hecho de que el hilo siga con mensajes.
+- **No aplica a ITSMECOM**: en los tickets manda el estado y el `Equipo Asignado` en Jira (ver «Hilos que citan un ITSMECOM»), no la lectura del hilo.
+
+Ejemplo de referencia: «[ZA] Producto sin xmedia». El squad diagnosticó una inconsistencia Core-Legacy por un rollback en DB2 y la conversación pasó a los equipos de Core; nadie volvió a pedir nada a Pacman/Storefront, así que el hilo es ✅ resuelto, no 🏃‍♂️‍➡️, aunque siga habiendo mensajes y una carga pendiente en DB2 que no es nuestra.
+
 ## Estado de atención (2º emoji)
 
 | Emoji | Estado | Hilos de Teams | ITSMECOM |

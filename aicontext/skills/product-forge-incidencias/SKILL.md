@@ -169,6 +169,7 @@ Solo si el script falla (Graph no disponible, cambio de contrato del paquete com
    4. Antes de presentar nada, revisa el conjunto:
       - Coherencia con clasificaciones previas de la sesión para el mismo hilo o ticket.
       - Que todo hilo que cita un ITSMECOM se ha cruzado contra Jira por estado y equipo, sin decidir por etiquetas.
+      - Que los hilos cuya causa se ha ubicado fuera de Pacman/Storefront y **no tienen ninguna petición viva hacia el squad** están marcados ✅ y no como pendientes, y que los que sí reclaman algo a Pacman/Storefront siguen pendientes.
       - Las limitaciones y la cobertura de los extractores (rango cubierto, canales inaccesibles, miembros no verificados, lecturas fallidas) se muestran al usuario.
 4. **Presentación (informe mínimo)**: compón el informe según «Formato del informe» y muéstralo. Ampliar contexto solo si el usuario lo pide (vuelve a delegar el hilo/ticket concreto).
 5. **Si no se publica**: termina ofreciendo ampliar contexto o publicar el resumen, sin más texto.
@@ -215,6 +216,7 @@ Aplican además tus reglas comunes (castellano, horas en `Europe/Madrid`, no inv
 - Los extractores son de solo lectura; clasificar y publicar lo haces tú, y publicar solo con confirmación explícita.
 - **Eficiencia de lectura (obligatorio):** el barrido tarda ~17-20 s y la resolución de PR ~2 s; el resto del tiempo del informe es lectura del modelo. Lee `indice.txt` una vez, pide el texto íntegro de todos los candidatos en **una sola invocación** de `detalle.py` y no generes volcados intermedios ni releas los JSON. Medido en el informe del 18/10–04/11: sin este flujo se leyeron 550 KB para clasificar 26 KB útiles (el 83 % del texto descartado).
 - **ITSMECOM citados: nunca a ojo.** Todo hilo que cite un ticket se cruza contra Jira por **estado** y **`Equipo Asignado`**; las etiquetas no se usan. Un hilo cuyo ticket está en la categoría Done o ya no está en `jsdsoportepacman` **no se lista como pendiente**. Si no se pudo consultar el ticket, dilo como limitación y no apliques la regla.
+- **Causa fuera de Pacman/Storefront ⇒ resuelto.** Si el squad ubica la causa en otro sistema (Core/Product Core, Adapter, Imagen, Navigation, Grids, Menú, Tags, Search, frontales o infraestructura) y el hilo se escala a ese equipo **sin ninguna petición viva hacia Pacman/Storefront**, el hilo es ✅ y no pendiente, aunque la conversación siga con otros equipos. Solo vuelve a pendiente si alguien reclama explícitamente algo nuestro. Una mera sospecha o un «lo revisamos con ellos» no cierra el hilo. Detalle y ejemplo en [clasificacion.md](clasificacion.md).
 
   Presupuesto medido de ese informe, y de dónde se recortó:
 
