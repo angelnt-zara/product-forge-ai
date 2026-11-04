@@ -115,7 +115,14 @@ def main() -> int:
     p.add_argument("salida", help="directorio donde dejar un JSON por canal")
     p.add_argument("--canales", default="")
     p.add_argument("--workers-hilo", type=int, default=8)
-    p.add_argument("--workers-canal", type=int, default=5)
+    p.add_argument("--workers-canal", type=int, default=15)
+    p.add_argument(
+        "--desde-ultima-actividad",
+        action="store_true",
+        help="alias de --sin-ultima-actividad invertido; se acepta por compatibilidad "
+        "con la documentación de la skill (la búsqueda de hilos antiguos con "
+        "actividad está activa por defecto)",
+    )
     p.add_argument("--sin-ultima-actividad", action="store_true")
     p.add_argument("--sin-resumen", action="store_true")
     p.add_argument("--chars", type=int, default=300)
@@ -133,7 +140,12 @@ def main() -> int:
     with ThreadPoolExecutor(max_workers=a.workers_canal) as pool:
         resultados = list(
             pool.map(
-                lambda c: un_canal(c, a.desde, not a.sin_ultima_actividad, a.workers_hilo),
+                lambda c: un_canal(
+                    c,
+                    a.desde,
+                    not a.sin_ultima_actividad or a.desde_ultima_actividad,
+                    a.workers_hilo,
+                ),
                 seleccion,
             )
         )

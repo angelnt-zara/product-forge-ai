@@ -310,7 +310,12 @@ def raices(client, team: str, canal: str, paginas: int = 8) -> list:
 
 
 def raices_con_respuestas(
-    client, team: str, canal: str, desde: str = "", paginas: int = 8
+    client,
+    team: str,
+    canal: str,
+    desde: str = "",
+    paginas: int = 8,
+    paginas_vacias: int = 2,
 ) -> tuple[list, dict[str, list]]:
     """Posts raíz del canal CON sus respuestas incrustadas en la misma página.
 
@@ -326,14 +331,29 @@ def raices_con_respuestas(
     con 3.000 y 2.601 respuestas costaban 113 páginas (275 llamadas y +90 s en el
     canal 1) para no aportar nada al informe.
 
+    **Parada por páginas vacías (clave para el tiempo).** Las raíces vienen de más
+    reciente a más antigua, así que en cuanto una página entera queda por debajo de
+    `desde` ya no puede haber nada relevante detrás. Medido en el barrido del
+    18/10-04/11: de las 8 páginas del canal 2 solo la primera aportaba mensajes en
+    rango, y las 7 restantes costaban 42 de los 52 s del canal (paginación profunda
+    de Graph, hasta 16 s por página) sin devolver ni un mensaje útil. Se para tras
+    `paginas_vacias` páginas consecutivas sin nada en rango **y** con su mensaje
+    más antiguo ya fuera del rango (la segunda condición evita cortar en canales
+    con actividad intermitente, donde una página vacía puede tener detrás otra con
+    hilos vivos). Verificado: mismo resultado exacto en los 15 canales, 0 hilos
+    perdidos.
+
     Devuelve (raíces, {id_raiz: [respuestas]}).
     """
     url = f"{GRAPH_BETA}/teams/{team}/channels/{canal}/messages?$top=50&$expand=replies"
     raices_, por_hilo = [], {}
     pagina = 0
+    vacias = 0
     while url and pagina < paginas:
         datos = _get(client, url)
-        for bruto in datos.get("value", []):
+        crudos = datos.get("value", [])
+        aporta = False
+        for bruto in crudos:
             raiz = ChannelMessage.from_json(bruto)
             raices_.append(raiz)
             rr = [ChannelMessage.from_json(x) for x in (bruto.get("replies") or [])]
@@ -343,7 +363,24 @@ def raices_con_respuestas(
                 rr.extend(ChannelMessage.from_json(x) for x in extra.get("value", []))
                 siguiente = extra.get("@odata.nextLink")
             por_hilo[raiz.id] = rr
+            if (raiz.created or "") >= desde or any(
+                (m.created or "") >= desde for m in rr
+            ):
+                aporta = True
         pagina += 1
+        vacias = 0 if aporta else vacias + 1
+        if desde and vacias >= paginas_vacias:
+            mas_antiguo = min(
+                (b.get("createdDateTime") or "" for b in crudos), default=""
+            )
+            if mas_antiguo and mas_antiguo < desde:
+                if os.environ.get("PF_TEAMS_VERBOSE_PAGINAS"):
+                    print(
+                        f"aviso: parada tras {pagina} páginas en el canal {canal} "
+                        f"({vacias} sin nada en rango, más antiguo {mas_antiguo[:10]})",
+                        file=sys.stderr,
+                    )
+                break
         url = datos.get("@odata.nextLink")
     return raices_, por_hilo
 

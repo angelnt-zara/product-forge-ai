@@ -11,7 +11,7 @@ Flujo para obtener los temas pendientes del squad Products (Product Forge): hilo
 
 Escanear y publicar son el mismo flujo: la publicación añade los pasos de borrador, confirmación y envío.
 
-Intervienen dos subagentes de solo lectura, `product-forge-incidencias-teams-extractor` y `product-forge-incidencias-jira-extractor`. No comparten memoria: pásales todo el contexto que necesiten, incluida la norma de castellano. **Por defecto solo se lanza el de Jira**: la lectura de los 15 canales la hace el barrido único descrito en el paso 2. El resto de pasos, incluida la clasificación, son tuyos. Los criterios de clasificación están en [clasificacion.md](clasificacion.md).
+Interviene un único subagente de solo lectura, `product-forge-incidencias-teams-extractor`, y solo para lo que el barrido no da (informes previos antes de publicar o una duda material sobre un hilo concreto). **No hay subagente de Jira**: los ITSMECOM abiertos los obtiene el agente principal en línea con el MCP (ver paso 2), porque delegarlos costaba una sesión de modelo completa para dos llamadas que tardan ~2 s. Los subagentes no comparten memoria: pásale todo el contexto que necesite, incluida la norma de castellano. El resto de pasos, incluida la clasificación, son tuyos. Los criterios de clasificación están en [clasificacion.md](clasificacion.md).
 
 La lectura de los canales la hace el script `scripts/barrido.py`, que recorre todos los canales del alcance en una sola invocación y se apoya en `scripts/extract_channel.py` (pagina las respuestas completas, corta por fecha y aplica los filtros de mención y de URL de Producto). El barrido es la vía normal; los subagentes ya no leen canales salvo para un hilo concreto. Nadie debe montar su propio extractor con `jq` y `xargs`, ni reejecutar el script con otros flags para «verificar».
 
@@ -43,10 +43,12 @@ Esta sección es la **fuente única** de cómo se leen los canales. Ni el subage
 
 ```bash
 python3 .opencode/skills/product-forge-incidencias/scripts/barrido.py \
-  "<desde_iso>" "<dir_salida>" [--desde-ultima-actividad] [--canales 1,2,4] [--workers-canal 5]
+  "<desde_iso>" "<dir_salida>" [--canales 1,2,4] [--workers-canal 15]
 ```
 
-Recorre todos los canales en paralelo dentro de una sola invocación y deja `canal_NN.json` por canal **y `indice.txt`**. **Medido: 15 canales en ~85 s** (con 15 subagentes el mismo trabajo tardaba ~25 min). `--desde-ultima-actividad` es obligatorio para el alcance completo: incluye hilos abiertos antes del rango que siguen vivos.
+Recorre todos los canales en paralelo dentro de una sola invocación y deja `canal_NN.json` por canal **y `indice.txt`**. **Medido: 15 canales en ~17-20 s** (antes 93 s; con 15 subagentes el mismo trabajo tardaba ~25 min). Los hilos abiertos antes del rango que siguen vivos se incluyen **por defecto** (`--sin-ultima-actividad` lo desactiva).
+
+**De dónde salió la mejora (no la deshagas).** El barrido pedía siempre 8 páginas por canal. Medido con `PF_TEAMS_VERBOSE_PAGINAS=1`: de las 8 páginas del canal 2 solo la primera tenía mensajes en rango, y las 7 restantes costaban 42 de los 52 s del canal (paginación profunda de Graph, hasta 16 s por página) sin devolver ni un mensaje útil. Ahora se para tras 2 páginas consecutivas sin nada en rango cuya página más antigua ya quede fuera del rango. Verificado contra el barrido completo: **0 hilos perdidos y `indice.txt` idéntico byte a byte**. No bajes esa ventana a 1 página: el orden de raíces no es estrictamente cronológico (la primera página del canal 1 mezcla 2025-07 con 2026-11). `$filter` por fecha y `$top=200` devuelven 400 en Graph beta.
 
 ### Lectura en una sola pasada (obligatorio)
 
@@ -110,12 +112,22 @@ Solo si el script falla (Graph no disponible, cambio de contrato del paquete com
 
    ```bash
    python3 .opencode/skills/product-forge-incidencias/scripts/barrido.py \
-     "<desde_iso>" "<dir_salida>" [--desde-ultima-actividad] [--canales 1,2,4] [--workers-canal 5]
+     "<desde_iso>" "<dir_salida>" [--canales 1,2,4] [--workers-canal 15]
    ```
+
+   Los hilos antiguos con actividad en el rango se buscan **por defecto** (no hay que pasar nada); `--sin-ultima-actividad` lo desactiva. Medido: 15 canales en **~17-20 s** con `--workers-canal 15` (antes 93 s).
 
    Si un canal sale con `error`, indícalo como limitación del canal. Si el usuario acota canales, pásalos en `--canales`; si pide excluir los de implantación, no incluyas los 9–15 e indícalo en el alcance del informe. Si ya hay datos recientes de esta sesión con el mismo alcance, reutilízalos.
 
-   **Subagentes: solo Jira por defecto.** Lanza `product-forge-incidencias-jira-extractor` (ITSMECOM abiertos) siempre, **en paralelo con el barrido**. Pídele los **3 últimos comentarios** de cada ticket, no el histórico completo: el resto se consulta después solo del ticket que lo necesite. El `teams-extractor` **solo** hace falta para algo que el barrido no da: los **informes previos** de los últimos 7 días cuando se va a publicar, o una duda material sobre un hilo concreto (pásale el `rootId` y dile que **no relea el canal**).
+   **Jira: en línea, sin subagente.** Obtén los ITSMECOM abiertos **tú**, con el MCP de Jira, en paralelo con el barrido. La delegación al subagente `product-forge-incidencias-jira-extractor` se retiró porque costaba una sesión de modelo completa (minutos) para un trabajo que son dos llamadas: medido, el JQL de los 9 tickets abiertos responde en **0,5 s** y los 3 últimos comentarios de los 9 tickets en **1,5 s** lanzados en paralelo (28 KB). Procedimiento:
+   1. **Búsqueda**, una llamada por tipo (los nombres con espacios entrecomillados) para no filtrar a posteriori:
+      - `project = ITSMECOM AND status not in (Resolved, Cerrado, Cancelado) AND labels = C-PacmanProduct AND "Equipo Asignado" in (jsdsoportepacman) AND (created >= <desde> OR updated >= <desde>) AND issuetype = Incidente ORDER BY created ASC`
+      - la misma con `issuetype = "Solicitud de servicio"`.
+      Comprueba `total` y pagina con `start_at` hasta cubrirlo: devuelve 10 por página.
+   2. **Comentarios**: `jira_get_issue_comments` con `max_results: 3` de todos los tickets **en paralelo** (`Promise.allSettled`). No pidas el histórico completo: el resto se consulta después solo del ticket que lo necesite. Ojo: `jira_search` y `jira_get_issue` no traen comentarios; hay que pedirlos aparte.
+   3. Anota el campo `assignee` de la búsqueda: distingue «En curso, asignado a <nombre>» de «En cartera, sin asignar» en el informe.
+
+   El `teams-extractor` **solo** hace falta para algo que el barrido no da: los **informes previos** de los últimos 7 días cuando se va a publicar, o una duda material sobre un hilo concreto (pásale el `rootId` y dile que **no relea el canal**).
 
 3. **Clasificación y cotejo (tuyos), en una sola pasada de lectura:**
    1. Lee **`indice.txt`** (~28 KB) y haz el triage de los hilos con esa línea.
@@ -167,4 +179,4 @@ Aplican además tus reglas comunes (castellano, horas en `Europe/Madrid`, no inv
 
 - Pasa a los extractores la norma de castellano y la de horas.
 - Los extractores son de solo lectura; clasificar y publicar lo haces tú, y publicar solo con confirmación explícita.
-- **Eficiencia de lectura (obligatorio):** el barrido tarda ~85 s; el resto del tiempo del informe es lectura del modelo. Lee `indice.txt` una vez, pide el texto íntegro solo de los candidatos con `detalle.py` y no generes volcados intermedios ni releas los JSON. Medido en el informe del 18/10–04/11: sin este flujo se leyeron 550 KB para clasificar 26 KB útiles (el 83 % del texto descartado).
+- **Eficiencia de lectura (obligatorio):** el barrido tarda ~17-20 s; el resto del tiempo del informe es lectura del modelo. Lee `indice.txt` una vez, pide el texto íntegro solo de los candidatos con `detalle.py` y no generes volcados intermedios ni releas los JSON. Medido en el informe del 18/10–04/11: sin este flujo se leyeron 550 KB para clasificar 26 KB útiles (el 83 % del texto descartado).

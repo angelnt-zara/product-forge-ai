@@ -57,7 +57,7 @@ Tu trabajo con la relevancia es únicamente dejar constancia, en la salida, de *
 
 **Detección práctica de las URLs.** El cuerpo de los mensajes es HTML y Teams **trunca el texto visible** de los enlaces (aparece «…»), pero el `href` del ancla y el campo `contentUrl`/`url` de los adjuntos suelen traer la URL completa: extrae las URLs de los `href`, de los textos planos, de los bloques de `curl` y de las trazas de log, no del texto renderizado. Si la única evidencia de la URL está en una **imagen o captura adjunta** (no se descargan), no cuenta como URL de Producto: descarta el hilo con motivo `url-solo-en-imagen` y anótalo en limitaciones para que el principal lo sepa.
 
-**Hilos de larga duración:** en los canales 8–15 es habitual que el hilo de una cadena o de una integración se abra mucho antes del rango y siga vivo. El barrido ya los incluye con `--desde-ultima-actividad`; tú solo tienes que marcarlos con `raizFueraDeRango: true` y la `fechaRaiz` cuando el raíz sea anterior al rango. No releas el canal para comprobarlo.
+**Hilos de larga duración:** en los canales 8–15 es habitual que el hilo de una cadena o de una integración se abra mucho antes del rango y siga vivo. El barrido ya los incluye por defecto; tú solo tienes que marcarlos con `raizFueraDeRango: true` y la `fechaRaiz` cuando el raíz sea anterior al rango. No releas el canal para comprobarlo.
 
 ## Hilos con enlaces a PR
 

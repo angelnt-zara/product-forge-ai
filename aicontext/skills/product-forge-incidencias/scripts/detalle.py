@@ -54,13 +54,18 @@ def main() -> int:
     p = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    # `parse_intermixed_args` permite que las opciones vayan mezcladas con los ids
+    # (`detalle.py <dir> --chars 500 <id>`), que es el orden natural al componer el
+    # comando. Con `parse_args`, argparse tomaba `--chars` como un id más y abortaba
+    # con "unrecognized arguments"; con `parse_known_args` seguía fallando porque
+    # el primer posicional ya cerraba la lista.
     p.add_argument("salida", help="directorio que dejó barrido.py")
     p.add_argument("ids", nargs="*", help="ids de hilo (1ª columna de indice.txt)")
     p.add_argument("--canal", type=int, default=None)
     p.add_argument("--max-resp", type=int, default=0)
     p.add_argument("--chars", type=int, default=0)
     p.add_argument("--listar", action="store_true", help="lista los ids disponibles")
-    a = p.parse_args()
+    a = p.parse_intermixed_args()
 
     salida = Path(a.salida)
     if not salida.is_dir():
