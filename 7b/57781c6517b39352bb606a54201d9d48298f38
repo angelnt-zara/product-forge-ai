@@ -1,0 +1,19 @@
+.gitignore
+  s_31b4f8f8e33260::t_695302a08339c5 60-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "7b57781c6517b39352bb606a54201d9d48298f38",
+  "prompts": {},
+  "sessions": {
+    "s_31b4f8f8e33260": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e59307813ffeGbQ7TfMYApMuii",
+        "model": "inditex/KAIA/deepseek-v4.1-flash_high"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
