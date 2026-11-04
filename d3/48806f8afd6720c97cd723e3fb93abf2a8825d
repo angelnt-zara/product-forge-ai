@@ -1,0 +1,22 @@
+aicontext/agents/product-forge-incidencias-teams-extractor.md
+  h_46798eb9f7d88a 6-9,29-30,38-39,42-62,66-69,80-99,120-122,124
+aicontext/agents/product-forge-pana.md
+  h_46798eb9f7d88a 51,53
+aicontext/skills/product-forge-incidencias/SKILL.md
+  h_46798eb9f7d88a 10,24-26,39-44,62
+aicontext/skills/product-forge-incidencias/clasificacion.md
+  h_46798eb9f7d88a 20-27,75-84
+aicontext/skills/product-forge-teams/SKILL.md
+  h_46798eb9f7d88a 31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "d348806f8afd6720c97cd723e3fb93abf2a8825d",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
