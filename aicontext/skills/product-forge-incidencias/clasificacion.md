@@ -17,6 +17,14 @@ Si falta información para decidir con rigor (no queda claro si la última respu
 
 Solo se clasifican hilos que mencionan al squad (etiqueta de ProductForge o de sus equipos, o su nombre) o que lo implican por el canal. Un hilo que solo etiqueta a otros equipos no es del squad: no cuenta como pendiente. Anótalo como limitación si la mención es dudosa.
 
+**Canales de soporte de API e implantación (Q - Soporte API Storefront e Imp. Bershka / Lefties / Massimo Dutti / Oysho / Pull and Bear / Stradivarius / Zara Home, todos externos):** en estos canales convive funcionalidad de muchos equipos, así que la relevancia la decide el **filtro reforzado del extractor**: el hilo debe mencionar **Storefront** (o una etiqueta del squad) **y** aportar al menos una **URL de API de Producto** con segmento `/product`, `/products` o `/productsArray` en el path. Los dos requisitos son obligatorios y se evalúan sobre el hilo completo (raíz o respuestas).
+
+Los demás canales externos (B - Gestión incidencias Tecnología, P - Dudas técnicas, PRO Validación Pruebas, Incidencias Entornos Previos) se filtran **solo por mención al squad**, igual que los internos: no les exijas URL de Producto.
+
+- Si el extractor devuelve un hilo que cumple el filtro pero al leerlo el endpoint citado resulta **no ser de Producto** (por ejemplo, `/stores/{id}/menu`, `/tags`, `/grids`, `/checkout`, o una pantalla del frontal de Pacman), **no es del squad**: omítelo como informativo/ajeno y anótalo en una línea.
+- Al contrario: si un hilo de estos canales trata claramente un problema de Producto pero el extractor lo dejó en `descartadosPorFiltro` por no encajar en la regla literal (p. ej. la URL viene partida o sin esquema), **no lo rescates por iniciativa propia**: indícalo como limitación y, si es material, pide al extractor que lo recupere con su sesión.
+- En estos canales es frecuente que el hilo del rollout de una cadena se abra semanas antes y siga vivo. Clasifícalo por su **última actividad**, no por la fecha del raíz, y ten en cuenta la antigüedad real al valorar criticidad.
+
 ## Quién cuenta como «respuesta del squad»
 
 Se considera dada respuesta si **al menos un miembro de ProductForge** ha respondido en el hilo con **una respuesta concreta**.
@@ -64,14 +72,16 @@ Si alguna PR no está aprobada, el hilo sigue pendiente (🫥 o 🏃‍♂️‍
 
 Combina estos factores. **Los topes (entorno y tipo) prevalecen siempre** sobre la prioridad del canal, la afectación y la prudencia:
 
-1. **Prioridad del canal** donde se reporta:
-   1. PRO Validación Pruebas: siempre 🔴.
-   2. B - Gestión incidencias Tecnología: siempre 🔴.
-   3. Incidencias 🐞: 🔴 o 🟠 según el impacto.
-   4. SQUAD Product Forge 🛠: según el contenido, cualquier nivel.
-   5. P - Dudas técnicas: normalmente consultas (🟡/⚪).
-   6. Incidencias Entornos Previos: problemas de PRE, 🟡 o ⚪.
-   7. PACMAN Contributors: normalmente consultas o problemas menores, 🟡 o ⚪.
+1. **Prioridad del canal** donde se reporta (el scope —interno/externo— es contexto de quién escribe, no un factor de criticidad):
+   1. PRO Validación Pruebas (externo): siempre 🔴.
+   2. B - Gestión incidencias Tecnología (externo): siempre 🔴.
+   3. Incidencias 🐞 (interno): 🔴 o 🟠 según el impacto.
+   4. SQUAD Product Forge 🛠 (interno): según el contenido, cualquier nivel.
+   5. P - Dudas técnicas (externo): normalmente consultas (🟡/⚪).
+   6. Incidencias Entornos Previos (externo): problemas de PRE, 🟡 o ⚪.
+   7. PACMAN Contributors (interno): normalmente consultas o problemas menores, 🟡 o ⚪.
+   8. Q - Soporte API Storefront (externo): normalmente consultas de integración (🟡/⚪); sube a 🟠/🔴 si es un bug de API de Producto con afectación en PRO o STAGE.
+   9. Imp. Bershka / Lefties / Massimo Dutti / Oysho / Pull and Bear / Stradivarius / Zara Home (externos): el canal no fija el nivel; decide el contenido (entorno, tipo y afectación). Un bloqueo de la implantación de una cadena en PRO/STAGE es 🟠 como mínimo y 🔴 si compromete una fecha de salida.
 2. **Entorno (tope):** PRE y entornos previos (PRE, PREINT, INT) siempre 🟡 o ⚪. **STAGE es producción, no un entorno previo**: no aplica este tope y se clasifica como PRO.
 3. **Tipo de petición (tope):** una consulta o solicitud de información siempre 🟡 o ⚪. Un bug es como mínimo 🟠 y pasa a 🔴 si apremia corregirlo (fecha límite cercana, campaña, evento como Double 11…).
 4. **Afectación:** una afectación grave (usuarios, ventas, PRO degradado) es 🔴.

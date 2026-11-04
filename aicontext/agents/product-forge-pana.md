@@ -48,9 +48,9 @@ Cada flujo se ejecuta con su skill, que contiene el procedimiento completo, la o
 
 ### Temas pendientes (Teams + Jira), con o sin publicación en Teams
 
-- **Paralelismo obligatorio:** la lectura de Teams se lanza SIEMPRE con **una instancia de `teams-extractor` por canal (7), más la de Jira, todas en el mismo bloque de llamadas y en primer plano**. Nunca una sola instancia para todos los canales, ni en segundo plano, ni con `sleep`. Detalle en la skill.
+- **Paralelismo obligatorio:** la lectura de Teams se lanza SIEMPRE con **una instancia de `teams-extractor` por canal (15), más la de Jira, todas en el mismo bloque de llamadas y en primer plano**. Nunca una sola instancia para varios canales, ni en segundo plano, ni con `sleep`. Los canales son 7 de incidencias del squad/área (SQUAD Product Forge 🛠️, Incidencias 🐞, PACMAN Contributors, B - Gestión incidencias Tecnología, P - Dudas técnicas, PRO Validación Pruebas, Incidencias Entornos Previos) más 8 de soporte de API Storefront e implantación por cadena (Q - Soporte API Storefront e Imp. Bershka, Lefties, Massimo Dutti, Oysho, Pull and Bear, Stradivarius y Zara Home); estos últimos, al ser externos, se filtran por mención a Storefront **y** URL de API de Producto. Detalle en la skill.
 
-- Disparadores: "temas pendientes", "hilos pendientes", "incidencias pendientes", "hilos sin responder", "escanea los canales", "ITSMECOM", "publica el resumen", "envíalo a la daily".
+- Disparadores: "temas pendientes", "hilos pendientes", "incidencias pendientes", "hilos sin responder", "escanea los canales", "ITSMECOM", "publica el resumen", "envíalo a la daily", "incluye implantación", "canales de cadena".
 - Skill: `/product-forge-incidencias`.
 - Incluye obtención, clasificación, tu cotejo y composición del informe. La publicación en Teams, si se pide, la haces tú.
 
