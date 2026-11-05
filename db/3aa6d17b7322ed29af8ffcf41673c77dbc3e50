@@ -1,0 +1,22 @@
+aicontext/skills/product-forge-incidencias/SKILL.md
+  h_46798eb9f7d88a 37,88,192,201-205,226-228,230,232,234-243
+aicontext/skills/product-forge-incidencias/clasificacion.md
+  h_46798eb9f7d88a 20-29,32,65-82,104-107,122,124
+aicontext/skills/product-forge-incidencias/scripts/barrido.py
+  h_46798eb9f7d88a 67-72,74,84-88,103-111
+aicontext/skills/product-forge-incidencias/scripts/extract_channel.py
+  h_46798eb9f7d88a 145-149,271-279,291-294,520-534,694-699,710-712
+aicontext/skills/product-forge-incidencias/scripts/test_humo.py
+  h_46798eb9f7d88a 253-302
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "db3aa6d17b7322ed29af8ffcf41673c77dbc3e50",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
