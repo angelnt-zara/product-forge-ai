@@ -1,0 +1,19 @@
+aicontext/skills/product-forge-teams/scripts/publish.py
+  s_598825f07c5707::t_dc1d7bd1e5f8db 1-285
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "81868a77bff12f9769507e4baea32f2aad70cccf",
+  "prompts": {},
+  "sessions": {
+    "s_598825f07c5707": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e57ee3ea2ffeK3Z5x6WxQ4Or1Y",
+        "model": "inditex/KAIA/deepseek-v4.1-flash_high"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
