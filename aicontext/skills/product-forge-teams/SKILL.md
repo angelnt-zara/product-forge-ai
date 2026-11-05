@@ -13,8 +13,8 @@ Si falla la autenticación de Teams/Graph (`az login`, token expirado, permisos)
 
 Aplican SIEMPRE, en cualquier flujo que use esta skill y sea cual sea el destino:
 
-- **Aviso de IA:** TODO mensaje que se publique en Teams (respuesta en canal, hilo nuevo, chat privado o cualquier otro destino) empieza por la línea `🤖 Mensaje generado con IA` **en cursiva** (Markdown: `*🤖 Mensaje generado con IA*`), para advertir al lector de que lo ha generado un agente. Va siempre **al principio**, antes de cualquier título o contenido, separada del resto por una línea en blanco (en HTML, como `<p><i>🤖 Mensaje generado con IA</i></p>`). Forma parte del texto exacto que se muestra al usuario y que este confirma; no la omitas ni la modifiques.
-- **Título en hilos nuevos:** si el mensaje **abre un hilo nuevo** (no es una respuesta), debe incluir siempre un título que resuma la petición o el problema en un **máximo de 10-15 palabras**. Si el CLI admite asunto (`subject`), úsalo; si no, es la primera línea en negrita tras el aviso de IA. Las respuestas a hilos existentes no necesitan título adicional.
+- **Aviso de IA:** TODO mensaje que se publique en Teams (respuesta en canal, hilo nuevo, chat privado o cualquier otro destino) empieza por la línea `🤖 Mensaje generado con IA` **en cursiva** (Markdown: `*🤖 Mensaje generado con IA*`), para advertir al lector de que lo ha generado un agente. Va siempre **al principio**, antes de cualquier título o contenido, separada del resto por una línea en blanco. Forma parte del texto exacto que se muestra al usuario y que este confirma; no la omitas ni la modifiques. `publish.py` la exige y aborta si falta.
+- **Título en hilos nuevos:** si el mensaje **abre un hilo nuevo** (no es una respuesta), debe incluir siempre un título que resuma la petición o el problema en un **máximo de 10-15 palabras**. Va en el `subject` del mensaje raíz (`publish.py root --subject`), no como primera línea en negrita. Las respuestas a hilos existentes no necesitan título adicional.
 
 ## Lectura
 
@@ -61,33 +61,68 @@ Cada llamada se hace **a un solo canal**. Los canales se leen en paralelo, cada 
 
 Modifica estado y **no se puede editar ni borrar lo enviado**. Solo se publica con el **texto exacto**, el **destino** y la **confirmación explícita** del usuario (cada versión nueva requiere una confirmación nueva). Envía exactamente el texto confirmado.
 
+**Publica siempre con `scripts/publish.py`, no con el CLI directo.** Motivo: el conversor Markdown→HTML del paquete compartido (`teams.util.text.markdown_to_html`, que es lo que usan `teams channel reply` y `teams chat send`) **no soporta cursiva ni código inline**: `*texto*` y `` `texto` `` salen con los asteriscos y los backticks a la vista. Consecuencia real observada el 05/11/2026 en «Incidencias 🐞»: el aviso de IA se publicó como `*🤖 Mensaje generado con IA*` literal y los identificadores (`COMING_SOON_CHANGED`, `MilestoneNotFoundException`) con las comillas invertidas visibles. Además, el CLI **no tiene comando para publicar un mensaje raíz** de canal (solo `channel reply`), así que un hilo nuevo obliga a escribir código a mano.
+
+```bash
+# Hilo nuevo (mensaje raíz, con asunto)
+python3 .opencode/skills/product-forge-teams/scripts/publish.py root \
+  --team <GROUP_ID> --channel "<CHANNEL_ID>" --subject "<título>" \
+  --message-file /tmp/msg.md
+
+# Respuesta en un hilo existente
+python3 .opencode/skills/product-forge-teams/scripts/publish.py reply \
+  --team <GROUP_ID> --channel "<CHANNEL_ID>" --thread <MESSAGE_ID> \
+  --message-file /tmp/msg.md
+
+# Chat (grupo o notas personales)
+python3 .opencode/skills/product-forge-teams/scripts/publish.py chat \
+  --chat <CHAT_ID> --message-file /tmp/msg.md
+```
+
+- **Escribe siempre el mensaje en un fichero** (`--message-file`) y pásalo al script: evita problemas de escapado en la shell con asteriscos, backticks y comillas. Muestra al usuario **ese mismo fichero** como borrador.
+- **`--dry-run` antes de publicar**: imprime el HTML resultante sin enviar nada. Úsalo para comprobar que la cursiva y el código salen como etiquetas y no como texto.
+- El script **valida** el mensaje: exige que el aviso de IA abra el texto y aborta si la conversión deja backticks o `**` a la vista.
+- El script **escapa** `&`, `<` y `>` antes de generar etiquetas, así que el texto puede llevarlos sin romper el HTML.
+- `--html` envía el texto tal cual (ya convertido). Resérvalo para casos en que el HTML esté escrito a mano y validado.
+
 ### Destinos
 
-- **Chat de grupo por defecto** (destino por defecto, definido por el usuario el 03/11/2026): chat `19:c464808cd0a54e2ba8ee742d995f2341@thread.v2` («[INCIDENCIAS] Product Forge 🛠️»). Es un chat con otros miembros (p. ej. Jose Manuel Neto Delgado y Francisco Javier Corchado Bernal), no unas notas personales: indica siempre este destino en la confirmación. Se envía como **HTML directo** (ver «Formato del mensaje»):
+- **Chat de grupo por defecto** (destino por defecto, definido por el usuario el 03/11/2026): chat `19:c464808cd0a54e2ba8ee742d995f2341@thread.v2` («[INCIDENCIAS] Product Forge 🛠️»). Es un chat con otros miembros (p. ej. Jose Manuel Neto Delgado y Francisco Javier Corchado Bernal), no unas notas personales: indica siempre este destino en la confirmación.
 
   ```bash
-  python3 -m teams chat send --chat "19:c464808cd0a54e2ba8ee742d995f2341@thread.v2" --message "<html>" --yes
+  python3 .opencode/skills/product-forge-teams/scripts/publish.py chat \
+    --chat "19:c464808cd0a54e2ba8ee742d995f2341@thread.v2" --message-file /tmp/msg.md
   ```
 
-- **Hilo de la daily** (solo si el usuario lo pide): canal «SQUAD Product Forge 🛠️», mensaje raíz `1789993863727`. Se envía como respuesta (Markdown):
+  No uses `teams chat send` con HTML: antepone un `🤖` suelto al mensaje cuando el texto no empieza por ese emoji, y con HTML queda un emoji huérfano antes del primer párrafo.
+
+- **Hilo de la daily** (solo si el usuario lo pide): canal «SQUAD Product Forge 🛠️», mensaje raíz `1789993863727`. Se envía como respuesta:
 
   ```bash
-  python3 -m teams channel reply --team 1301738f-827e-48ec-8770-3f0922c1c295 --channel "19:c2d93e0c05834c5f885f7ebbb2a82da8@thread.tacv2" --thread 1789993863727 --message "<md>" --yes
+  python3 .opencode/skills/product-forge-teams/scripts/publish.py reply \
+    --team 1301738f-827e-48ec-8770-3f0922c1c295 \
+    --channel "19:c2d93e0c05834c5f885f7ebbb2a82da8@thread.tacv2" \
+    --thread 1789993863727 --message-file /tmp/msg.md
   ```
 
   Ya no se publica en el chat de grupo «Product Forge 🛠️».
 - **Chat privado del usuario** (solo si lo pide expresamente): el chat de notas personales `48:notes`.
 
   ```bash
-  python3 -m teams chat send --chat "48:notes" --message "<html>" --yes
+  python3 .opencode/skills/product-forge-teams/scripts/publish.py chat --chat "48:notes" --message-file /tmp/msg.md
   ```
 
   **No uses el 1:1 que `chat list` muestra como «Chat with <nombre del usuario>»**: puede ser el de otra persona (ya se envió por error a Vicente Vidal Aznar). Antes de enviar a cualquier chat 1:1, verifica el destinatario real leyendo `chat messages`, e indica el chat exacto en la confirmación.
 
+- **Hilo nuevo en un canal** (p. ej. escalado a otro squad, ver `/product-forge-pacman-kos`): usa `publish.py root` con `--subject`. El asunto es obligatorio y va en el `subject` del mensaje raíz, no como primera línea en negrita. El canal y su `groupId`/`channelId` los determina el flujo que publica; esta skill solo resuelve el mecanismo.
+
 ### Formato del mensaje
 
-- **Markdown (respuesta en canal):** el conversor une con espacios las líneas consecutivas que no sean viñetas. Escribe cada viñeta (`- `) precedida de una línea en blanco.
+- **Sintaxis admitida por `publish.py`:** `**negrita**`, `*cursiva*`, `` `código` ``, viñetas `- item`, enlaces `[texto](url)`, URLs sueltas y párrafos separados por línea en blanco. Es lo único que se convierte; no uses tablas, encabezados `#` ni bloques de código con triple backtick.
+- **Aviso de IA:** la primera línea, `*🤖 Mensaje generado con IA*`, es obligatoria y el script aborta si no está o no abre el mensaje.
+- **El conversor del CLI no sirve para esto:** `teams channel reply` y `teams chat send` usan `markdown_to_html` del paquete compartido, que **no** interpreta `*cursiva*` ni `` `código` `` (los deja literales). No publiques con esos comandos: usa `publish.py`.
+- **Líneas consecutivas sin viñeta** se unen en un mismo párrafo, separadas por un espacio. Para forzar un salto, deja una línea en blanco.
 - **Corchetes prohibidos en el texto del enlace:** `[` y `]` dentro de `[texto](url)` rompen el Markdown y el enlace sale como URL cruda. Reemplaza `[PACMAN-NNN] título` por `PACMAN-NNN: título`, elimina cualquier otro `[` o `]` (y `(` `)` sin balancear) y no uses títulos truncados con `…`.
-- **Espaciado entre bloques:** el conversor Markdown→HTML no deja espacio visible entre bloques (ni líneas en blanco ni párrafos con `&nbsp;`). Para el chat privado, envía **HTML directo** (si el mensaje contiene HTML se envía tal cual): títulos y cabeceras en `<p><b>…</b></p>`, viñetas en `<ul><li>…</li></ul>`, enlaces con `<a href="…">` (con `&amp;` en la URL) y un `<br>` extra antes de cada cabecera de bloque, incluida la que sigue al título.
-- **Una única fuente del texto** para que el borrador mostrado al usuario y lo enviado coincidan. El borrador se muestra como se vería en Teams (enlaces sobre el texto, sin URLs); si se pide el literal, con las URLs completas.
-- Valida el formato del mensaje (p. ej. con regex por línea) antes de enviar y no envíes si alguna línea falla.
+- **`&`, `<` y `>`** se escapan solos; puedes escribirlos en el texto.
+- **Una única fuente del texto** para que el borrador mostrado al usuario y lo enviado coincidan: el fichero `--message-file`. El borrador se muestra como se vería en Teams (enlaces sobre el texto, sin URLs); si se pide el literal, con las URLs completas.
+- **Comprueba con `--dry-run`** el HTML antes de publicar. Valida que no queden backticks ni `**` a la vista.
