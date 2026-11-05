@@ -250,6 +250,56 @@ def main() -> int:
         troceadas = itsmecom.jql(filas, tamano_lote=5)
         check("trocea cuando se pide un lote menor", len(troceadas) == 3, str(len(troceadas)))
 
+    print("6. relevancia estricta del canal 2 (Incidencias 🐞)")
+    # Regresión de los tres fallos del informe del 18/10–04/11: un hilo de
+    # Tágticos sin mención ni participación del squad entraba por «el canal
+    # implica al squad»; un hilo abierto por el squad para reclamar a otro equipo
+    # no debe contar como petición nuestra.
+
+    def m(texto_: str, autor_: str, menciones_: list[str] | None = None) -> dict:
+        """Mensaje crudo de Graph, que es lo que consumen los helpers."""
+        return {
+            "from": {"user": {"displayName": autor_}},
+            "createdDateTime": "2026-11-04T10:00:00Z",
+            "body": {"content": f"<p>{texto_}</p>"},
+            "mentions": [{"mentionText": x} for x in (menciones_ or [])],
+        }
+
+    # (a) ajeno: ni mención ni participación de ProductForge
+    ajeno = m("dadlo de alta porfi y unificad", "Antonio Diaz Maroto Chacon")
+    check(
+        "hilo de otro squad sin mención ni participación no es relevante",
+        not (ec.menciona_squad(ajeno) or ec.squad_participa(ajeno, [ajeno])),
+    )
+    # (b) participación: un miembro responde en el hilo
+    check(
+        "la participación de un miembro hace relevante el hilo",
+        ec.squad_participa(ajeno, [ajeno, m("reviso", "Jose Manuel Neto Delgado")]),
+    )
+    # (c) mención por etiqueta
+    check(
+        "la etiqueta del squad hace relevante el hilo",
+        ec.menciona_squad(m("cc", "alguien", ["ProductForge"])),
+    )
+    # (d) nombre suelto en el texto NO es mención
+    check(
+        "un nombre sin etiquetar no cuenta como mención",
+        not ec.menciona_squad(m("Angel Negrete, ¿lo ves?", "alguien")),
+    )
+    check(
+        "una etiqueta a un miembro sí cuenta",
+        ec.menciona_squad(m("cc", "alguien", ["Angel Negrete Tuñas"])),
+    )
+    # (e) la marca estricta se propaga desde barrido
+    import barrido
+
+    check(
+        "barrido aplica relevancia estricta solo al canal 2",
+        barrido.CANALES_CON_MENCION_ESTRICTA == {2}
+        and 2 not in barrido.CANALES_CON_MENCION,
+        str(barrido.CANALES_CON_MENCION_ESTRICTA),
+    )
+
     print()
     if fallos:
         print(f"FALLARON {len(fallos)} comprobaciones: {', '.join(fallos)}")

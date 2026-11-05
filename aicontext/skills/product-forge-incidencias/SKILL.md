@@ -34,6 +34,7 @@ Tres scripts más completan el flujo, y cada uno existe por un motivo medido:
 - **Canales**: por defecto los **15**, todos equivalentes: 7 de incidencias del squad/área (1–7) y 8 externos (8 Q - Soporte API Storefront y 9–15 Imp. por cadena). Los lee el barrido único (ver «Lectura de Teams»). El usuario puede acotarlos o excluir los de implantación.
 - **Scope de los canales**: `interno` = solo miembros de PACMAN (SQUAD Product Forge 🛠️, Incidencias 🐞, PACMAN Contributors); `externo` = abierto a toda la organización (B - Gestión incidencias Tecnología, P - Dudas técnicas, PRO Validación Pruebas, Incidencias Entornos Previos, Q - Soporte API Storefront e Imp. XXX). El scope **no** determina la relevancia: solo el contexto y el filtro de cada canal.
 - **Filtro reforzado (solo Q - Soporte API Storefront e Imp. XXX)**: en esos 8 canales solo entran los hilos que mencionan **Storefront** (o una etiqueta del squad) **y** contienen una **URL de API de Producto** (segmento `/product`, `/products` o `/productsArray` en el path). Las dos condiciones son obligatorias. Los demás canales externos (B, P, PRO Validación Pruebas, Entornos Previos) se filtran solo por mención al squad, como los internos.
+- **Relevancia estricta en Incidencias 🐞 (canal 2)**: el barrido **no** aplica filtro en este canal, pero al clasificar solo se incluye un hilo si **menciona al squad o a un miembro de ProductForge** (lista de `team.adoc`, más Elias Ferreiro Borreiros) **o si algún miembro de ProductForge participa en el hilo**. Si no se cumple ninguna de las dos, el hilo se omite como ajeno, citando el squad propietario cuando se pueda identificar en `team.adoc`. La excepción del hilo abierto por el squad para reclamar revisión a otro equipo prevalece: ese hilo es ✅ omitido, no pendiente. Detalle en `clasificacion.md`.
 - **PRs cerradas**: si incluir hilos con PR cerradas (por defecto no; ver clasificación).
 - **Publicar**: por defecto **no**. Solo se publica si el usuario lo pide en la petición o lo solicita tras ver el informe.
 - **Destino** (solo si publica):
@@ -84,7 +85,7 @@ Si un hilo necesita más contexto del que da el índice, se pide con `detalle.py
 | # | Canal | Scope | Team | Channel ID | Filtro aplicado por el barrido |
 |---|-------|-------|------|------------|-------------------------------|
 | 1 | SQUAD Product Forge 🛠️ | interno | `1301738f-827e-48ec-8770-3f0922c1c295` | `19:c2d93e0c05834c5f885f7ebbb2a82da8@thread.tacv2` | sin filtro de mención (excepción) |
-| 2 | Incidencias 🐞 | interno | `1301738f-827e-48ec-8770-3f0922c1c295` | `19:d311bbd5ba844456a3f88ca0f8fcc1ec@thread.tacv2` | sin filtro: el canal implica al squad |
+| 2 | Incidencias 🐞 | interno | `1301738f-827e-48ec-8770-3f0922c1c295` | `19:d311bbd5ba844456a3f88ca0f8fcc1ec@thread.tacv2` | **mención estricta**: al squad o a un miembro, o participación de un miembro |
 | 3 | PACMAN Contributors | interno | `1301738f-827e-48ec-8770-3f0922c1c295` | `19:TFiV3Qv4kALmUMHeZJxzjdivoSYvaQ64PtQ0hPlG0tM1@thread.tacv2` | sin filtro: el canal implica al squad |
 | 4 | B - Gestión incidencias Tecnología | externo | `fc58da2f-67b0-49ab-a3df-d2b84d676f26` | `19:38382f0598414c04b7a4354ea823f795@thread.tacv2` | mención al squad |
 | 5 | P - Dudas técnicas | externo | `fc58da2f-67b0-49ab-a3df-d2b84d676f26` | `19:d63e20f255304e7ea5c97cd0a6ba760c@thread.tacv2` | mención al squad |
@@ -188,7 +189,7 @@ Cada hilo o ticket lleva **dos emojis**, siempre **los primeros de cada viñeta*
 1. Una línea de alcance: canales, rango, zona horaria (`Europe/Madrid`) y nº de hilos relevantes. Indica que Q - Soporte API Storefront y los Imp. XXX se han filtrado por mención a Storefront + URL de API de Producto, y que los hilos que citan un ITSMECOM se han verificado contra Jira por estado y equipo asignado.
 2. Tabla resumen por canal **solo sobre pendientes** (🫥 y 🏃‍♂️‍➡️): nº de pendientes y su desglose por criticidad 🔴 🟠 🟡 ⚪ y por atención 🫥 🏃‍♂️‍➡️, solo con los canales que tengan pendientes. Los recuentos se obtienen contando tu clasificación, no se estiman. Incluye ITSMECOM como una fila más.
 3. **Pendientes (🫥 y 🏃‍♂️‍➡️)**, ordenados según «Orden», **una sola línea por elemento**: criticidad + atendido · fecha · antigüedad · canal · autor · tema en pocas palabras · URL completa en texto visible. Marca con «(PR abierta)» los hilos del equipo. Separa hilos de Teams, incidencias ITSMECOM y consultas ITSMECOM.
-4. No listes por defecto resueltos (✅), informativos, motivos ni observaciones. Añade una única línea final «Omitidos: N resueltos, N informativos, N PR cerradas, N por ITSMECOM cerrado o fuera de Pacman» (contados desde tu clasificación) y avisa solo de limitaciones que afecten al resultado (canal inaccesible, miembros no verificados, truncado, ticket no consultable).
+4. No listes por defecto resueltos (✅), informativos, motivos ni observaciones. Añade una única línea final «Omitidos: N resueltos, N informativos, N PR cerradas, N por ITSMECOM cerrado o fuera de Pacman, N ajenos al squad» (contados desde tu clasificación) y avisa solo de limitaciones que afecten al resultado (canal inaccesible, miembros no verificados, truncado, ticket no consultable). El recuento «ajenos al squad» incluye los hilos de Incidencias 🐞 sin mención ni participación del squad.
 
 **Orden dentro de cada bloque** (informe y mensaje): primero por criticidad (🔴, 🟠, 🟡, ⚪) y, dentro de la misma, por atendido (🫥, 🏃‍♂️‍➡️, ✅). A igualdad de ambos, del más antiguo al más reciente.
 
@@ -197,6 +198,11 @@ Cada hilo o ticket lleva **dos emojis**, siempre **los primeros de cada viñeta*
 - **Título**: primera línea tras el aviso de IA obligatorio (skill `/product-forge-teams`): `**Temas pendientes entre dd/mm/aaaa y dd/mm/aaaa**` (inicio y fin del informe), seguida de línea en blanco. Es la única línea que no es viñeta ni cabecera de bloque.
 - Mensaje **conciso**, **un tema por línea** como viñeta, con las particularidades de formato de `/product-forge-teams`. Sin línea de «Urgente» ni texto adicional.
 - **Cinco bloques**, en este orden, cada uno ordenado según «Orden» y omitido si está vacío: 1º «Hilos abiertos por personas externas» (🫥/🏃‍♂️‍➡️ de Teams); 2º «Incidencias ITSMECOM»; 3º «Consultas ITSMECOM»; 4º «Hilos internos» (hilos del equipo con PR abierta); 5º «Hilos externos resueltos» (✅ iniciados por personas externas). Los bloques 1 a 4 llevan solo pendientes; los ✅ van solo en el 5º.
+- **Invariantes por bloque (obligatorios, se comprueban antes de enviar)**:
+  - **Bloque 1**: el raíz lo ha escrito alguien **que no es miembro de ProductForge** y el hilo tiene petición viva hacia el squad. Un hilo abierto por un miembro del squad **nunca** va aquí.
+  - **Bloque 4**: solo hilos con **al menos una PR en estado `OPEN`**. Un hilo del equipo sin PR abierta no entra (si su causa está fuera, es ✅ omitido; si es una petición interna sin PR, va al informe, no al mensaje). El texto del enlace es **el título de la PR**, sin prefijo de canal.
+  - **Bloque 5**: ✅ iniciados por personas externas. Los ✅ de hilos internos no se publican.
+  - **Canal**: en los bloques 1 y 5 el texto del enlace lleva el canal real del hilo. Si un hilo está en Incidencias 🐞, se pone «Incidencias 🐞», no el canal donde se cree que debería estar.
 - **Hilos de Teams**: `- <criticidad> <atendido> [título](webUrl) · dd/mm`. En el 1er bloque el texto del enlace empieza por el nombre completo del canal (`[<Canal>: <título>]`, sin sufijo «Canal …»). En hilos del equipo, el texto es el título de la PR (`gh pr view`), la principal si hay varias.
 - **Líneas ITSMECOM**: `- <criticidad> <atendido> [ITSMECOM-N](https://jira.inditex.com/jira/browse/ITSMECOM-N): <título> · dd/mm — <estado>. <descripción>`. El enlace va **solo sobre el ID**; la fecha es la de creación. El estado es «En curso, asignado a <nombre>» o «En cartera, sin asignar». La descripción (ver clasificación) es obligatoria.
 - **Resumen de estado**: en TODOS los hilos 🏃‍♂️‍➡️ y ✅ añade tras la fecha ` — <resumen breve>` (ver clasificación). Los 🫥 no llevan resumen.
@@ -217,16 +223,21 @@ Aplican además tus reglas comunes (castellano, horas en `Europe/Madrid`, no inv
 - **Eficiencia de lectura (obligatorio):** el barrido tarda ~17-20 s y la resolución de PR ~2 s; el resto del tiempo del informe es lectura del modelo. Lee `indice.txt` una vez, pide el texto íntegro de todos los candidatos en **una sola invocación** de `detalle.py` y no generes volcados intermedios ni releas los JSON. Medido en el informe del 18/10–04/11: sin este flujo se leyeron 550 KB para clasificar 26 KB útiles (el 83 % del texto descartado).
 - **ITSMECOM citados: nunca a ojo.** Todo hilo que cite un ticket se cruza contra Jira por **estado** y **`Equipo Asignado`**; las etiquetas no se usan. Un hilo cuyo ticket está en la categoría Done o ya no está en `jsdsoportepacman` **no se lista como pendiente**. Si no se pudo consultar el ticket, dilo como limitación y no apliques la regla.
 - **Causa fuera de Pacman/Storefront ⇒ resuelto.** Si el squad ubica la causa en otro sistema (Core/Product Core, Adapter, Imagen, Navigation, Grids, Menú, Tags, Search, frontales o infraestructura) y el hilo se escala a ese equipo **sin ninguna petición viva hacia Pacman/Storefront**, el hilo es ✅ y no pendiente, aunque la conversación siga con otros equipos. Solo vuelve a pendiente si alguien reclama explícitamente algo nuestro. Una mera sospecha o un «lo revisamos con ellos» no cierra el hilo. Detalle y ejemplo en [clasificacion.md](clasificacion.md).
+- **Hilo del squad que reclama revisión a otro squad ⇒ ✅ omitido.** Si el raíz lo escribe un miembro de ProductForge para pedir a otro equipo que revise lo suyo (jobs en KO por DataGravity o XMedia, datos que llegan mal desde Core…), el hilo no es una petición hacia Producto/Storefront: es trabajo ajeno y **nunca** se lista como pendiente ni como hilo interno. Una nota posterior del propio squad («quedan KOs que limpiar») **no** lo reabre; solo lo reabre una petición al squad desde otro autor.
+- **Incidencias 🐞 solo con mención o participación del squad.** En el canal 2 la relevancia es estricta: mención al squad o a un miembro de ProductForge, o participación de un miembro. Sin ninguna de las dos, el hilo es ajeno y se omite citando el squad propietario. Ver [clasificacion.md](clasificacion.md).
+- **Acuses ajenos no reabren.** Tras una respuesta concreta de cierre del squad, un «gracias», «lo tenemos en cuenta» o «lo probamos en la próxima ronda» de alguien ajeno **no** devuelve el hilo a pendiente. Solo lo reabre un mensaje que vuelva a reportar el problema, pida algo al squad o contradiga el diagnóstico.
 
-  Presupuesto medido de ese informe, y de dónde se recortó:
+### Presupuesto medido del informe
 
-  | Consumo | Antes | Ahora |
-  |---|---|---|
-  | `indice.txt` | 28 KB | 28 KB |
-  | Detalle de candidatos | 116 KB en **4 llamadas** | ~68 KB en **1 llamada** |
-  | Hilos de más de 20 respuestas | 67 KB (3 completos) | 8,7 KB (−87 %) |
-  | Jira (búsqueda + comentarios) | 25 KB en 2 búsquedas | 25 KB en 1 búsqueda |
-  | Resolución de PR | no se hacía | ~1 KB, 1 llamada |
-  | Verificación de ITSMECOM citados | no se hacía | ~1 KB, 1 llamada |
+De dónde se recortó:
 
-  No merece la pena, y está medido para que no se reintente: recomprimir los JSON (`indent=1` → plano, 430 → 358 KB) no ahorra nada porque el agente no los lee; recortar el cuerpo del índice a 150 caracteres solo baja un 6 %; y bajar los comentarios de Jira a 2 pierde diagnósticos completos.
+| Consumo | Antes | Ahora |
+|---|---|---|
+| `indice.txt` | 28 KB | 28 KB |
+| Detalle de candidatos | 116 KB en **4 llamadas** | ~68 KB en **1 llamada** |
+| Hilos de más de 20 respuestas | 67 KB (3 completos) | 8,7 KB (−87 %) |
+| Jira (búsqueda + comentarios) | 25 KB en 2 búsquedas | 25 KB en 1 búsqueda |
+| Resolución de PR | no se hacía | ~1 KB, 1 llamada |
+| Verificación de ITSMECOM citados | no se hacía | ~1 KB, 1 llamada |
+
+No merece la pena, y está medido para que no se reintente: recomprimir los JSON (`indent=1` → plano, 430 → 358 KB) no ahorra nada porque el agente no los lee; recortar el cuerpo del índice a 150 caracteres solo baja un 6 %; y bajar los comentarios de Jira a 2 pierde diagnósticos completos.

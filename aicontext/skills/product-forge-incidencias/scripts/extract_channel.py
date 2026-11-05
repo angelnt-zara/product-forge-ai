@@ -142,6 +142,11 @@ MIEMBROS_SQUAD = (
     "elias ferreiro",
 )
 
+# Marca de relevancia estricta: el canal 2 (Incidencias 🐞) no se conforma con
+# que el canal «implique» al squad. Se pasa como `mencion_obligatoria` y activa
+# la rama estricta de `extraer`.
+MENCION_ESTRICTA = ("__estricta__",)
+
 WORKERS_DEFECTO = int(os.environ.get("PF_TEAMS_WORKERS", "8"))
 
 
@@ -263,6 +268,15 @@ def es_del_squad(nombre: str) -> bool:
     return any(p in limpio for p in MIEMBROS_SQUAD)
 
 
+def squad_participa(raiz, respuestas) -> bool:
+    """True si algún miembro de ProductForge escribe en el hilo.
+
+    No basta con el autor del raíz: en Incidencias 🐞 hay hilos abiertos por
+    otras personas en los que el squad entra a responder, y esos sí son nuestros.
+    """
+    return any(es_del_squad(autor(m)) for m in [raiz] + list(respuestas or []))
+
+
 def menciona_squad(
     m,
     etiquetas: tuple[str, ...] = MENCIONES_SQUAD,
@@ -274,6 +288,10 @@ def menciona_squad(
     (hay quien escribe «ProductForge» sin etiquetar). Los nombres de personas se
     buscan **solo** en `mentions`: así no se confunde una respuesta escrita por un
     miembro del squad con una mención a ese miembro.
+
+    Un nombre suelto en el texto («Angel Negrete, ¿lo ves?») **no** cuenta como
+    mención: en Teams sin etiqueta no hay garantía de que la persona esté
+    siquiera en el canal, y aceptarlo metía hilos ajenos en el canal 2.
     """
     mencionados = [_sin_tildes(x) for x in menciones(m)]
     if any(any(p in men for p in miembros) for men in mencionados):
@@ -499,10 +517,21 @@ def extraer(
         if (raiz.created or "") < desde and not reciente:
             continue  # antiguo sin actividad en el rango
 
-        if mencion_obligatoria:
-            # Relevante si algún mensaje menciona al squad o si el hilo lo abrió un
-            # miembro del equipo (sus hilos en Incidencias 🐞 son trabajo del squad
-            # aunque no se etiquete a sí mismo).
+        if mencion_obligatoria == MENCION_ESTRICTA:
+            # Canal 2 (Incidencias 🐞): relevancia estricta. Solo entra si alguien
+            # menciona al squad o a un miembro de ProductForge, o si un miembro
+            # participa en el hilo. Que el canal «implique» al squad ya no vale:
+            # por ahí entraban asuntos de Tágticos y Grids sin relación con
+            # Producto (p. ej. «Información de new in»).
+            if not (
+                any(menciona_squad(m) for m in [raiz] + rr)
+                or squad_participa(raiz, rr)
+            ):
+                continue
+        elif mencion_obligatoria:
+            # Resto de canales con mención: vale mencionar al squad **o** que lo
+            # haya abierto un miembro (sus hilos son trabajo del squad aunque no
+            # se etiquete a sí mismo).
             if not any(menciona_squad(m) for m in [raiz] + rr) and not es_del_squad(autor(raiz)):
                 continue
 
@@ -662,6 +691,12 @@ def main() -> int:
         help="exige mención al squad por etiqueta o texto; sin valor usa las etiquetas "
         "y nombres del squad, con valor es una lista separada por comas",
     )
+    p.add_argument(
+        "--mencion-estricta",
+        action="store_true",
+        help="relevancia estricta (canal 2): exige mención al squad o a un miembro, "
+        "o participación de un miembro en el hilo",
+    )
     a = p.parse_args()
 
     filtro = None
@@ -672,7 +707,9 @@ def main() -> int:
         filtro = lambda t: bool(rx.search(t))  # noqa: E731
 
     mencion_obligatoria = None
-    if a.menciona:
+    if a.mencion_estricta:
+        mencion_obligatoria = MENCION_ESTRICTA
+    elif a.menciona:
         mencion_obligatoria = (
             MENCIONES_SQUAD
             if a.menciona == "__defecto__"

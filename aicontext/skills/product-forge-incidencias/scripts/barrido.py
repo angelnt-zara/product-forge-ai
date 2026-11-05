@@ -64,12 +64,14 @@ CANALES = [
     (15, "Imp. Zara Home", "1301738f-827e-48ec-8770-3f0922c1c295", "19:7_n40ZpehZYr-aOqZZ8W1PTa10wZ-o5JCjk6QFpFEr81@thread.tacv2", True),
 ]
 
-# Canales en los que se exige mención al squad. Solo los externos de incidencias
-# (4-7): es donde hay volumen de otros equipos y hace falta discriminar. Los
-# internos 2-3 no lo llevan porque el propio canal ya implica al squad (la
-# clasificación lo admite: «menciona al squad ... o lo implican por el canal»);
-# filtrarlos perdía hilos abiertos por el equipo en su propio canal de Incidencias.
+# Canales en los que se exige mención al squad. Los externos de incidencias
+# (4-7): es donde hay volumen de otros equipos y hace falta discriminar. El canal
+# 3 (PACMAN Contributors) no lo lleva porque el propio canal ya implica al squad.
+# El canal 2 (Incidencias 🐞) lleva la relevancia ESTRICTA: además de mención,
+# vale la participación de un miembro, pero no basta con que el canal lo implique
+# (por ahí entraban asuntos de Tágticos y Grids, como «Información de new in»).
 CANALES_CON_MENCION = {4, 5, 6, 7}
+CANALES_CON_MENCION_ESTRICTA = {2}
 
 
 def un_canal(c, desde, dua, workers):
@@ -79,7 +81,11 @@ def un_canal(c, desde, dua, workers):
         if reforzado
         else None
     )
-    mencion = ec.MENCIONES_SQUAD if n in CANALES_CON_MENCION else None
+    mencion = (
+        ec.MENCION_ESTRICTA
+        if n in CANALES_CON_MENCION_ESTRICTA
+        else (ec.MENCIONES_SQUAD if n in CANALES_CON_MENCION else None)
+    )
     t0 = time.monotonic()
     try:
         filas = ec.extraer(
@@ -94,7 +100,15 @@ def un_canal(c, desde, dua, workers):
         return {
             "canal": n,
             "nombre": nombre,
-            "filtro": "reforzado Storefront+URL" if reforzado else ("mención al squad" if mencion else "sin filtro"),
+            "filtro": (
+                "reforzado Storefront+URL"
+                if reforzado
+                else (
+                    "mención estricta (squad o participación)"
+                    if n in CANALES_CON_MENCION_ESTRICTA
+                    else ("mención al squad" if mencion else "sin filtro")
+                )
+            ),
             "hilos": filas,
             "segundos": round(time.monotonic() - t0, 1),
             "error": None,
