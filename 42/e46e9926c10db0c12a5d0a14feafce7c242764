@@ -1,0 +1,25 @@
+aicontext/skills/product-forge-incidencias/SKILL.md
+  s_508efc7076f74f::t_4c6166b9d6a253 37-39,68-69,137-138,229-231
+aicontext/skills/product-forge-incidencias/clasificacion.md
+  s_508efc7076f74f::t_b7b52f7c14b543 23,27-32,44-86
+aicontext/skills/product-forge-incidencias/scripts/barrido.py
+  s_508efc7076f74f::t_4aa2bf0b1f0e2b 91,100,115-117,126
+aicontext/skills/product-forge-incidencias/scripts/test_humo.py
+  s_508efc7076f74f::t_2c4efcc3772b5d 303-378
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "42e46e9926c10db0c12a5d0a14feafce7c242764",
+  "prompts": {},
+  "sessions": {
+    "s_508efc7076f74f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e506574bfffe5kmCTNXMXpOqvs",
+        "model": "inditex/KAIA/deepseek-v4.1-flash_high"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
