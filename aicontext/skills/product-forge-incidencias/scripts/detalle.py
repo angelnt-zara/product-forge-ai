@@ -131,7 +131,13 @@ def main() -> int:
         print(f"TÍTULO: {h['titulo']}")
         print(f"WEBURL: {h['webUrl']}")
         print(f"MENCIONES_SQUAD: {', '.join(h.get('menciones_squad') or []) or '-'}")
+        print(f"MENCIONES_OTRAS: {', '.join(h.get('menciones_otras') or []) or '-'}")
+        print(f"RECLAMA_A_OTRO: {'SÍ' if h.get('reclama_a_otro') else 'no'}")
         print(f"URLS_PRODUCTO: {'; '.join(h.get('urls_producto') or []) or '-'}")
+        # El cuerpo del raíz debe mostrarse siempre: en un hilo sin respuestas es
+        # el único contenido disponible, y quien lo abrió puede estar pidiendo a
+        # OTRO equipo que revise lo suyo, lo que no es trabajo de este squad.
+        print(f"RAÍZ: {h.get('texto_raiz') or '(sin texto)'}")
         resp = h.get("respuestas") or []
         # Recorte automático de hilos largos, salvo que se pidan completas o se
         # fije --max-resp a mano.

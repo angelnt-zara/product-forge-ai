@@ -88,6 +88,7 @@ def un_canal(c, desde, dua, workers):
     )
     t0 = time.monotonic()
     try:
+        excluidos: list = []
         filas = ec.extraer(
             team,
             ch,
@@ -96,6 +97,7 @@ def un_canal(c, desde, dua, workers):
             mencion_obligatoria=mencion,
             desde_ultima_actividad=dua,
             workers=workers,
+            excluidos_out=excluidos,
         )
         return {
             "canal": n,
@@ -110,6 +112,9 @@ def un_canal(c, desde, dua, workers):
                 )
             ),
             "hilos": filas,
+            # Hilos descartados por relevancia. No se tiran en silencio: el
+            # informe los cuenta en «Omitidos» y revisa si alguno es nuestro.
+            "excluidos": excluidos,
             "segundos": round(time.monotonic() - t0, 1),
             "error": None,
         }
@@ -118,6 +123,7 @@ def un_canal(c, desde, dua, workers):
             "canal": n,
             "nombre": nombre,
             "hilos": [],
+            "excluidos": [],
             "segundos": round(time.monotonic() - t0, 1),
             "error": str(exc)[:300],
         }

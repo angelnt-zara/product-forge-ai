@@ -142,6 +142,39 @@ MIEMBROS_SQUAD = (
     "elias ferreiro",
 )
 
+# Squads y equipos AJENOS a ProductForge. Se usan para distinguir un hilo que
+# nos pide algo de uno que reclama trabajo de otro equipo. Caso real que motivó
+# esto (05/11/2026): en Incidencias 🐞, un miembro del squad abrió «Problemas con
+# el cambio del filtro Tipo de grid» mencionando SOLO a Grids («Grids ¿le podéis
+# echar un ojo?»). Como el autor era del squad, entró como pendiente propio
+# cuando en realidad era una reclamación a otro equipo.
+SQUADS_AJENOS = (
+    "grids",
+    "gridcore",
+    "grid core",
+    "gridsf",
+    "imagen",
+    "xmedia",
+    "menu",
+    "menudelux",
+    "tagticos",
+    "tags",
+    "search",
+    "searchsf",
+    "navigation",
+    "navigasf",
+    "productcore",
+    "product core",
+    "adapter",
+    "product adapter",
+    "assets",
+    "recommend",
+    "insights",
+    "sidequests",
+    "frontales",
+    "sre",
+)
+
 # Marca de relevancia estricta: el canal 2 (Incidencias 🐞) no se conforma con
 # que el canal «implique» al squad. Se pasa como `mencion_obligatoria` y activa
 # la rama estricta de `extraer`.
@@ -302,6 +335,44 @@ def menciona_squad(
     return False
 
 
+def squads_ajenos(m) -> list[str]:
+    """Squads/equipos ajenos mencionados en el mensaje.
+
+    Se buscan solo en `mentions` (etiquetas reales), no en el texto: un «grids»
+    suelto en una frase («los grids de la home») no indica que el hilo sea de
+    Grids, mientras que una etiqueta sí. Alimenta `raiz_reclama_a_otro`, que
+    distingue una petición hacia nosotros de una reclamación a otro equipo.
+    """
+    salida = []
+    for men in menciones(m):
+        limpio = _sin_tildes(men)
+        for nombre in SQUADS_AJENOS:
+            if nombre in limpio and men not in salida:
+                salida.append(men)
+                break
+    return salida
+
+
+def raiz_reclama_a_otro(raiz, respuestas) -> bool:
+    """True si un miembro del squad abre el hilo para reclamar a OTRO equipo.
+
+    Condiciones (las tres):
+      1. el raíz lo escribe un miembro de ProductForge,
+      2. el raíz etiqueta a un squad ajeno,
+      3. nadie menciona al squad en todo el hilo.
+
+    Ese hilo es trabajo ajeno: no es una petición hacia Producto/Storefront y
+    debe omitirse como ✅, nunca listarse como pendiente ni como hilo interno.
+    Si alguien etiqueta después al squad, deja de serlo: hay una petición viva
+    hacia nosotros y se clasifica con los criterios normales.
+    """
+    if not es_del_squad(autor(raiz)):
+        return False
+    if not squads_ajenos(raiz):
+        return False
+    return not any(menciona_squad(m) for m in [raiz] + list(respuestas or []))
+
+
 # ── GET con reintento ────────────────────────────────────────────────────────
 def _get(client, url: str, intentos: int = 3):
     """GET con reintento: Graph devuelve timeouts y 429 esporádicos."""
@@ -442,6 +513,7 @@ def extraer(
     desde_ultima_actividad: bool = False,
     workers: int = WORKERS_DEFECTO,
     verbose: bool = False,
+    excluidos_out: list | None = None,
 ) -> list[dict]:
     client = graph_client()
 
@@ -507,6 +579,7 @@ def extraer(
                     objetivos.append(r)
 
     filas = []
+    excluidos: list[dict] = []
     for raiz in objetivos:
         rr = por_hilo.get(raiz.id, [])
         # Graph devuelve las respuestas de más reciente a más antigua. Se ordenan
@@ -518,16 +591,63 @@ def extraer(
             continue  # antiguo sin actividad en el rango
 
         if mencion_obligatoria == MENCION_ESTRICTA:
-            # Canal 2 (Incidencias 🐞): relevancia estricta. Solo entra si alguien
-            # menciona al squad o a un miembro de ProductForge, o si un miembro
-            # participa en el hilo. Que el canal «implique» al squad ya no vale:
-            # por ahí entraban asuntos de Tágticos y Grids sin relación con
-            # Producto (p. ej. «Información de new in»).
-            if not (
-                any(menciona_squad(m) for m in [raiz] + rr)
-                or squad_participa(raiz, rr)
-            ):
-                continue
+            # Canal 2 (Incidencias 🐞): relevancia estricta. Exige mención
+            # EXPLÍCITA al squad o a un miembro de ProductForge en algún mensaje
+            # del hilo. Antes bastaba con que un miembro participara, incluido el
+            # autor del raíz, y por ahí entraba como pendiente un hilo abierto por
+            # el squad para reclamar a Grids (05/11/2026, «Problemas con el cambio
+            # del filtro Tipo de grid»).
+            #
+            # La única excepción es un hilo abierto por alguien de FUERA en el que
+            # un miembro del squad entra a responder: esos sí son nuestros.
+            #
+            # Los hilos sin mención no se tiran en silencio: se acumulan en
+            # `excluidos` con su motivo, para poder contarlos en «Omitidos» y
+            # preguntar al usuario si alguno parece materialmente nuestro.
+            #
+            # Casos (en orden):
+            #  - raíz del squad + etiqueta a otro squad + nadie nos menciona
+            #    ⇒ reclamación a otro equipo, se excluye (falso positivo real).
+            #  - raíz del squad sin mencionar a nadie
+            #    ⇒ tema propio del squad, SE QUEDA: somos nosotros quienes
+            #      reportamos una incidencia en este canal.
+            #  - raíz de fuera sin mención y sin participación nuestra ⇒ ajeno.
+            sin_mencion = not any(menciona_squad(m) for m in [raiz] + rr)
+            if sin_mencion:
+                if raiz_reclama_a_otro(raiz, rr):
+                    excluidos.append(
+                        {
+                            "id": raiz.id,
+                            "webUrl": raiz.raw.get("webUrl"),
+                            "titulo": raiz.raw.get("subject") or (texto(raiz)[:90] or "(sin asunto)"),
+                            "autor": autor(raiz),
+                            "fecha": a_madrid(raiz.created),
+                            "n_respuestas": len(rr),
+                            "texto_raiz": texto(raiz),
+                            "autor_raiz_es_squad": True,
+                            "menciones_otras": squads_ajenos(raiz),
+                            "reclama_a_otro": True,
+                            "motivo": "causa fuera de Pacman, reclamada por el squad",
+                        }
+                    )
+                    continue
+                if not es_del_squad(autor(raiz)) and not squad_participa(raiz, rr):
+                    excluidos.append(
+                        {
+                            "id": raiz.id,
+                            "webUrl": raiz.raw.get("webUrl"),
+                            "titulo": raiz.raw.get("subject") or (texto(raiz)[:90] or "(sin asunto)"),
+                            "autor": autor(raiz),
+                            "fecha": a_madrid(raiz.created),
+                            "n_respuestas": len(rr),
+                            "texto_raiz": texto(raiz),
+                            "autor_raiz_es_squad": False,
+                            "menciones_otras": squads_ajenos(raiz),
+                            "reclama_a_otro": False,
+                            "motivo": "sin mención ni participación del squad",
+                        }
+                    )
+                    continue
         elif mencion_obligatoria:
             # Resto de canales con mención: vale mencionar al squad **o** que lo
             # haya abierto un miembro (sus hilos son trabajo del squad aunque no
@@ -554,6 +674,16 @@ def extraer(
                 "autor": autor(raiz),
                 "n_respuestas": len(rr),
                 "ultima_actividad": a_madrid(rr[-1].created) if rr else a_madrid(raiz.created),
+                # Cuerpo del mensaje raíz. IMPRESCINDIBLE para clasificar: en un
+                # hilo sin respuestas es el ÚNICO texto disponible, y sin él el
+                # agente acaba decidiendo por el título. Caso real (05/11/2026):
+                # «Problemas con el cambio del filtro Tipo de grid» tiene 0
+                # respuestas y su raíz pedía a Grids que lo revisara; el título
+                # no lo decía y el hilo se clasificó como pendiente propio.
+                "texto_raiz": texto(raiz),
+                "autor_raiz_es_squad": es_del_squad(autor(raiz)),
+                "menciones_otras": squads_ajenos(raiz),
+                "reclama_a_otro": raiz_reclama_a_otro(raiz, rr),
                 "menciones_squad": sorted(
                     {
                         men
@@ -585,6 +715,10 @@ def extraer(
         )
 
     filas.sort(key=lambda f: f["fecha"])
+    # Los hilos descartados por relevancia (canal 2) se devuelven aparte: hay que
+    # poder contarlos en «Omitidos» y revisar si alguno es materialmente nuestro.
+    if excluidos_out is not None:
+        excluidos_out.extend(excluidos)
     return filas
 
 
@@ -605,16 +739,30 @@ def linea_indice(f: dict, chars: int = 300) -> str:
     ult = _ultimo(f)
     ult_autor = ult["autor"] if ult else f["autor"]
     ult_squad = "S" if (ult and es_del_squad(ult["autor"])) else "-"
-    cuerpo = (ult["texto"] if ult else "") or ""
+    # Sin respuestas, el texto útil es el del RAÍZ. Antes quedaba vacío y el
+    # triage se hacía solo con el título: así se colaron hilos cuyo raíz pedía
+    # a otro equipo que revisara lo suyo (0 respuestas, cuerpo invisible).
+    cuerpo = (ult["texto"] if ult else "") or f.get("texto_raiz") or ""
     if len(cuerpo) > chars:
         cuerpo = cuerpo[:chars].rstrip() + "…"
     cuerpo = re.sub(r"\s+", " ", cuerpo)
     fuera = "!" if f["fecha_raiz_fuera_de_rango"] else "-"
+    # Marcas de relevancia: quién abrió el hilo y si reclama a otro equipo. Con
+    # esto el triage no depende del último mensaje y se detecta el caso «el
+    # squad pide a Grids que revise algo», que no es trabajo nuestro.
+    marcas = []
+    if f.get("autor_raiz_es_squad"):
+        marcas.append("raizAUTOR")
+    if f.get("menciones_otras"):
+        marcas.append("otro=" + "/".join(f["menciones_otras"]))
+    if f.get("reclama_a_otro"):
+        marcas.append("RECLAMA_A_OTRO")
+    extra = (" [" + ", ".join(marcas) + "]") if marcas else ""
     return (
         f"{f['id']} | {f['fecha'][:10]} {fuera} | {f['autor']} | "
         f"resp={f['n_respuestas']:>3} squad={len(squad):>2} | "
         f"ult={f['ultima_actividad'][:10]} {ult_squad} {ult_autor} | "
-        f"urls={len(f['urls_producto'])} | {f['titulo'][:90]} | {cuerpo}"
+        f"urls={len(f['urls_producto'])}{extra} | {f['titulo'][:90]} | {cuerpo}"
     )
 
 
@@ -651,7 +799,13 @@ def detalle(filas: list[dict], ids: list[str]) -> str:
             f"TÍTULO: {f['titulo']}\n"
             f"WEBURL: {f['webUrl']}\n"
             f"MENCIONES_SQUAD: {', '.join(f['menciones_squad']) or '-'}\n"
-            f"URLS_PRODUCTO: {'; '.join(f['urls_producto']) or '-'}"
+            f"MENCIONES_OTRAS: {', '.join(f.get('menciones_otras') or []) or '-'}\n"
+            f"RECLAMA_A_OTRO: {'SÍ' if f.get('reclama_a_otro') else 'no'}\n"
+            f"URLS_PRODUCTO: {'; '.join(f['urls_producto']) or '-'}\n"
+            # El cuerpo del raíz es obligatorio de mostrar: en hilos sin
+            # respuestas es el único contenido, y quien lo abrió puede estar
+            # pidiendo a otro equipo que revise lo suyo (no es trabajo nuestro).
+            f"RAÍZ: {f.get('texto_raiz') or '(sin texto)'}"
         )
         for r in f["respuestas"]:
             marca = "SQUAD" if es_del_squad(r["autor"]) else "     "

@@ -20,9 +20,15 @@ Solo se clasifican hilos que mencionan al squad (etiqueta de ProductForge o de s
 **Canal Incidencias 🐞 (canal 2): relevancia estricta.** En este canal **no basta** con que el hilo «implique» al squad por el canal. Solo se clasifica si se cumple **al menos una** de estas dos condiciones:
 
 1. **Mención directa al squad**: el raíz o alguna respuesta menciona la etiqueta o el nombre del squad (`ProductForge`, `Store Front Producto`, `ComercialProducto`, `ComercialProductoStore`, `Pacman Contributors`, `Pacman Products`) **o a un miembro de ProductForge** —lista de `team.adoc` § ProductForge, más Elias Ferreiro Borreiros—, tanto en `mentions` como en el texto del mensaje.
-2. **Participación del squad**: al menos un miembro de ProductForge ha escrito en el hilo, sea en el raíz o en una respuesta.
+2. **Participación del squad en un hilo ajeno**: el raíz lo escribió **alguien de fuera** y **al menos un miembro de ProductForge** ha respondido.
 
 Si **ninguna** se cumple, el hilo **se omite** como ajeno (motivo «sin mención ni participación del squad») y se cuenta en «Omitidos». Cuando el hilo lo atiendan personas de otro squad identificables en `team.adoc`, cita el squad propietario en el motivo: es la señal de a quién pertenece el asunto. Un hilo así no es informativo ni pendiente: no es nuestro.
+
+> **Ojo: que el raíz lo escriba un miembro del squad NO basta para entrar.** La condición 2 exige que el raíz sea de alguien **de fuera**. Antes se contaba al autor del raíz como «participación del squad», y por ahí entraban hilos que un miembro abría en este canal para pedir a **otro** equipo que revisara lo suyo. Caso real (05/11/2026): «Problemas con el cambio del filtro Tipo de grid en el buscador desde la página de Grids», abierto por un miembro del squad mencionando solo a Grids («Grids ¿le podéis echar un ojo?»). Se clasificó como 🟠 pendiente propio cuando era trabajo de Grids.
+>
+> El extractor marca estos casos con `reclama_a_otro = true` y los campos `autor_raiz_es_squad` y `menciones_otras`; el índice los muestra como `[raizAUTOR, otro=Grids, RECLAMA_A_OTRO]`. Si `reclama_a_otro` es cierto, se omite como ✅ con motivo «causa fuera de Pacman, reclamada por el squad», sin valorar criticidad.
+
+- **Los hilos sin mención no se tiran en silencio.** Si un hilo de este canal no cumple la relevancia estricta, no se descarta sin más: se cuenta en la línea final de «Omitidos» y, si el título sugiere que podría ser de Producto/Storefront, se pregunta al usuario (ver «Dudas razonables: pregunta con enlace»).
 
 - **Excepción que prevalece**: que un miembro del squad participe **no** convierte en pendiente un hilo cuya causa está fuera y en el que el squad solo reclama revisión a otro equipo. Se aplica entonces la regla de «Hilos cuya causa está fuera de Pacman/Storefront», incluido el subcaso del hilo abierto por un miembro del squad para pedir a otro squad que revise lo suyo: **✅ omitido**, nunca pendiente.
 - **Cuidado con los hilos transversales**: en Incidencias 🐞 es habitual que el raíz lo abra una persona de Cross con varios squads en su ámbito (p. ej. PM Vertical Comercial) y que el asunto acabe en Tágticos, Grids o MenuDelux. Si nadie de ProductForge intervino y el contenido no pide nada sobre Producto/Storefront, el hilo es ajeno aunque su autor figure en `team.adoc` en otra sección.
@@ -34,6 +40,49 @@ Los demás canales externos (B - Gestión incidencias Tecnología, P - Dudas té
 - Si el extractor devuelve un hilo que cumple el filtro pero al leerlo el endpoint citado resulta **no ser de Producto** (por ejemplo, `/stores/{id}/menu`, `/tags`, `/grids`, `/checkout`, o una pantalla del frontal de Pacman), **no es del squad**: omítelo como informativo/ajeno y anótalo en una línea.
 - Al contrario: si un hilo de estos canales trata claramente un problema de Producto pero el extractor lo dejó en `descartadosPorFiltro` por no encajar en la regla literal (p. ej. la URL viene partida o sin esquema), **no lo rescates por iniciativa propia**: indícalo como limitación y, si es material, pide al extractor que lo recupere con su sesión.
 - En estos canales es frecuente que el hilo del rollout de una cadena se abra semanas antes y siga vivo. Clasifícalo por su **última actividad**, no por la fecha del raíz, y ten en cuenta la antigüedad real al valorar criticidad.
+
+## Reglas de obligado cumplimiento antes de clasificar
+
+Estas dos comprobaciones van **antes** de la criticidad y del estado de atención. Saltárselas produjo dos errores reales el 05/11/2026, ambos detectados por el usuario y no por el agente.
+
+### 1. Hilo sin respuestas ⇒ leer el raíz. Nunca clasificar por el título
+
+Si `n_respuestas = 0`, el **único** contenido del hilo es el mensaje raíz. Está prohibido decidir relevancia, criticidad o estado mirando solo el título.
+
+- El índice incluye el cuerpo del raíz en la columna del último mensaje cuando no hay respuestas, y `detalle.py` lo imprime en la línea `RAÍZ:`.
+- Si el raíz **no** aparece en el detalle (extracción antigua o fallo de lectura), no lo supongas: vuelve a pedir el detalle con `detalle.py` y, si sigue faltando, marca el hilo como **no verificable** en las limitaciones. Nunca como 🫥 por defecto.
+- Caso real: «Problemas con el cambio del filtro Tipo de grid en el buscador desde la página de Grids» tiene 0 respuestas; su raíz pide a Grids que lo revise. Por el título parecía una incidencia nuestra y se publicó como 🟠 pendiente.
+
+### 2. Cierre del squad sin réplica posterior ⇒ ✅ resuelto
+
+Si el **último** mensaje del hilo es de un miembro de ProductForge y contiene una **acción terminada** —«ya está desplegado», «desplegado en PRO», «corregido», «mergeado», «subido», «hecho», «resuelto», «ya lo veo ok»— y **no hay ningún mensaje después**, el hilo es **✅ resuelto**, aunque el solicitante no haya confirmado ni nadie haya validado en la siguiente ronda.
+
+- La acción del squad está completa; la validación pendiente es del solicitante, no nuestra.
+- El resumen de estado recoge qué se hizo y, si procede, que queda pendiente de verlo en la próxima prueba.
+- No se aplica si el último mensaje del squad es una **pregunta** o deja algo abierto («estamos revisándolo», «lo miro», «¿podéis pasarme un ejemplo?»): entonces sigue pendiente.
+- Caso real: «Errores 5xx y 4xx en Irlanda OY». Último mensaje de Neto: «Ya quedó desplegado en PRO. En la próxima prueba lo deberíamos ver reflejado». Se publicó como 🔴 pendiente en dos informes seguidos.
+
+## Dudas razonables: pregunta con enlace
+
+Cuando la clasificación de un hilo o ticket no sea concluyente —no queda claro si pide algo al squad o a otro equipo, si la última respuesta cierra o solo acusa recibo, o si un hilo sin mención es realmente de Producto—, **no decidas por tu cuenta ni lo escondas en las limitaciones**: pregunta al usuario con la herramienta `question`.
+
+Requisitos de la pregunta:
+
+- **Una pregunta por hilo dudoso**, con las opciones concretas y excluyentes (`Incluir como pendiente`, `Omitir como ajeno`, `Omitir como resuelto`).
+- **Siempre el enlace completo en el texto visible** (`webUrl` del hilo, o la URL del ticket en Jira), para que se pueda verificar en un clic. No vale «el hilo del filtro de grids»: hay que poder abrirlo sin buscarlo.
+- Incluye en el enunciado el dato que causa la duda: quién abrió el hilo, a quién menciona y qué dice el último mensaje.
+- Si hay **varios** hilos dudosos, pregunta por todos en la **misma** llamada (`questions` admite varias), no en tandas.
+- No preguntes lo que una regla ya resuelve: la duda debe ser material. Aplicar una regla clara no requiere confirmación.
+
+### 3. Hilos excluidos por relevancia: revísalos y pregunta si hay duda
+
+El extractor guarda en `excluidos` (dentro del JSON de cada canal) los hilos descartados por no cumplir la relevancia, con su `motivo`, `webUrl`, `texto_raiz`, `autor_raiz_es_squad` y `menciones_otras`. **No los ignores**: al cerrar la clasificación, recórrelos y decide.
+
+- Si el motivo es `causa fuera de Pacman, reclamada por el squad`, van directos a «Omitidos» como ajenos. No preguntes: la regla es clara.
+- Si el motivo es `sin mención ni participación del squad` **y** el título o el raíz sugieren que el asunto es de Producto/Storefront (parrillas, precios, visibilidad, bundles, extra-detail, PDP, API de producto), **pregunta al usuario** con `question` y el **enlace completo** del hilo. Es un posible punto ciego de la regla estricta y la decisión es suya.
+- Si el asunto es claramente de otro ámbito (menú, navegación, buscador, wishlist, checkout, imágenes), no preguntes: cuenta el hilo en «Omitidos» y sigue.
+
+No preguntes por todos: solo por los que de verdad puedan ser nuestros. Una pregunta con demasiadas opciones no se lee.
 
 ## Hilos que citan un ITSMECOM: verificación cruzada obligatoria
 

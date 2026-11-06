@@ -300,6 +300,82 @@ def main() -> int:
         str(barrido.CANALES_CON_MENCION_ESTRICTA),
     )
 
+    print("7. reclamación a otro squad y cuerpo del raíz (05/11/2026)")
+    # Dos fallos reales detectados por el usuario:
+    #  a) el squad abre un hilo en Incidencias 🐞 para pedir a Grids que revise
+    #     lo suyo: NO es trabajo nuestro.
+    #  b) un hilo con 0 respuestas se clasificó por el título porque el cuerpo del
+    #     raíz no se guardaba.
+
+    # (a) raíz del squad etiquetando SOLO a otro equipo ⇒ reclamación, no nuestro
+    raiz_otro = m(
+        "Grids ¿le podéis echar un ojo?",
+        "Alberto Barrio Louzao",
+        ["Grids"],
+    )
+    check(
+        "raíz del squad que solo etiqueta a Grids se detecta como reclamación",
+        ec.raiz_reclama_a_otro(raiz_otro, [raiz_otro]),
+    )
+    check(
+        "squads_ajenos extrae la etiqueta Grids",
+        ec.squads_ajenos(raiz_otro) == ["Grids"],
+        str(ec.squads_ajenos(raiz_otro)),
+    )
+    # si además nos etiquetan, deja de ser reclamación: hay petición hacia nosotros
+    check(
+        "si el hilo menciona al squad deja de ser reclamación a otro",
+        not ec.raiz_reclama_a_otro(
+            raiz_otro, [raiz_otro, m("cc", "alguien", ["ProductForge"])]
+        ),
+    )
+    # raíz del squad SIN etiquetar a nadie: es tema propio, NO se excluye
+    raiz_propio = m("No se muestran los grids donde cae un outfit", "Adrian Rabade Rodriguez")
+    check(
+        "raíz del squad sin etiquetas no es reclamación a otro equipo",
+        not ec.raiz_reclama_a_otro(raiz_propio, [raiz_propio]),
+    )
+    # raíz de fuera etiquetando a otro equipo: tampoco es «reclamada por el squad»
+    raiz_ajena = m("MenuDelux, tenemos un 503", "Luca Saletta Sillero", ["MenuDelux"])
+    check(
+        "raíz ajeno que etiqueta a otro equipo no se marca como reclamación nuestra",
+        not ec.raiz_reclama_a_otro(raiz_ajena, [raiz_ajena]),
+    )
+    check(
+        "un 'grids' suelto en el texto no cuenta como etiqueta a Grids",
+        ec.squads_ajenos(m("los grids de la home fallan", "alguien")) == [],
+    )
+
+    # (b) el cuerpo del raíz debe llegar al índice aunque no haya respuestas
+    fila = {
+        "id": "1",
+        "fecha": "05/11/2026 16:34",
+        "fecha_raiz_fuera_de_rango": False,
+        "titulo": "Problemas con el filtro Tipo de grid",
+        "autor": "Alberto Barrio Louzao",
+        "n_respuestas": 0,
+        "ultima_actividad": "05/11/2026 16:34",
+        "texto_raiz": "Grids ¿le podéis echar un ojo?",
+        "autor_raiz_es_squad": True,
+        "menciones_otras": ["Grids"],
+        "reclama_a_otro": True,
+        "menciones_squad": [],
+        "respuestas": [],
+        "urls_producto": [],
+        "prs": [],
+    }
+    linea = ec.linea_indice(fila)
+    check(
+        "el índice muestra el texto del raíz cuando no hay respuestas",
+        "¿le podéis echar un ojo?" in linea,
+        linea[-90:],
+    )
+    check(
+        "el índice marca RECLAMA_A_OTRO para el triage",
+        "RECLAMA_A_OTRO" in linea,
+        linea[:120],
+    )
+
     print()
     if fallos:
         print(f"FALLARON {len(fallos)} comprobaciones: {', '.join(fallos)}")
