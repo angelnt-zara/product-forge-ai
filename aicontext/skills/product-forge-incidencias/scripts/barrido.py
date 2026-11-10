@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Barrido de los 15 canales de incidencias en UNA sola invocación.
+"""Barrido de los 16 canales de incidencias en UNA sola invocación.
 
 Motivo: lanzar 15 subagentes (LLM) para que cada uno ejecute el mismo script
 multiplica el coste real, porque cada subagente añade sus propias vueltas de
@@ -14,7 +14,7 @@ Uso:
     python3 barrido.py <desde_iso> <salida_dir> [opciones]
 
 Opciones:
-    --canales 1,2,4       solo esos canales (por defecto, los 15)
+    --canales 1,2,4       solo esos canales (por defecto, los 16)
     --workers-canal N     canales en paralelo (por defecto 5)
     --workers-hilo N      hilos en paralelo dentro de un canal (por defecto 8)
     --sin-ultima-actividad  no busca hilos antiguos con actividad en el rango
@@ -62,6 +62,8 @@ CANALES = [
     (13, "Imp. Pull and Bear", "1301738f-827e-48ec-8770-3f0922c1c295", "19:tCR1SuX9xZZEImROkyJ5n4AxUX1fSprq3-55DLtazQI1@thread.tacv2", True),
     (14, "Imp. Stradivarius", "1301738f-827e-48ec-8770-3f0922c1c295", "19:mF1UCTeEURR_4mSSlGqMq58IJ_XOaLJqLkEem7e6Mas1@thread.tacv2", True),
     (15, "Imp. Zara Home", "1301738f-827e-48ec-8770-3f0922c1c295", "19:7_n40ZpehZYr-aOqZZ8W1PTa10wZ-o5JCjk6QFpFEr81@thread.tacv2", True),
+    # Canal de anuncios de Storefront API (equipo distinto, abierto a externos).
+    (16, "Storefront API", "84b73c44-5251-4874-ab8b-c38f48ea64f4", "19:94d12a174f634914a552731714e61cac@thread.tacv2", True),
 ]
 
 # Canales en los que se exige mención al squad. Los externos de incidencias
