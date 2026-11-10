@@ -1,0 +1,14 @@
+aicontext/skills/product-forge-incidencias/clasificacion.md
+  h_46798eb9f7d88a 220,255
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "b526e1eb68eacfcaf2cf1650b47b9f31d893bd11",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
