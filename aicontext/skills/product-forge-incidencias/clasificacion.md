@@ -88,6 +88,7 @@ Requisitos de la pregunta:
 
 - **Una pregunta por hilo dudoso**, con las opciones concretas y excluyentes (`Incluir como pendiente`, `Omitir como ajeno`, `Omitir como resuelto`).
 - **Siempre el enlace completo en el texto visible** (`webUrl` del hilo, o la URL del ticket en Jira), para que se pueda verificar en un clic. No vale «el hilo del filtro de grids»: hay que poder abrirlo sin buscarlo.
+- **El enlace va SIEMPRE solo en una línea nueva** (salto de línea antes y nada después, ni punto final ni paréntesis). Los `webUrl` de Teams son muy largos y, si van al final de una línea de texto, la consola los parte y no se abren bien. Aplica a todo texto de `question` (enunciado y descripciones de opciones). Estructura: primero el enunciado con la duda, línea en blanco y la URL sola en su línea.
 - Incluye en el enunciado el dato que causa la duda: quién abrió el hilo, a quién menciona y qué dice el último mensaje.
 - Si hay **varios** hilos dudosos, pregunta por todos en la **misma** llamada (`questions` admite varias), no en tandas.
 - No preguntes lo que una regla ya resuelve: la duda debe ser material. Aplicar una regla clara no requiere confirmación.

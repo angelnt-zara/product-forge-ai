@@ -29,7 +29,8 @@ Opciones:
     --dry-run              imprime el HTML resultante sin publicar
     --yes                  no pide confirmación interactiva
 
-Soporta: **negrita**, *cursiva*, `código`, listas `- item`, enlaces
+Soporta: **negrita**, *cursiva*, `código`, listas `- item`, listas numeradas
+`N. item` (el primer número fija el inicio: <ol start="N">), enlaces
 [texto](url), URLs sueltas y párrafos separados por línea en blanco.
 """
 from __future__ import annotations
@@ -133,7 +134,13 @@ def markdown_to_teams_html(texto: str) -> str:
 
     partes: list[str] = []
     parrafo: list[str] = []
-    en_lista = False
+    en_lista: str | None = None  # "ul" | "ol" | None
+
+    def cerrar_lista() -> None:
+        nonlocal en_lista
+        if en_lista:
+            partes.append(f"</{en_lista}>")
+            en_lista = None
 
     def cerrar_parrafo() -> None:
         if parrafo:
@@ -143,18 +150,27 @@ def markdown_to_teams_html(texto: str) -> str:
     for linea in texto.split("\n"):
         s = linea.strip()
 
+        numerado = re.match(r"^(\d+)[.)]\s+(.+)$", s)
+        if numerado:
+            cerrar_parrafo()
+            if en_lista != "ol":
+                cerrar_lista()
+                partes.append(f'<ol start="{int(numerado.group(1))}">')
+                en_lista = "ol"
+            partes.append(f"<li>{_inline(numerado.group(2))}</li>")
+            continue
+
         vinyeta = re.match(r"^[-*+]\s+(.+)$", s)
         if vinyeta:
             cerrar_parrafo()
-            if not en_lista:
+            if en_lista != "ul":
+                cerrar_lista()
                 partes.append("<ul>")
-                en_lista = True
+                en_lista = "ul"
             partes.append(f"<li>{_inline(vinyeta.group(1))}</li>")
             continue
 
-        if en_lista:
-            partes.append("</ul>")
-            en_lista = False
+        cerrar_lista()
 
         if not s:
             cerrar_parrafo()
@@ -162,8 +178,7 @@ def markdown_to_teams_html(texto: str) -> str:
 
         parrafo.append(s)
 
-    if en_lista:
-        partes.append("</ul>")
+    cerrar_lista()
     cerrar_parrafo()
 
     return "\n".join(partes)

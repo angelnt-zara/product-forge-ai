@@ -118,7 +118,7 @@ python3 .opencode/skills/product-forge-teams/scripts/publish.py chat \
 
 ### Formato del mensaje
 
-- **Sintaxis admitida por `publish.py`:** `**negrita**`, `*cursiva*`, `` `código` ``, viñetas `- item`, enlaces `[texto](url)`, URLs sueltas y párrafos separados por línea en blanco. Es lo único que se convierte; no uses tablas, encabezados `#` ni bloques de código con triple backtick.
+- **Sintaxis admitida por `publish.py`:** `**negrita**`, `*cursiva*`, `` `código` ``, viñetas `- item`, listas numeradas `N. item` (el primer número fija el inicio con `<ol start="N">`), enlaces `[texto](url)`, URLs sueltas y párrafos separados por línea en blanco. Es lo único que se convierte; no uses tablas, encabezados `#` ni bloques de código con triple backtick.
 - **Aviso de IA:** la primera línea, `*🤖 Mensaje generado con IA*`, es obligatoria y el script aborta si no está o no abre el mensaje.
 - **El conversor del CLI no sirve para esto:** `teams channel reply` y `teams chat send` usan `markdown_to_html` del paquete compartido, que **no** interpreta `*cursiva*` ni `` `código` `` (los deja literales). No publiques con esos comandos: usa `publish.py`.
 - **Líneas consecutivas sin viñeta** se unen en un mismo párrafo, separadas por un espacio. Para forzar un salto, deja una línea en blanco.
