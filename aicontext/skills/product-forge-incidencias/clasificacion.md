@@ -80,6 +80,29 @@ Si el **último** mensaje del hilo es de un miembro de ProductForge y contiene u
 - No se aplica si el último mensaje del squad es una **pregunta** o deja algo abierto («estamos revisándolo», «lo miro», «¿podéis pasarme un ejemplo?»): entonces sigue pendiente.
 - Caso real: «Errores 5xx y 4xx en Irlanda OY». Último mensaje de Neto: «Ya quedó desplegado en PRO. En la próxima prueba lo deberíamos ver reflejado». Se publicó como 🔴 pendiente en dos informes seguidos.
 
+## Control de dudas obligatorio (puerta antes de presentar o publicar)
+
+Preguntar ante la duda **no es opcional ni queda a criterio del momento**. Tras clasificar y **antes** de mostrar el informe o de redactar cualquier borrador de publicación, recorre todos los elementos y construye la lista de dudas. Es una **puerta**: sin ella resuelta no se presenta ni se publica nada.
+
+Un elemento es dudoso, y por tanto se pregunta, si se cumple **al menos una**:
+
+1. La última aportación del squad es un **diagnóstico o una conclusión sin acción terminada** («no se reproduce», «creo que es de X», «funciona por nuestro lado», «no lo vemos») y nadie del solicitante ha confirmado ni cerrado. No es un cierre ✅ ni una petición viva clara.
+2. Dos reglas apuntan a resultados distintos (p. ej. «respuesta concreta del squad» vs. «sigue abierto el ticket»), o hay que aplicar «en caso de duda» para decidir.
+3. No queda claro si el último mensaje ajeno **reabre** o solo **acusa recibo**.
+4. La pelota parece estar en otro equipo pero no hay ubicación cerrada ni petición explícita hacia Pacman/Storefront.
+5. El resumen de estado que escribirías **no se sostiene con una frase concreta** del hilo (si tienes que suavizarlo con «seguimos revisando» u otra fórmula genérica, es señal de duda).
+6. Un hilo `dudoso: true` o excluido por relevancia cuyo asunto podría ser de Producto/Storefront (ver más abajo).
+
+Cómo se aplica:
+
+- **Una sola llamada `question`** con todas las dudas (formato de la sección siguiente, con el enlace en línea propia). Opciones concretas y excluyentes, con la clasificación que aplicaría a cada una.
+- **Prohibido** resolver una duda «a favor de pendiente» o «a favor de resuelto» sin preguntar, y prohibido dejarla solo anotada en limitaciones.
+- Si no hay dudas, no preguntes: anota en una línea «Sin dudas de clasificación» en el alcance para que conste que la puerta se ha pasado.
+- Las respuestas del usuario se recuerdan durante la sesión: no repreguntes por el mismo hilo en el mismo estado.
+- Una publicación **nunca** incluye un elemento cuya duda no esté resuelta.
+
+Caso real que originó esta puerta (10/11/2026): hilo «OY productsf no devuelve el detalle de producto commercialDetail». Un miembro del squad escribió «no se reproduce el caso reportado ni ninguno de los del ticket»; se publicó como 🔴 🏃‍♂️‍➡️ con el resumen «seguimos revisando» sin preguntar. Era el criterio 1 y el 5.
+
 ## Dudas razonables: pregunta con enlace
 
 Cuando la clasificación de un hilo o ticket no sea concluyente —no queda claro si pide algo al squad o a otro equipo, si la última respuesta cierra o solo acusa recibo, o si un hilo sin mención es realmente de Producto—, **no decidas por tu cuenta ni lo escondas en las limitaciones**: pregunta al usuario con la herramienta `question`.
@@ -146,7 +169,7 @@ Ese tipo de mensaje **confirma** la acción del squad, no pide nada nuevo: el hi
 - piden algo concreto al squad —un dato, un cambio, una validación nuestra, un fix de nuestro lado— o hacen una pregunta directa sobre nuestro ámbito que se queda sin respuesta;
 - contradicen el diagnóstico o devuelven la pelota a Producto/Storefront.
 
-La duda se resuelve a favor de **resuelto** solo cuando el mensaje ajeno es inequívocamente de confirmación; si es ambiguo, el hilo sigue pendiente y se anota.
+La duda se resuelve a favor de **resuelto** solo cuando el mensaje ajeno es inequívocamente de confirmación; si es ambiguo, el hilo va al control de dudas y se pregunta al usuario.
 
 ## Hilos iniciados por miembros del squad (peticiones de revisión de PR)
 
@@ -174,7 +197,7 @@ Nuestro trabajo termina donde acaba nuestro ámbito: si la causa del problema es
   - La respuesta del equipo destino —«me encargo de esos jobs», «le echo un ojo»— **cierra** el hilo: la causa está fuera y ya tiene dueño.
 - **Reabre el hilo (🫥/🏃‍♂️‍➡️, criticidad normal)**: un mensaje posterior **de otro autor** —el solicitante, otro equipo— que **reclama explícitamente algo a Pacman/Storefront** —pide un dato, un cambio, una validación, un fix de nuestro lado, o pregunta por nuestro ámbito y se queda sin respuesta—. Entonces vuelve a ser pendiente del squad y se clasifica con los criterios habituales. Un acuse, un agradecimiento o un cierre ajeno **no** lo reabre (ver «Mensajes ajenos que no reabren un hilo cerrado»), y una anotación del propio squad tampoco.
 - **No cierra el hilo** que el squad solo **sospeche** o **apunte** a otro equipo sin establecerse la ubicación: «creo que es de Core», «revisamos con ellos», «les avisamos». Eso es 🏃‍♂️‍➡️ mientras no haya ubicación cerrada ni petición posterior nuestra.
-- **Diagnóstico en disputa**: si el squad apunta a un sistema ajeno y ese equipo devuelve la pelota a Producto, o nadie asume la causa, el hilo **sigue pendiente** y se anota la discrepancia. La duda se resuelve siempre a favor de pendiente.
+- **Diagnóstico en disputa**: si el squad apunta a un sistema ajeno y ese equipo devuelve la pelota a Producto, o nadie asume la causa, es una duda material: va al control de dudas y se pregunta al usuario con el enlace.
 - **Ubicación parcial**: si el hilo tiene varias peticiones y solo una queda fuera de Pacman, se cierra únicamente la parte externa; si queda cualquier acción nuestra viva, el hilo sigue pendiente.
 - En el **resumen de estado** indica el equipo destino y el motivo, sin corchetes: «causa en Core-Legacy, escalado a Product Core; pendiente cargar el catentry en DB2». Nunca lo dejes como pendiente por el solo hecho de que el hilo siga con mensajes.
 - **No aplica a ITSMECOM**: en los tickets manda el estado y el `Equipo Asignado` en Jira (ver «Hilos que citan un ITSMECOM»), no la lectura del hilo.
@@ -190,7 +213,7 @@ Ejemplo de referencia: «[ZA] Producto sin xmedia». El squad diagnosticó una i
 | ✅ | **Resuelto** | Hay respuesta concreta de un miembro de ProductForge y los mensajes posteriores son acuses, confirmaciones o cierres ajenos, no peticiones nuevas. | Resuelto o cerrado. |
 
 - **Los acuses ajenos no reabren**: tras una respuesta concreta de cierre del squad, un «gracias», un «lo tenemos en cuenta» o un «lo probamos en la próxima ronda» de una persona ajena **no** devuelve el hilo a 🏃‍♂️‍➡️; se queda ✅. Detalle de qué sí reabre en «Quién cuenta como respuesta del squad».
-- En caso de duda entre resuelto y pendiente, clasifica como pendiente y déjalo anotado en una línea (salvo la regla de PR aprobada).
+- En caso de duda entre resuelto y pendiente **no decidas en solitario ni lo dejes «anotado»**: va al control de dudas (ver «Control de dudas obligatorio») y se pregunta al usuario. Solo si el usuario no puede responder, se clasifica como pendiente y se declara en limitaciones. Excepción: la regla de PR aprobada, que ya está resuelta y no se pregunta.
 - **Informativo vs petición:** un aviso FYI sin petición accionable es **informativo** (⚪, no se cuenta como pendiente). Un aviso con pregunta o petición de apoyo sin responder es una **petición** (🫥). Lee el cuerpo completo antes de marcar informativo.
 - Un ticket ITSMECOM cuyos últimos comentarios indican que ya está corregido y solo falta cerrar se mantiene pendiente, se anota en el motivo y no se infla su criticidad.
 - Si el ticket de Jira citado en un hilo figura resuelto o cerrado, **el hilo se omite** por la regla de verificación cruzada (ver «Hilos que citan un ITSMECOM»), no se lista como pendiente.
