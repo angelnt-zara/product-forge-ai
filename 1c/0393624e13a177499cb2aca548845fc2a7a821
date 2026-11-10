@@ -1,0 +1,19 @@
+aicontext/skills/product-forge-incidencias/scripts/test_humo.py
+  s_2c65db94827816::t_34bc656e931c94 379-466
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "1c0393624e13a177499cb2aca548845fc2a7a821",
+  "prompts": {},
+  "sessions": {
+    "s_2c65db94827816": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e40d02228ffelE9bI51MehjT5d",
+        "model": "inditex/KAIA/deepseek-v4.1-flash_high"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
