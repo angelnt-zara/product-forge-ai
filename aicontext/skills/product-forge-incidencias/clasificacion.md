@@ -77,7 +77,9 @@ Si el **último** mensaje del hilo es de un miembro de ProductForge y contiene u
 
 - La acción del squad está completa; la validación pendiente es del solicitante, no nuestra.
 - El resumen de estado recoge qué se hizo y, si procede, que queda pendiente de verlo en la próxima prueba.
-- No se aplica si el último mensaje del squad es una **pregunta** o deja algo abierto («estamos revisándolo», «lo miro», «¿podéis pasarme un ejemplo?»): entonces sigue pendiente.
+- No se aplica si el último mensaje del squad **deja trabajo nuestro abierto** («estamos revisándolo», «lo miro», «lo abordaremos cuando tengamos capacidad»): entonces sigue pendiente.
+- **Pregunta del squad que no bloquea nuestro trabajo ⇒ ✅ por nuestro lado.** Si el último mensaje del squad **ya responde a lo que se consultó** (da el dato, la alternativa o el diagnóstico) y solo añade una pregunta al solicitante para valorar un desarrollo opcional o futuro («¿lo necesitáis también para bundles?», «si preferís que lo devuelva nosotros, habría que desarrollarlo»), la pelota está en el solicitante: el hilo es ✅ y el resumen lo dice («respondido; pendiente de que X confirme si necesita…»). Caso real (10/11/2026): «Consulta sobre disponibilidad del campo addToCartDisabled en Producto», donde David explicó que storefront no lo expone y que se deriva del `type`, y preguntó si se necesita en bundles; se publicó como 🟡 🏃‍♂️‍➡️ por error.
+- Sí sigue pendiente si la pregunta del squad **es necesaria para poder avanzar nosotros** (falta un dato para reproducir o corregir: «¿podéis pasarme un ejemplo?») y el solicitante no ha respondido: ahí también la pelota está fuera, pero no se ha dado respuesta de fondo; no se marca ✅ y, si hay duda de cuál de los dos casos es, va al control de dudas.
 - Caso real: «Errores 5xx y 4xx en Irlanda OY». Último mensaje de Neto: «Ya quedó desplegado en PRO. En la próxima prueba lo deberíamos ver reflejado». Se publicó como 🔴 pendiente en dos informes seguidos.
 
 ## Control de dudas obligatorio (puerta antes de presentar o publicar)
