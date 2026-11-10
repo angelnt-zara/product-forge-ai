@@ -237,11 +237,11 @@ Combina estos factores. **Los topes (entorno y tipo) prevalecen siempre** sobre 
    3. Incidencias 🐞 (interno): 🔴 o 🟠 según el impacto.
    4. SQUAD Product Forge 🛠 (interno): según el contenido, cualquier nivel.
    5. P - Dudas técnicas (externo): normalmente consultas (🟡/⚪).
-   6. Incidencias Entornos Previos (externo): problemas de PRE, 🟡 o ⚪.
+   6. Incidencias Entornos Previos (externo): problemas de PRE/PREINT, siempre ⚪ (ver tope de entorno).
    7. PACMAN Contributors (interno): normalmente consultas o problemas menores, 🟡 o ⚪.
    8. Q - Soporte API Storefront (externo): normalmente consultas de integración (🟡/⚪); sube a 🟠/🔴 si es un bug de API de Producto con afectación en PRO o STAGE.
    9. Imp. Bershka / Lefties / Massimo Dutti / Oysho / Pull and Bear / Stradivarius / Zara Home (externos): el canal no fija el nivel; decide el contenido (entorno, tipo y afectación). Un bloqueo de la implantación de una cadena en PRO/STAGE es 🟠 como mínimo y 🔴 si compromete una fecha de salida.
-2. **Entorno (tope):** PRE y entornos previos (PRE, PREINT, INT) siempre 🟡 o ⚪. **STAGE es producción, no un entorno previo**: no aplica este tope y se clasifica como PRO.
+2. **Entorno (tope):** toda incidencia relacionada con PRE y entornos previos (PRE, PREINT, INT) es siempre ⚪ (el nivel más bajo), sea cual sea su tipo (bug o consulta), la prioridad de Jira, el canal o la antigüedad. Este tope prevalece sobre cualquier otro factor, incluida la prioridad del canal. Se aplica también a hilos de otros canales y a tickets ITSMECOM cuyo entorno sea PRE/PREINT (título, etiquetas de entorno como `[PREINT]` o contenido). **STAGE es producción, no un entorno previo**: no aplica este tope y se clasifica como PRO.
 3. **Tipo de petición (tope):** una consulta o solicitud de información siempre 🟡 o ⚪. Un bug es como mínimo 🟠 y pasa a 🔴 si apremia corregirlo (fecha límite cercana, campaña, evento como Double 11…).
 4. **Afectación:** una afectación grave (usuarios, ventas, PRO degradado) es 🔴.
 
@@ -249,8 +249,8 @@ Combina estos factores. **Los topes (entorno y tipo) prevalecen siempre** sobre 
 
 Mismos factores sobre el ticket: Incidente = bug; Solicitud de servicio = consulta; entorno y afectación según el ticket y, sobre todo, sus **últimos comentarios**.
 
-- **Consultas (Solicitud de servicio):** SIEMPRE 🟡 o ⚪, nunca 🔴 ni 🟠, aunque sea PRO, tenga prioridad A o lleve mucho tiempo abierta. 🟡 si la prioridad de Jira es A, B o C; ⚪ si es D o no hay prioridad.
-- **Incidentes:** como mínimo 🟠; 🔴 si apremian o hay afectación grave; en PRE, tope 🟡/⚪.
+- **Consultas (Solicitud de servicio):** SIEMPRE 🟡 o ⚪, nunca 🔴 ni 🟠, aunque sea PRO, tenga prioridad A o lleve mucho tiempo abierta. 🟡 si la prioridad de Jira es A, B o C; ⚪ si es D o no hay prioridad. Si es de PRE/PREINT, siempre ⚪ (tope de entorno).
+- **Incidentes:** como mínimo 🟠; 🔴 si apremian o hay afectación grave; en PRE/PREINT, siempre ⚪ (tope de entorno, prevalece sobre el mínimo 🟠).
 - **Ya corregido:** si los comentarios indican que la causa está corregida y solo falta cerrar, no lo marques 🔴 y di por qué.
 - No inventes la afectación. Si faltan datos, elige el nivel que mejor se justifique con los disponibles y anótalo en una línea; la prudencia nunca anula los topes.
 
