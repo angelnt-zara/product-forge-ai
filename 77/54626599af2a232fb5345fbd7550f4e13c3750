@@ -1,0 +1,23 @@
+aicontext/skills/product-forge-incidencias/SKILL.md
+  s_aa58df4f9c5e19::t_cd5735ef78e47b 39,192,203-205,212-213,216,233
+aicontext/skills/product-forge-teams/SKILL.md
+  s_aa58df4f9c5e19::t_32b714d03822a5 121
+aicontext/skills/product-forge-teams/scripts/publish.py
+  s_aa58df4f9c5e19::t_2c8d3da246e6e0 32-33,137-143,153-162,166-167,169,173,181
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "7754626599af2a232fb5345fbd7550f4e13c3750",
+  "prompts": {},
+  "sessions": {
+    "s_aa58df4f9c5e19": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e3ba2969cffeHw770tJ9Gz3fwX",
+        "model": "claude-sonnet-5.5"
+      },
+      "human_author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
