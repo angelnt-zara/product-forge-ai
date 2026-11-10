@@ -41,6 +41,24 @@ Los demás canales externos (B - Gestión incidencias Tecnología, P - Dudas té
 - Al contrario: si un hilo de estos canales trata claramente un problema de Producto pero el extractor lo dejó en `descartadosPorFiltro` por no encajar en la regla literal (p. ej. la URL viene partida o sin esquema), **no lo rescates por iniciativa propia**: indícalo como limitación y, si es material, pide al extractor que lo recupere con su sesión.
 - En estos canales es frecuente que el hilo del rollout de una cadena se abra semanas antes y siga vivo. Clasifícalo por su **última actividad**, no por la fecha del raíz, y ten en cuenta la antigüedad real al valorar criticidad.
 
+### Destinatario del hilo en los canales 8-15: no todo «Storefront» es nuestro
+
+El filtro reforzado tiene un punto ciego que produjo **cuatro falsos positivos reales** en el informe del 18/10–09/11/2026: «Storefront» es el nombre genérico de la familia de APIs que también consumen Grids y Navigation, y además forma parte del nombre de **otro equipo** («Storefront Parrillas»). Hilos dirigidos a Grids o a Menú entraban como pendientes del squad.
+
+El extractor aplica ahora una decisión de **tres estados** (`destinatario_canales_externos`), **solo** cuando el hilo no menciona al squad ni tiene participación de un miembro de ProductForge:
+
+| Estado | Condición | Qué haces |
+|---|---|---|
+| **mantener** | El hilo menciona al squad, o un miembro de ProductForge participa | Se clasifica normal. **Esta condición prevalece siempre** |
+| **excluir** | Sin mención ni participación, y el raíz se dirige a otro squad de PACMAN (`pacman menú`, `menú pacman`, `menudelux`, `gridsf`, `comercialgrids`, `comercialparrillas`, `navigasf`, `tágticos`, `searchsf`…) o el hilo dice «Storefront <equipo ajeno>» | Omitir como ajeno, citando el squad real |
+| **preguntar** | Sin mención, sin participación y sin destinatario identificable | **Preguntar al usuario con el enlace completo**, nunca decidir en solitario |
+
+- **La participación prevalece sobre todo lo demás.** Hay hilos reales que solo se salvan por ahí: «STOREFRONT // Medidas Extra - detail» no menciona al squad, pero responde Adrián Rábade (PACMAN-35944). Sin esta salvaguarda se perdería.
+- **El patrón exige el sintagma pegado** «Storefront <equipo>», nunca la palabra suelta. Medido: aceptar `\bgrids\b` suelto se comía dos hilos reales de Producto («extra-detail by reference», «Productos con nombres diferentes en storefront»), porque en hilos de Producto se habla de grids constantemente.
+- **Los «preguntar» no se excluyen ni se dan por pendientes**: van a `excluidos` con `dudoso: true` y el informe los consulta con `question`. Es la política acordada el 09/11/2026: ante la duda, pregunta con enlace.
+- **La URL no basta para decidir.** Un listado de categoría (`/category/{id}/product?...`) sigue pasando el filtro de URL porque estrecharlo rompía casos legítimos; el destinatario es quien descarta el hilo.
+- **No se usan etiquetas** de Jira ni de Teams para decidir, ni siquiera cuando aciertan (`C-PacmanGrids` en ITSMECOM-5892704 y ITSMECOM-5898095). La regla del flujo es que un caso se decide por estado y equipo asignado; aquí, por a quién se dirige el hilo.
+
 ## Reglas de obligado cumplimiento antes de clasificar
 
 Estas dos comprobaciones van **antes** de la criticidad y del estado de atención. Saltárselas produjo dos errores reales el 05/11/2026, ambos detectados por el usuario y no por el agente.

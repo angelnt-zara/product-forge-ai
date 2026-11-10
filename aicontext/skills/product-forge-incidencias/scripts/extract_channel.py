@@ -107,6 +107,56 @@ TAG_RE = re.compile(r"<[^>]+>")
 URL_PRODUCTO = re.compile(r"/(?:products?(?:Array)?)(?:/|$|[?#])", re.I)
 MENCIÓN_SF = re.compile(r"storefront", re.I)
 
+# ── Destinatario ajeno en los canales 8-15 (Q - Soporte API Storefront e Imp. XXX)
+#
+# Motivo (medido el 09/11/2026 sobre el informe del 18/10–09/11): el filtro
+# reforzado aceptaba «Storefront» a secas como mención al squad, y esa palabra
+# es el nombre genérico de la familia de APIs que también consumen Grids y
+# Navigation, además de formar parte del nombre de OTRO equipo («Storefront
+# Parrillas»). Resultado: hilos de Grids y de Menú entraban como pendientes
+# nuestros. Cuatro falsos positivos reales en esa ventana:
+#   · «[ST] API SF getGridFiltersByGridId»        → Grids
+#   · «[ST] Recibimos menos media[] en getGrid»   → Grids
+#   · «Migrar tiendas a Pacman Menú en Stage»     → Menú
+#   · «Implantación Zarahome Mónaco STG»          → Menú
+#
+# La decisión es de TRES estados, y solo se aplica cuando el hilo NO menciona al
+# squad ni tiene participación de un miembro de ProductForge (esa condición
+# prevalece siempre: hay hilos reales que solo se salvan por ahí, como «Medidas
+# Extra-detail», donde no se menciona al squad pero responde Adrián Rábade):
+#   1. MANTENER   → mención al squad o participación de un miembro.
+#   2. EXCLUIR    → sin mención ni participación, y el raíz se dirige a otro
+#                   squad de PACMAN (`SQUAD_AJENO_TXT`) o el hilo habla de
+#                   «Storefront <equipo ajeno>» (`SF_AJENO`).
+#   3. PREGUNTAR  → sin mención, sin participación y sin destinatario
+#                   identificable. NO se excluye ni se da por pendiente: el
+#                   informe lo pregunta al usuario con el enlace completo, que
+#                   es la política acordada para estos casos (09/11/2026).
+#
+# Lo que NO se hace aquí a propósito:
+#   · No se estrecha `URL_PRODUCTO`. Se probó una lista blanca de endpoints y
+#     rompía casos legítimos (`/itxrest/N/catalog/store/X/product/id/{cc}`), así
+#     que un listado de categoría (`/category/N/product?...`) sigue pasando el
+#     filtro de URL; el destinatario es quien lo descarta.
+#   · No se usan etiquetas de Jira ni de Teams para decidir: la regla del flujo
+#     es que el estado de un caso se decide por estado y equipo asignado, y aquí
+#     el criterio es a quién se dirige el hilo, no qué etiqueta lleva.
+#   · No se busca `\bgrids\b` ni `\bmenú\b` sueltos: en hilos de Producto se
+#     habla de grids constantemente («en el grid de storefront»), y medido,
+#     `\bgrids\b` suelto se comía dos hilos reales de Producto.
+SF_AJENO = re.compile(r"storefront\s*(parrillas|grids|navigation|men[uú])", re.I)
+
+# Nombres de los squads de PACMAN ajenos a Producto. Se buscan en el TEXTO del
+# raíz (no en las etiquetas) porque el saludo explícito es la señal más fiable:
+# «necesitamos que se migren las tiendas a Pacman menú» o «la implantación en
+# menú pacman». Incluye las formas con tilde y sin ella.
+SQUAD_AJENO_TXT = re.compile(
+    r"pacman\s*men[uú]|\bmen[uú]\s*pacman|\bmenudelux\b|comercialmen[uú]"
+    r"|comercialgrids|comercialparrillas|\bgridsf\b|pacman\s*grids"
+    r"|\bnavigasf\b|comercialnavigation|t[aá]gticos|\bsearchsf\b|comercialsearch",
+    re.I,
+)
+
 # Etiquetas y nombres del squad que cuentan como mención (canales 2-7).
 # Se aplican sobre `mentions[].mentionText` y sobre el texto del mensaje, que es
 # lo que antes cada subagente tenía que sacar por su cuenta con el CLI.
@@ -373,6 +423,45 @@ def raiz_reclama_a_otro(raiz, respuestas) -> bool:
     return not any(menciona_squad(m) for m in [raiz] + list(respuestas or []))
 
 
+def destinatario_canales_externos(raiz, respuestas) -> tuple[str, str]:
+    """Decide si un hilo de los canales 8-15 es nuestro, de otro squad, o dudoso.
+
+    Solo tiene sentido en los canales con filtro reforzado (Q - Soporte API
+    Storefront e Imp. XXX), donde convive funcionalidad de muchos equipos.
+
+    Devuelve `(decision, motivo)` con `decision` en `{"mantener", "excluir",
+    "preguntar"}`:
+
+    - `mantener`: el hilo menciona al squad o un miembro de ProductForge
+      participa. Esta condición prevalece SIEMPRE sobre las demás.
+    - `excluir`: sin mención ni participación, y el raíz se dirige a otro squad
+      de PACMAN (`SQUAD_AJENO_TXT`) o el hilo menciona a otro equipo pegado a
+      la palabra «Storefront» (`SF_AJENO`).
+    - `preguntar`: sin mención, sin participación y sin destinatario
+      identificable. No se excluye ni se da por pendiente: el informe lo
+      consulta con el usuario y el enlace del hilo.
+    """
+    todos = [raiz] + list(respuestas or [])
+
+    # 1. Mención al squad o participación de un miembro: prevalece.
+    if any(menciona_squad(m) for m in todos):
+        return "mantener", "menciona al squad"
+    if any(es_del_squad(autor(m)) for m in (respuestas or [])):
+        return "mantener", "participa un miembro del squad"
+
+    # 2. Destinatario explícito de otro squad.
+    for m in todos:
+        ajeno = SF_AJENO.search(texto(m))
+        if ajeno:
+            return "excluir", f"dirigido a {ajeno.group(0)}"
+    otro = SQUAD_AJENO_TXT.search(texto(raiz))
+    if otro:
+        return "excluir", f"dirigido a {otro.group(0)}"
+
+    # 3. Sin señal suficiente: no se decide en solitario.
+    return "preguntar", "sin mención, participación ni destinatario claro"
+
+
 # ── GET con reintento ────────────────────────────────────────────────────────
 def _get(client, url: str, intentos: int = 3):
     """GET con reintento: Graph devuelve timeouts y 429 esporádicos."""
@@ -510,6 +599,7 @@ def extraer(
     *,
     filtro=None,
     mencion_obligatoria: tuple[str, ...] | None = None,
+    destinatario_externo: bool = False,
     desde_ultima_actividad: bool = False,
     workers: int = WORKERS_DEFECTO,
     verbose: bool = False,
@@ -663,6 +753,51 @@ def extraer(
         )
         if filtro and not filtro(cuerpo):
             continue
+
+        # Canales 8-15 (Q - Soporte API Storefront e Imp. XXX): además del filtro
+        # reforzado, se decide a quién se dirige el hilo. Sin esto entraban como
+        # pendientes nuestros hilos de Grids y de Menú que solo decían
+        # «Storefront» (nombre genérico de la familia de APIs y del equipo
+        # «Storefront Parrillas»). Ver `destinatario_canales_externos`.
+        if destinatario_externo:
+            decision, motivo = destinatario_canales_externos(raiz, rr)
+            if decision == "excluir":
+                excluidos.append(
+                    {
+                        "id": raiz.id,
+                        "webUrl": raiz.raw.get("webUrl"),
+                        "titulo": raiz.raw.get("subject") or (texto(raiz)[:90] or "(sin asunto)"),
+                        "autor": autor(raiz),
+                        "fecha": a_madrid(raiz.created),
+                        "n_respuestas": len(rr),
+                        "texto_raiz": texto(raiz),
+                        "autor_raiz_es_squad": es_del_squad(autor(raiz)),
+                        "menciones_otras": squads_ajenos(raiz),
+                        "reclama_a_otro": False,
+                        "motivo": f"destinatario ajeno: {motivo}",
+                    }
+                )
+                continue
+            if decision == "preguntar":
+                # No se excluye ni se da por pendiente: se marca para que el
+                # informe lo consulte al usuario con el enlace del hilo.
+                excluidos.append(
+                    {
+                        "id": raiz.id,
+                        "webUrl": raiz.raw.get("webUrl"),
+                        "titulo": raiz.raw.get("subject") or (texto(raiz)[:90] or "(sin asunto)"),
+                        "autor": autor(raiz),
+                        "fecha": a_madrid(raiz.created),
+                        "n_respuestas": len(rr),
+                        "texto_raiz": texto(raiz),
+                        "autor_raiz_es_squad": es_del_squad(autor(raiz)),
+                        "menciones_otras": squads_ajenos(raiz),
+                        "reclama_a_otro": False,
+                        "motivo": "dudoso: sin mención ni destinatario claro",
+                        "dudoso": True,
+                    }
+                )
+                continue
 
         filas.append(
             {
@@ -854,8 +989,10 @@ def main() -> int:
     a = p.parse_args()
 
     filtro = None
+    destinatario_externo = False
     if a.solo_storefront:
         filtro = lambda t: bool(MENCIÓN_SF.search(t) and URL_PRODUCTO.search(t))  # noqa: E731
+        destinatario_externo = True
     elif a.regex:
         rx = re.compile(a.regex, re.I)
         filtro = lambda t: bool(rx.search(t))  # noqa: E731
@@ -876,6 +1013,7 @@ def main() -> int:
         a.desde,
         filtro=filtro,
         mencion_obligatoria=mencion_obligatoria,
+        destinatario_externo=destinatario_externo,
         desde_ultima_actividad=a.desde_ultima_actividad,
         workers=a.workers,
         verbose=a.verbose,

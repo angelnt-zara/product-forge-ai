@@ -376,6 +376,94 @@ def main() -> int:
         linea[:120],
     )
 
+    # ── 8. Destinatario ajeno en los canales 8-15 (09/11/2026) ───────────────
+    # Cuatro falsos positivos reales: dos de Grids y dos de Menú, que entraban
+    # porque «Storefront» a secas contaba como mención al squad y el nombre de
+    # otro equipo forma parte del saludo («Storefront Parrillas»).
+    print("8. destinatario ajeno en los canales 8-15 (09/11/2026)")
+
+    def _msg(autor_, txt, menciones_=()):
+        raw = {
+            "id": "1",
+            "createdDateTime": "2026-11-01T10:00:00Z",
+            "messageType": "message",
+            "from": {"user": {"displayName": autor_}},
+            "body": {"contentType": "html", "content": f"<p>{txt}</p>"},
+            "mentions": [{"mentionText": m} for m in menciones_],
+        }
+        return ec.ChannelMessage.from_json(raw)
+
+    def _decide(autor_, raiz, respuestas):
+        return ec.destinatario_canales_externos(
+            _msg(autor_, raiz), [_msg(a, t) for a, t in respuestas]
+        )[0]
+
+    casos = [
+        (
+            "Grids: saludo a Storefront Parrillas se excluye",
+            "Arnau Comas Codina",
+            "Buenas Storefront Parrillas, dudas sobre getGridFiltersByGridId",
+            [("Julian Blodinger", "Paso a responder")],
+            "excluir",
+        ),
+        (
+            "Grids: media[] dirigido a Storefront Parrillas se excluye",
+            "Arnau Comas Codina",
+            "Buenas Storefront Parrillas Daniel Ramos, recibimos menos media[]",
+            [("Enmanuel Vegas Acosta", "Hola, revisamos")],
+            "excluir",
+        ),
+        (
+            "Menú: petición explícita a Pacman menú se excluye",
+            "Marc Sanchez Burgos",
+            "necesitamos que se migren las tiendas a Pacman menú en Stage",
+            [("David Rojo Antona", "rollback realizado")],
+            "excluir",
+        ),
+        (
+            "Menú: implantación en menú pacman se excluye",
+            "Montserrat Aguilar Fuego",
+            "la implantación del primer mercado de MC en menú pacman en STG",
+            [("Iván Fernández López", "solucionado")],
+            "excluir",
+        ),
+        (
+            "Producto: participación de un miembro prevalece sin mención",
+            "Marcos Mel Vila",
+            "necesitamos que en extra detail se devuelvan los dos pesos",
+            [("Adrian Rabade Rodriguez", "Dejo la tarea PACMAN-35944")],
+            "mantener",
+        ),
+        (
+            "Producto: mención al squad mantiene el hilo",
+            "Oscar Merce Pont",
+            "el producto llega con nombre distinto en storefront",
+            [("Jose Miguel Coro Riopiedre", "Pacman Products, revisad")],
+            "mantener",
+        ),
+        (
+            "sin mención ni destinatario claro se pregunta, no se excluye",
+            "Alejandro Druso Losada Pedrouzo",
+            "Nos traslanda de duti cuatro dudas técnicas para revisar",
+            [("Enmanuel Vegas Acosta", "claro!")],
+            "preguntar",
+        ),
+    ]
+    for nombre, autor_, raiz, respuestas, esperado in casos:
+        obtenido = _decide(autor_, raiz, respuestas)
+        check(nombre, obtenido == esperado, f"esperado={esperado} obtenido={obtenido}")
+
+    check(
+        "un 'grids' suelto en el raíz no excluye un hilo de Producto",
+        _decide(
+            "Ramon Meana Vallina",
+            "Hemos visto que /extra-detail no funciona en los grids de storefront",
+            [("Aaron Blanco Meis", "hemos solucionado el 404")],
+        )
+        == "mantener",
+        "el sintagma debe ser 'Storefront <equipo>', no la palabra suelta",
+    )
+
     print()
     if fallos:
         print(f"FALLARON {len(fallos)} comprobaciones: {', '.join(fallos)}")

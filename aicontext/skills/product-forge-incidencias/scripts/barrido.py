@@ -95,6 +95,7 @@ def un_canal(c, desde, dua, workers):
             desde,
             filtro=filtro,
             mencion_obligatoria=mencion,
+            destinatario_externo=reforzado,
             desde_ultima_actividad=dua,
             workers=workers,
             excluidos_out=excluidos,
