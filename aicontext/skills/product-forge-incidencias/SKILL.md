@@ -201,10 +201,23 @@ Cada hilo o ticket lleva **dos emojis**, siempre **los primeros tras el número 
 
 1. Una línea de alcance: canales, rango, zona horaria (`Europe/Madrid`) y nº de hilos relevantes. Indica que Q - Soporte API Storefront y los Imp. XXX se han filtrado por mención a Storefront + URL de API de Producto, y que los hilos que citan un ITSMECOM se han verificado contra Jira por estado y equipo asignado.
 2. Tabla resumen por canal **solo sobre pendientes** (🫥 y 🏃‍♂️‍➡️): nº de pendientes y su desglose por criticidad 🔴 🟠 🟡 ⚪ y por atención 🫥 🏃‍♂️‍➡️, solo con los canales que tengan pendientes. Los recuentos se obtienen contando tu clasificación, no se estiman. Incluye ITSMECOM como una fila más.
-3. **Pendientes (🫥 y 🏃‍♂️‍➡️)**, ordenados según «Orden», **una sola línea por elemento**: criticidad + atendido · fecha · antigüedad · canal · autor · tema en pocas palabras · URL completa en texto visible. Marca con «(PR abierta)» los hilos del equipo. Separa hilos de Teams, incidencias ITSMECOM y consultas ITSMECOM.
+3. **Pendientes (🫥 y 🏃‍♂️‍➡️)**, ordenados según «Orden», **una sola línea por elemento**: criticidad + atendido · fecha · antigüedad · canal · autor · tema en pocas palabras · URL completa en texto visible. Marca con «(PR abierta)» los hilos del equipo. Separa hilos de Teams, incidencias ITSMECOM y consultas ITSMECOM. **Un hilo y su ITSMECOM son un único bullet** (ver «Duplicados hilo ↔ ITSMECOM»).
 4. No listes por defecto resueltos (✅), informativos, motivos ni observaciones. Añade una única línea final «Omitidos: N resueltos, N informativos, N PR cerradas, N por ITSMECOM cerrado o fuera de Pacman, N ajenos al squad» (contados desde tu clasificación) y avisa solo de limitaciones que afecten al resultado (canal inaccesible, miembros no verificados, truncado, ticket no consultable). El recuento «ajenos al squad» incluye los hilos de Incidencias 🐞 sin mención ni participación del squad.
 
 **Orden dentro de cada bloque** (informe y mensaje): primero por criticidad (🔴, 🟠, 🟡, ⚪) y, dentro de la misma, por atendido (🫥, 🏃‍♂️‍➡️, ✅). A igualdad de ambos, del más antiguo al más reciente.
+
+### Duplicados hilo ↔ ITSMECOM
+
+Un mismo asunto llega a menudo **por dos vías**: el hilo de Teams y el ticket ITSMECOM que se abrió desde él (el bot `srvcsopcomerciax` responde «🔵 Se ha creado el ticket ITSMECOM-N para tu consulta») o que trata el mismo caso. **No son dos elementos: son uno.** Reglas:
+
+- **Un solo bullet point.** Cuando detectes que un hilo y un ITSMECOM son el mismo asunto, **no los listes por separado**: publica **una única línea** con **los dos enlaces**, y **el del hilo primero**. Formato: `<criticidad> <atendido> [<título del hilo>](<webUrl del hilo>) e [ITSMECOM-N](https://jira.inditex.com/jira/browse/ITSMECOM-N) · dd/mm — <resumen>`. El bullet va en el bloque que corresponda según el estado final (si queda pendiente, en «Hilos abiertos por personas externas»; si queda resuelto, en «Hilos externos resueltos»), **no en los dos bloques**.
+- **Cómo detectarlo:** (1) el hilo cita la clave en el raíz o en cualquier respuesta; (2) el bot la creó desde el hilo; (3) mismo título o mismo síntoma y mismo producto/tienda. Ojo: el extractor puede recortar las respuestas de los hilos largos, así que un ticket citado solo al principio puede escaparse; si sospechas, compruébalo con `detalle.py --completas`.
+- **Estado: manda el cambio más reciente de los dos.** Para decidir criticidad y atendido, **cruza hilo y ticket y quédate con la información más actual** —el último comentario del ticket, su cambio de estado o su reasignación frente al último mensaje del hilo, y viceversa—. No vale aplicar solo la regla del hilo ni solo la del ticket:
+  - Si el **ticket va por delante** (p. ej. ya tiene diagnóstico y está escalado a otro equipo) aunque el hilo se quedara en «lo reviso», el estado es el del ticket.
+  - Si el **hilo va por delante** (el squad ya respondió y el ticket sigue sin tocar), el estado es el del hilo.
+  - **Un ticket que sale de la cola `jsdsoportepacman`** (a otro equipo) **no cierra por sí solo el bullet**: si el hilo sigue con petición viva hacia el squad, el bullet sigue pendiente; si el ticket ya está resuelto/cerrado o escalado y el hilo no aporta nada nuevo, el bullet pasa a resueltos citando el equipo real.
+- **Regresión, no duplicado nuevo:** si el ticket nuevo repite el título y el síntoma de otro **ya cerrado**, descríbelo como **regresión** del anterior y cita la clave vieja en el resumen, en lugar de presentarlo como un caso independiente.
+- El resumen del bullet debe reflejar **la conclusión más reciente de las dos vías**, no una mezcla de ambas.
 
 ## Mensaje de publicación (borrador y envío)
 
@@ -218,10 +231,11 @@ Cada hilo o ticket lleva **dos emojis**, siempre **los primeros tras el número 
   - **Bloque 5**: ✅ iniciados por personas externas. Los ✅ de hilos internos no se publican.
   - **Canal**: en los bloques 1 y 5 el texto del enlace lleva el canal real del hilo. Si un hilo está en Incidencias 🐞, se pone «Incidencias 🐞», no el canal donde se cree que debería estar.
 - **Hilos de Teams**: `N. <criticidad> <atendido> [título](webUrl) · dd/mm`. En el 1er bloque el texto del enlace empieza por el nombre completo del canal (`[<Canal>: <título>]`, sin sufijo «Canal …»). En hilos del equipo, el texto es el título de la PR (`gh pr view`), la principal si hay varias.
+- **Hilo con ITSMECOM (duplicado)**: una sola línea con **los dos enlaces y el del hilo primero**: `N. <criticidad> <atendido> [<título del hilo>](<webUrl>) e [ITSMECOM-N](https://jira.inditex.com/jira/browse/ITSMECOM-N) · dd/mm — <resumen>`. No se duplica el elemento en dos bloques ni en dos líneas. Detalle en «Duplicados hilo ↔ ITSMECOM».
 - **Líneas ITSMECOM**: `N. <criticidad> <atendido> [ITSMECOM-N](https://jira.inditex.com/jira/browse/ITSMECOM-N): <título> · dd/mm — <estado>. <descripción>`. El enlace va **solo sobre el ID**; la fecha es la de creación. El estado es «En curso, asignado a <nombre>» o «En cartera, sin asignar». La descripción (ver clasificación) es obligatoria.
 - **Resumen de estado**: en TODOS los hilos 🏃‍♂️‍➡️ y ✅ añade tras la fecha ` — <resumen breve>` (ver clasificación). Los 🫥 no llevan resumen.
 - **Texto limpio**: cada hilo o ticket aparece una sola vez; sin corchetes (quítalos de títulos y resúmenes) ni textos truncados; mantén una única fuente del texto.
-- **Comprobación previa al envío**: valida con regex que cada línea numerada cumple el formato anterior, por ejemplo `^\d+\. (🔴|🟠|🟡|⚪) (🏃‍♂️‍➡️|🫥|✅) \[[^\[\]]+\]\(https://[^)\s]+\)(: [^\[\]]+?)? · \d\d/\d\d( — [^\[\]]+)?$`, y no envíes si alguna falla.
+- **Comprobación previa al envío**: valida con regex que cada línea numerada cumple el formato anterior. Para las líneas con duplicado hilo + ITSMECOM el patrón admite el segundo enlace: `^\d+\. (🔴|🟠|🟡|⚪) (🏃‍♂️‍➡️|🫥|✅) \[[^\[\]]+\]\(https://[^)\s]+\)( e \[[^\[\]]+\]\(https://[^)\s]+\))?(: [^\[\]]+?)? · \d\d/\d\d( — [^\[\]]+)?$`. No envíes si alguna falla.
 - Avisa de que los mensajes enviados no se pueden editar ni borrar.
 
 ### Informes previos
