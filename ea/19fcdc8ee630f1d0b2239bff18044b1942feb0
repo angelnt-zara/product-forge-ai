@@ -1,0 +1,14 @@
+aicontext/skills/product-forge-incidencias/SKILL.md
+  h_46798eb9f7d88a 204,209-221,234,238
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "ea19fcdc8ee630f1d0b2239bff18044b1942feb0",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
