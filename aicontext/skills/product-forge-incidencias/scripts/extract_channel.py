@@ -89,7 +89,7 @@ if _SHARED is None:  # pragma: no cover
 sys.path.insert(0, str(_SHARED))
 
 from teams.app import create_app                      # noqa: E402
-from teams.config import GRAPH_BETA, GRAPH_RESOURCE, TOKEN_CACHE_GRAPH  # noqa: E402
+from teams.config import GRAPH_BETA                   # noqa: E402
 from teams.models import ChannelMessage               # noqa: E402
 
 # ── Zona horaria: Europe/Madrid real, con CET/CEST automático ────────────────
@@ -235,7 +235,7 @@ WORKERS_DEFECTO = int(os.environ.get("PF_TEAMS_WORKERS", "8"))
 
 # ── Cliente autenticado ──────────────────────────────────────────────────────
 def graph_client():
-    """Devuelve un cliente con token de `az` para Graph beta.
+    """Devuelve el cliente HTTP autenticado de Graph beta (el del paquete compartido).
 
     Intenta primero el cliente del paquete compartido; si su estructura interna
     cambia (el atributo es privado), construye uno propio con sus piezas
@@ -244,19 +244,30 @@ def graph_client():
     app = create_app()
     graph = app.graph
 
-    az = getattr(graph, "_az", None)
-    if az is not None:
-        return az
+    # `_client`: paquete actual (OAuth device code). `_az`: versión antigua.
+    for nombre in ("_client", "_az"):
+        cliente = getattr(graph, nombre, None)
+        if cliente is not None and hasattr(cliente, "get"):
+            return cliente
+
+    # Fallback solo para versiones antiguas del paquete (autenticación con `az`).
+    # Las constantes se importan aquí: en el paquete actual ya no existen.
+    try:
+        from teams.auth.az import AzTokenProvider
+        from teams.auth.cache import TokenCache
+        from teams.config import GRAPH_RESOURCE, TOKEN_CACHE_GRAPH
+        from teams.http import HttpClient
+    except ImportError:
+        raise SystemExit(
+            "No encuentro el cliente HTTP de Graph en el paquete `teams` compartido "
+            "(se esperaba `app.graph._client`). Revisa la versión del paquete."
+        )
 
     print(
         "aviso: no encuentro el cliente interno del paquete compartido; "
         "construyo uno propio con AzTokenProvider",
         file=sys.stderr,
     )
-    from teams.auth.az import AzTokenProvider
-    from teams.auth.cache import TokenCache
-    from teams.http import HttpClient
-
     return HttpClient(auth=AzTokenProvider(GRAPH_RESOURCE, TokenCache(TOKEN_CACHE_GRAPH)))
 
 

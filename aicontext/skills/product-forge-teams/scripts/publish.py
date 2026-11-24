@@ -6,7 +6,7 @@ Existe porque el conversor Markdown->HTML del paquete compartido
 (`` `x` ``): los deja literales, y el mensaje publicado muestra los asteriscos y
 las comillas invertidas. Además el CLI `teams` no tiene comando para publicar un
 mensaje **raíz** de canal (solo `channel reply`, que responde a un hilo existente),
-así que sin este script hay que escribir a mano `app.graph._az.post(...)`.
+así que sin este script hay que escribir a mano `app.graph._client.post(...)`.
 
 Uso:
     # Hilo nuevo en un canal (mensaje raíz, con asunto)
@@ -184,6 +184,23 @@ def markdown_to_teams_html(texto: str) -> str:
     return "\n".join(partes)
 
 
+def _cliente_graph(app):
+    """Cliente HTTP autenticado de Graph del paquete compartido.
+
+    El atributo es privado y ha cambiado entre versiones del paquete: `_client`
+    (OAuth device code, actual) y `_az` (versión antigua con `az`). Se prueban en
+    ese orden en lugar de romperse con AttributeError.
+    """
+    for nombre in ("_client", "_az"):
+        cliente = getattr(app.graph, nombre, None)
+        if cliente is not None and hasattr(cliente, "post"):
+            return cliente
+    raise SystemExit(
+        "No encuentro el cliente HTTP de Graph en el paquete `teams` compartido "
+        "(se esperaba `app.graph._client` o `app.graph._az`). Revisa la versión del paquete."
+    )
+
+
 def _validar_entrada(texto: str) -> None:
     """Comprueba que el aviso de IA abre el mensaje."""
     if AVISO_IA not in texto:
@@ -274,7 +291,7 @@ def main() -> None:
 
     if args.cmd == "root":
         url = f"{GRAPH_BETA}/teams/{args.team}/channels/{args.channel}/messages"
-        data = app.graph._az.post(
+        data = _cliente_graph(app).post(
             url,
             body={
                 "subject": args.subject,
