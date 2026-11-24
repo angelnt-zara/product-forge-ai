@@ -1,0 +1,16 @@
+aicontext/skills/product-forge-incidencias/scripts/extract_channel.py
+  h_46798eb9f7d88a 92,238,247-264
+aicontext/skills/product-forge-teams/scripts/publish.py
+  h_46798eb9f7d88a 9,187-203,294
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "71343aea4216719607889a3476013b7d37036691",
+  "prompts": {},
+  "humans": {
+    "h_46798eb9f7d88a": {
+      "author": "Angel Negrete <angelnt@ext.zara.com>"
+    }
+  }
+}
